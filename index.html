@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YOURS SALON — Daily Ops Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12100E;
+    --surface:#1B1815;
+    --surface-2:#242019;
+    --line:#332C22;
+    --gold:#C9A227;
+    --gold-soft:#E4C55C;
+    --teal:#3E8272;
+    --rust:#B5473F;
+    --text:#F3EEE3;
+    --muted:#9C9284;
+    --faint:#5E574A;
+    --radius:12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% -10%, rgba(201,162,39,0.08), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:16px 12px 40px;
+  }
+  .wrap{max-width:1400px; margin:0 auto;}
+
+  /* ===== HEADER ===== */
+  header{
+    display:flex; 
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:4px;
+  }
+
+  .header-main {
+    width: 100%;
+  }
+
+  .brand-section {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .brand-section::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px 0;
+  }
+
+  .logo-mark {
+    display: flex;
+    gap: 2px;
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.12), rgba(201, 162, 39, 0.04));
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 4px 8px;
+    position: relative;
+    min-width: 42px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-initial {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--gold);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .logo-initial:first-child {
+    color: var(--gold-soft);
+  }
+
+  .logo-mark::after {
+    content: '✦';
+    position: absolute;
+    font-size: 6px;
+    bottom: -4px;
+    right: -4px;
+    color: var(--gold-soft);
+    background: var(--bg);
+    padding: 0 2px;
+  }
+
+  .brand-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .brand-name span {
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .brand-tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    color: var(--gold-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 1px;
+    opacity: 0.8;
+  }
+
+  .brand-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .14em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    margin-bottom: 2px;
+  }
+
+  h1 span {
+    color: var(--gold-soft);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 2px;
+    opacity: 0.8;
+    line-height: 1.4;
+  }
+
+  /* ===== TOP ROW ===== */
+  .top-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 6px 0;
+    width: 100%;
+  }
+
+  .top-row-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .top-row-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .total-attend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .total-attend:hover {
+    border-color: var(--gold);
+  }
+
+  .total-attend .label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+
+  .total-attend .count {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold-soft);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .total-attend .count-sub {
+    font-size: 9px;
+    color: var(--faint);
+    font-weight: 400;
+  }
+
+  .date-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 3px 8px 3px 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .date-controls label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+
+  .date-controls input[type="date"] {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    outline: none;
+    width: 120px;
+  }
+
+  .date-controls input[type="date"]:focus {
+    border-color: var(--gold);
+  }
+
+  .date-controls .today-btn {
+    background: var(--gold);
+    color: #1B1508;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+  }
+
+  .date-controls .today-btn:hover {
+    background: var(--gold-soft);
+  }
+
+  .sync-status {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .sync-status .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .sync-status .dot.error {
+    background: var(--rust);
+  }
+
+  .sync-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+  }
+
+  .sync-btn:hover {
+    border-color: var(--gold);
+    color: var(--text);
+  }
+
+  .last-sync {
+    font-size: 8px;
+    color: var(--faint);
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .razor-line {
+    height: 1px;
+    margin: 12px 0 18px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--line) 18%, var(--line) 82%, var(--gold) 100%);
+    opacity: .6;
+  }
+
+  /* ===== Stats Cards ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px 10px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(201, 162, 39, 0.06);
+  }
+
+  .stat-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .stat-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 4px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .stat-sub {
+    font-size: 8px;
+    color: var(--faint);
+    margin-top: 2px;
+  }
+
+  /* ===== TWO COLUMN PANELS ===== */
+  .panel-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .panel .panel-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* ===== TABLES ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+
+  td {
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .staff-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  .avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--gold);
+    color: var(--gold-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .num {
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+    font-size: 11px;
+  }
+
+  .clickable-count {
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 1px 4px;
+    border-radius: 4px;
+    display: inline-block;
+    font-weight: 600;
+  }
+
+  .clickable-count:hover {
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--gold-soft);
+  }
+
+  .log-panel table td, .log-panel table th {
+    padding: 6px 6px;
+  }
+
+  .empty-state {
+    color: var(--faint);
+    font-size: 12px;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  .loading {
+    color: var(--muted);
+    font-size: 12px;
+    padding: 10px 0;
+  }
+
+  /* ===== Weekly Summary ===== */
+  .weekly-summary table {
+    font-size: 11px;
+  }
+
+  .weekly-summary table th {
+    font-size: 8px;
+    padding: 4px 5px;
+  }
+
+  .weekly-summary table td {
+    padding: 5px 5px;
+    font-size: 11px;
+  }
+
+  .weekly-summary .grand-total td {
+    font-weight: 700;
+    border-top: 2px solid var(--gold);
+    color: var(--gold-soft);
+    font-size: 12px;
+    background: rgba(201, 162, 39, 0.06);
+  }
+
+  .weekly-summary .period-label {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .weekly-summary .day-label {
+    color: var(--faint);
+    font-size: 9px;
+  }
+
+  .weekly-summary .amount-format {
+    font-size: 11px;
+  }
+
+  /* ===== Scroll Containers ===== */
+  .scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+
+  .scroll-wrap::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .scroll-wrap::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 2px;
+  }
+
+  .scroll-wrap::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 2px;
+  }
+
+  .scroll-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+  }
+
+  .log-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .log-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .log-scroll::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 2px;
+  }
+
+  .log-scroll::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 2px;
+  }
+
+  .log-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+  }
+
+  .log-scroll table {
+    font-size: 10px;
+  }
+
+  .log-scroll table th {
+    font-size: 8px;
+    padding: 4px 6px;
+  }
+
+  .log-scroll table td {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    padding: 16px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 16px 16px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .modal-header h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .modal-header h3 span {
+    color: var(--gold-soft);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 0 4px;
+  }
+
+  .modal-close:hover {
+    color: var(--rust);
+  }
+
+  .modal table {
+    font-size: 11px;
+  }
+
+  .modal table th {
+    font-size: 8px;
+    padding: 4px 6px;
+  }
+
+  .modal table td {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .modal .modal-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--gold-soft);
+  }
+
+  .modal::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .modal::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 2px;
+  }
+
+  .modal::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 2px;
+  }
+
+  /* ===== TOAST ===== */
+  #toast-container {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .toast {
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 12px;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .toast-success {
+    border-left: 3px solid var(--teal);
+  }
+
+  .toast-error {
+    border-left: 3px solid var(--rust);
+  }
+
+  .toast-info {
+    border-left: 3px solid var(--gold);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* ===== RESPONSIVE BREAKPOINTS ===== */
+  @media(min-width: 768px){
+    body { padding: 24px 20px 50px; }
+    .brand-name { font-size: 18px; }
+    h1 { font-size: 28px; }
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .panel-grid-2 { grid-template-columns: 1fr 1fr; }
+    .top-row { flex-wrap: nowrap; }
+  }
+
+  @media(min-width: 1024px){
+    body { padding: 32px 28px 60px; }
+    .brand-name { font-size: 20px; }
+    h1 { font-size: 32px; }
+    .stats { grid-template-columns: repeat(5, 1fr); }
+    .panel-grid-2 { grid-template-columns: 0.9fr 1.1fr; }
+  }
+
+  @media(max-width: 480px){
+    .top-row-left { min-width: 100%; }
+    .top-row-right { min-width: 100%; justify-content: flex-start; }
+    .date-controls { width: 100%; }
+    .date-controls input[type="date"] { flex: 1; min-width: 80px; }
+    .total-attend { flex: 1; justify-content: center; }
+    .stat-value { font-size: 16px; }
+    .weekly-summary table { font-size: 10px; }
+    .weekly-summary table td { font-size: 10px; padding: 4px 4px; }
+    .weekly-summary table th { font-size: 7px; padding: 3px 4px; }
+    .staff-matrix table { font-size: 10px; }
+    .staff-matrix table td { font-size: 10px; padding: 4px 4px; }
+    .staff-matrix table th { font-size: 7px; padding: 3px 4px; }
+    .staff-name { font-size: 10px; }
+    .num { font-size: 10px; }
+    .log-scroll table { font-size: 9px; }
+    .log-scroll table td { font-size: 9px; padding: 4px 4px; }
+    .log-scroll table th { font-size: 7px; padding: 3px 4px; }
+    .modal { padding: 14px 12px; }
+    .modal table td, .modal table th { font-size: 9px; padding: 3px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-main">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <div class="logo-mark">
+            <span class="logo-initial">Y</span>
+            <span class="logo-initial">S</span>
+          </div>
+          <div class="brand-info">
+            <div class="brand-name">YOURS <span>SALON</span></div>
+            <div class="brand-tagline">✦ Look Good, Feel Confident</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-eyebrow">Salon Operations · Daily Ledger</div>
+      <h1>Chair<span>&</span>Ledger</h1>
+      <div class="subtitle" id="staffSubtitle">Loading staff list...</div>
+
+      <div class="top-row">
+        <div class="top-row-left">
+          <div class="date-controls">
+            <label>📅</label>
+            <input type="date" id="datePicker">
+            <button class="today-btn" id="todayBtn">Today</button>
+          </div>
+        </div>
+
+        <div class="top-row-right">
+          <div class="total-attend" id="totalAttendBtn" title="Click to view all entries">
+            <span class="label">👥</span>
+            <span class="count" id="totalAttendCount">0</span>
+            <span class="count-sub" id="totalAttendSub">txns</span>
+          </div>
+
+          <div class="sync-status" id="syncStatus">
+            <span class="dot" id="syncDot"></span>
+            <span id="syncText">Loading</span>
+          </div>
+          <span class="last-sync" id="lastSyncTime"></span>
+          <button class="sync-btn" id="manualSyncBtn">⟳ Sync</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="razor-line"></div>
+
+  <!-- Stats Cards -->
+  <div class="stats" id="statCards">
+    <div class="stat-card staff">
+      <div class="stat-label">1. Staff Collection</div>
+      <div class="stat-value" id="statStaff">₹0</div>
+    </div>
+    <div class="stat-card cost">
+      <div class="stat-label">2. Cost Cutting</div>
+      <div class="stat-value" id="statCost">₹0</div>
+    </div>
+    <div class="stat-card cash">
+      <div class="stat-label">3. Cash Collection</div>
+      <div class="stat-value" id="statCash">₹0</div>
+      <div class="stat-sub" id="statCashSub">Cash</div>
+    </div>
+    <div class="stat-card online">
+      <div class="stat-label">4. Online Collection</div>
+      <div class="stat-value" id="statOnline">₹0</div>
+      <div class="stat-sub" id="statOnlineSub">Online</div>
+    </div>
+    <div class="stat-card total">
+      <div class="stat-label">5. Collection Today</div>
+      <div class="stat-value" id="statTotal">₹0</div>
+      <div class="stat-sub" id="statTotalSub">Staff + Cost</div>
+    </div>
+  </div>
+
+  <!-- Two Column Grid -->
+  <div class="panel-grid-2">
+    <!-- Staff Matrix -->
+    <div class="panel staff-matrix">
+      <h2>Staff Matrix</h2>
+      <div class="panel-sub" id="matrixSub">Totals per staff</div>
+      <div class="scroll-wrap">
+        <table id="matrixTable">
+          <thead>
+            <tr>
+              <th>Staff</th>
+              <th style="text-align:right">Collection</th>
+              <th style="text-align:right">Cost</th>
+              <th style="text-align:right">Attend</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Weekly Summary -->
+    <div class="panel weekly-summary">
+      <h2>Weekly Summary</h2>
+      <div class="panel-sub" id="weeklySub">Data-driven summary</div>
+      <div class="scroll-wrap">
+        <table id="weeklyTable">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th style="text-align:right" id="weeklyHeaderStaff">Staff</th>
+              <th style="text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody id="weeklyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Entries -->
+  <div class="panel log-panel">
+    <h2>Recent Entries</h2>
+    <div class="panel-sub" id="logSub">All entries (Latest first)</div>
+    <div id="logLoading" class="loading">Loading entries…</div>
+    <div class="log-scroll" id="logScrollContainer">
+      <table id="logTable" style="display:none">
+        <thead>
+          <tr>
+            <th>Date &amp; Time</th>
+            <th>Staff</th>
+            <th style="text-align:right">Amount</th>
+            <th style="text-align:right">Payment</th>
+            <th style="text-align:right">Cost</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">No entries logged yet.</div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📋 <span id="modalTitle">Customer Entries</span></h3>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="scroll-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Staff</th>
+            <th style="text-align:right">Payment</th>
+            <th style="text-align:right">Amount</th>
+            <th style="text-align:right">Cost</th>
+          </tr>
+        </thead>
+        <tbody id="modalBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-total" id="modalTotal">Total: ₹0</div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ========================================
+// CONFIGURATION
+// ========================================
+
+const SHEET_ID = '14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo';
+const API_KEY = 'AIzaSyAtJX7FtwdHzQCFP4LPVKgt7FrOEUdG-bQ';
+
+// ========================================
+// APPLICATION CODE
+// ========================================
+
+const STORAGE_KEY = "salon-entries";
+let entries = [];
+let staffList = [];
+let isSyncing = false;
+let autoSyncInterval = null;
+let selectedDate = null;
+
+const inr = n => "₹" + Math.round(n).toLocaleString('en-IN');
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const datePicker = document.getElementById('datePicker');
+  datePicker.value = todayStr();
+  selectedDate = todayStr();
+});
+
+// ========================================
+// TOAST NOTIFICATIONS
+// ========================================
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ========================================
+// EXTRACT UNIQUE STAFF NAMES
+// ========================================
+
+function extractStaffNames(data) {
+  const names = new Set();
+  data.forEach(entry => {
+    if (entry.employee && entry.employee.trim()) {
+      names.add(entry.employee.trim());
+    }
+  });
+  return Array.from(names).sort();
+}
+
+// ========================================
+// PARSE TIMESTAMP
+// ========================================
+
+function parseTimestamp(ts) {
+  if (!ts) return null;
+  
+  const ddmmyyMatch = ts.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+  if (ddmmyyMatch) {
+    const day = ddmmyyMatch[1];
+    const month = ddmmyyMatch[2];
+    const year = ddmmyyMatch[3];
+    const hour = ddmmyyMatch[4];
+    const min = ddmmyyMatch[5];
+    const sec = ddmmyyMatch[6];
+    return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+  }
+  
+  const ddmmyyOnly = ts.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (ddmmyyOnly) {
+    const day = ddmmyyOnly[1];
+    const month = ddmmyyOnly[2];
+    const year = ddmmyyOnly[3];
+    return `${year}-${month}-${day}`;
+  }
+  
+  const yyyymmddMatch = ts.match(/(\d{4}-\d{2}-\d{2})/);
+  if (yyyymmddMatch) {
+    return yyyymmddMatch[1];
+  }
+  
+  const d = new Date(ts);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString();
+  }
+  
+  return ts;
+}
+
+// ========================================
+// GOOGLE SHEETS API FETCH
+// ========================================
+
+async function fetchGoogleSheetsData() {
+  try {
+    console.log('Fetching from Google Sheets API...');
+    
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Form%20responses%201?key=${API_KEY}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      
+      if (response.status === 404) {
+        throw new Error('Sheet not found. Make sure sheet is shared.');
+      } else if (response.status === 403) {
+        throw new Error('API key invalid or Sheet API not enabled.');
+      } else {
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+    }
+    
+    const result = await response.json();
+    console.log('API Response received');
+    
+    if (!result.values || result.values.length < 2) {
+      throw new Error('No data found in sheet. Add some data first.');
+    }
+    
+    const headers = result.values[0];
+    console.log('Headers:', headers);
+    console.log('Total rows in sheet (including header):', result.values.length);
+    
+    const colIndex = {
+      timestamp: headers.findIndex(h => h && h.toLowerCase().includes('timestamp')),
+      name: headers.findIndex(h => h && h.toLowerCase().includes('your name')),
+      amount: headers.findIndex(h => h && h.toLowerCase().includes('amount')),
+      paymentMode: headers.findIndex(h => h && h.toLowerCase().includes('payment mode')),
+      costCutting: headers.findIndex(h => h && h.toLowerCase().includes('cost cutting'))
+    };
+    
+    if (colIndex.name === -1) {
+      colIndex.name = headers.findIndex(h => h && h.toLowerCase().includes('name'));
+    }
+    
+    console.log('Column indices:', colIndex);
+    
+    if (colIndex.name === -1) {
+      throw new Error('"Your Name" column not found.');
+    }
+    
+    if (colIndex.amount === -1) {
+      throw new Error('"Amount" column not found.');
+    }
+    
+    const data = [];
+    let skippedCount = 0;
+    
+    for (let i = 1; i < result.values.length; i++) {
+      const row = result.values[i];
+      
+      if (!row || row.length === 0 || !row[colIndex.name]) {
+        skippedCount++;
+        continue;
+      }
+      
+      const name = row[colIndex.name] ? row[colIndex.name].trim() : '';
+      const amount = colIndex.amount !== -1 ? parseFloat(row[colIndex.amount]) || 0 : 0;
+      const paymentMode = colIndex.paymentMode !== -1 && row[colIndex.paymentMode] ? row[colIndex.paymentMode].trim() : '';
+      const costCutting = colIndex.costCutting !== -1 ? parseFloat(row[colIndex.costCutting]) || 0 : 0;
+      
+      let rawTimestamp = '';
+      let date = todayStr();
+      
+      if (colIndex.timestamp !== -1 && row[colIndex.timestamp]) {
+        rawTimestamp = row[colIndex.timestamp].trim();
+        const ts = rawTimestamp;
+        
+        const ddmmyyMatch = ts.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (ddmmyyMatch) {
+          const day = ddmmyyMatch[1];
+          const month = ddmmyyMatch[2];
+          const year = ddmmyyMatch[3];
+          date = `${year}-${month}-${day}`;
+        } else {
+          const yyyymmddMatch = ts.match(/(\d{4}-\d{2}-\d{2})/);
+          if (yyyymmddMatch) {
+            date = yyyymmddMatch[1];
+          } else {
+            const d = new Date(ts);
+            if (!isNaN(d.getTime())) {
+              date = d.toISOString().slice(0, 10);
+            }
+          }
+        }
+      }
+      
+      if (!name) {
+        skippedCount++;
+        continue;
+      }
+      
+      data.push({
+        id: Date.now() + i + Math.random(),
+        date: date,
+        rawTimestamp: rawTimestamp,
+        employee: name,
+        amount: amount,
+        paymentMode: paymentMode,
+        saving: costCutting
+      });
+    }
+    
+    console.log('Total valid data rows:', data.length);
+    console.log('Skipped rows:', skippedCount);
+    return data;
+    
+  } catch (error) {
+    console.error('Error fetching Google Sheets data:', error);
+    showToast('⚠️ ' + error.message, 'error');
+    return null;
+  }
+}
+
+// ========================================
+// DATA MANAGEMENT
+// ========================================
+
+async function loadEntries() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    entries = saved ? JSON.parse(saved) : [];
+    console.log('Loaded entries from localStorage:', entries.length);
+    return true;
+  } catch (e) {
+    console.error('Storage load error:', e);
+    entries = [];
+    return false;
+  }
+}
+
+async function saveEntries() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    console.log('Saved entries to localStorage:', entries.length);
+    return true;
+  } catch (e) {
+    console.error('Storage save failed', e);
+    return false;
+  }
+}
+
+// ========================================
+// SYNC FUNCTION
+// ========================================
+
+async function syncWithGoogleSheets(silent = false) {
+  if (isSyncing) return;
+  isSyncing = true;
+  
+  const dot = document.getElementById('syncDot');
+  const text = document.getElementById('syncText');
+  
+  if (!silent) {
+    dot.className = 'dot';
+    text.textContent = 'Syncing...';
+  }
+  console.log('Starting sync...');
+  
+  try {
+    const sheetData = await fetchGoogleSheetsData();
+    
+    if (sheetData !== null && sheetData.length > 0) {
+      console.log('Sheet data received:', sheetData.length);
+      
+      entries = sheetData;
+      await saveEntries();
+      
+      staffList = extractStaffNames(entries);
+      console.log('Staff list extracted:', staffList);
+      
+      updateSubtitle();
+      
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('lastSyncTime').textContent = `⏱ ${timeStr}`;
+      
+      dot.className = 'dot';
+      text.textContent = `✓ ${sheetData.length}`;
+      
+      if (!silent) {
+        showToast(`✅ Synced ${sheetData.length} records`, 'success');
+      }
+      console.log('Sync completed successfully - total entries:', entries.length);
+    } else {
+      dot.className = 'dot error';
+      text.textContent = 'No data';
+      if (!silent) {
+        showToast('ℹ️ No data found in Google Sheets.', 'info');
+      }
+      console.log('No data found in sheet');
+    }
+  } catch (error) {
+    console.error('Sync error:', error);
+    dot.className = 'dot error';
+    text.textContent = 'Failed';
+    if (!silent) {
+      showToast('⚠️ Failed to sync: ' + error.message, 'error');
+    }
+  }
+  
+  isSyncing = false;
+  renderAll();
+}
+
+// ========================================
+// UPDATE SUBTITLE
+// ========================================
+
+function updateSubtitle() {
+  const subtitle = document.getElementById('staffSubtitle');
+  if (staffList.length > 0) {
+    subtitle.textContent = `Collection & savings — ${staffList.join(', ')}`;
+  } else {
+    subtitle.textContent = 'No staff data available yet. Sync to load data.';
+  }
+}
+
+// ========================================
+// GET ENTRIES FOR SELECTED DATE
+// ========================================
+
+function getSelectedDateEntries() {
+  const datePicker = document.getElementById('datePicker');
+  const date = datePicker.value || todayStr();
+  selectedDate = date;
+  return entries.filter(e => e.date === date);
+}
+
+// ========================================
+// GET MONTHLY ENTRIES FOR WEEKLY SUMMARY
+// ========================================
+
+function getMonthlyEntries() {
+  const datePicker = document.getElementById('datePicker');
+  const date = datePicker.value || todayStr();
+  const month = date.slice(0, 7);
+  return entries.filter(e => e.date.startsWith(month));
+}
+
+// ========================================
+// RENDER FUNCTIONS
+// ========================================
+
+function renderStats() {
+  const todayEntries = getSelectedDateEntries();
+  const displayDate = selectedDate || todayStr();
+  
+  const totalCount = todayEntries.length;
+  document.getElementById('totalAttendCount').textContent = totalCount;
+  document.getElementById('totalAttendSub').textContent = totalCount === 1 ? 'txn' : 'txns';
+  
+  const cashEntries = todayEntries.filter(e => e.paymentMode && e.paymentMode.toLowerCase() === 'cash');
+  const cashAmount = cashEntries.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('statCash').textContent = inr(cashAmount);
+  document.getElementById('statCashSub').textContent = cashEntries.length + ' Cash';
+  
+  const onlineEntries = todayEntries.filter(e => e.paymentMode && e.paymentMode.toLowerCase() === 'online');
+  const onlineAmount = onlineEntries.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('statOnline').textContent = inr(onlineAmount);
+  document.getElementById('statOnlineSub').textContent = onlineEntries.length + ' Online';
+  
+  const totalAmount = todayEntries.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('statStaff').textContent = inr(totalAmount);
+  
+  const totalCostCutting = todayEntries.reduce((s, e) => s + e.saving, 0);
+  document.getElementById('statCost').textContent = inr(totalCostCutting);
+  
+  const totalToday = totalAmount + totalCostCutting;
+  document.getElementById('statTotal').textContent = inr(totalToday);
+  document.getElementById('statTotalSub').textContent = totalAmount + ' + ' + totalCostCutting;
+}
+
+function renderMatrix() {
+  const todayEntries = getSelectedDateEntries();
+  const displayDate = selectedDate || todayStr();
+  document.getElementById('matrixSub').textContent = `Totals per staff (${displayDate})`;
+  
+  const body = document.getElementById('matrixBody');
+  body.innerHTML = '';
+  
+  const staffToShow = staffList.length > 0 ? staffList : ['No staff data'];
+  
+  staffToShow.forEach(name => {
+    const rows = todayEntries.filter(e => e.employee === name);
+    const col = rows.reduce((s, e) => s + e.amount, 0);
+    const sav = rows.reduce((s, e) => s + e.saving, 0);
+    const count = rows.length;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="staff-name"><span class="avatar">${initials(name)}</span>${name}</td>
+      <td class="num">${inr(col)}</td>
+      <td class="num">${inr(sav)}</td>
+      <td class="num">
+        <span class="clickable-count" data-staff="${name}" data-date="${displayDate}" title="Click to view ${name}'s entries">
+          ${count}
+        </span>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+  
+  document.querySelectorAll('.clickable-count').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const staffName = this.dataset.staff;
+      const date = this.dataset.date;
+      openStaffModal(staffName, date);
+    });
+  });
+}
+
+// ========================================
+// RENDER WEEKLY SUMMARY
+// ========================================
+
+function renderWeeklySummary() {
+  const monthlyEntries = getMonthlyEntries();
+  const currentDate = new Date(selectedDate || todayStr());
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  const datesWithData = [...new Set(monthlyEntries.map(e => e.date))].sort();
+  const staffNames = staffList.length > 0 ? staffList : ['No staff'];
+  
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const weekRanges = [
+    { label: 'Week 1', start: 1, end: 7 },
+    { label: 'Week 2', start: 8, end: 14 },
+    { label: 'Week 3', start: 15, end: 21 },
+    { label: 'Week 4', start: 22, end: lastDayOfMonth }
+  ];
+  
+  const activeWeeks = weekRanges.filter(week => {
+    for (let d = week.start; d <= week.end; d++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (monthlyEntries.some(e => e.date === dateStr)) {
+        return true;
+      }
+    }
+    return false;
+  });
+  
+  const summaryData = {};
+  staffNames.forEach(name => {
+    summaryData[name] = {
+      totalWeeks: 0,
+      days: {},
+      weeks: {}
+    };
+    
+    datesWithData.forEach(date => {
+      summaryData[name].days[date] = 0;
+    });
+    
+    activeWeeks.forEach(week => {
+      summaryData[name].weeks[week.label] = 0;
+    });
+  });
+  
+  monthlyEntries.forEach(entry => {
+    const staffName = entry.employee;
+    if (summaryData[staffName]) {
+      if (summaryData[staffName].days[entry.date] !== undefined) {
+        summaryData[staffName].days[entry.date] += entry.amount;
+      }
+      
+      const day = parseInt(entry.date.slice(8, 10));
+      activeWeeks.forEach(week => {
+        if (day >= week.start && day <= week.end) {
+          summaryData[staffName].weeks[week.label] += entry.amount;
+        }
+      });
+      
+      summaryData[staffName].totalWeeks += entry.amount;
+    }
+  });
+  
+  const thead = document.getElementById('weeklyTable').querySelector('thead');
+  const tbody = document.getElementById('weeklyBody');
+  
+  let headerHTML = '<th>Period</th>';
+  staffNames.forEach(name => {
+    headerHTML += `<th style="text-align:right">${name}</th>`;
+  });
+  headerHTML += `<th style="text-align:right;color:var(--gold-soft);">Total</th>`;
+  thead.innerHTML = `<tr>${headerHTML}</tr>`;
+  
+  let bodyHTML = '';
+  
+  const sortedDates = [...datesWithData].sort((a, b) => b.localeCompare(a));
+  
+  sortedDates.forEach(date => {
+    const dayNum = parseInt(date.slice(8, 10));
+    const dateDisplay = formatDate(date);
+    const dayLabel = `Day ${dayNum}`;
+    
+    let rowHTML = `<td><span class="day-label">${dayLabel}</span> <span style="color:var(--muted);font-size:8px;">(${dateDisplay})</span></td>`;
+    let hasData = false;
+    let rowTotal = 0;
+    
+    staffNames.forEach(name => {
+      const amount = summaryData[name].days[date] || 0;
+      if (amount > 0) hasData = true;
+      rowTotal += amount;
+      rowHTML += `<td class="num amount-format">${amount > 0 ? inr(amount) : ''}</td>`;
+    });
+    
+    rowHTML += `<td class="num amount-format" style="font-weight:600;color:var(--gold-soft);">${rowTotal > 0 ? inr(rowTotal) : ''}</td>`;
+    
+    if (hasData) {
+      bodyHTML += `<tr>${rowHTML}</tr>`;
+    }
+  });
+  
+  activeWeeks.forEach(week => {
+    let rowHTML = `<td class="period-label">${week.label}</td>`;
+    let hasData = false;
+    let rowTotal = 0;
+    
+    staffNames.forEach(name => {
+      const amount = summaryData[name].weeks[week.label] || 0;
+      if (amount > 0) hasData = true;
+      rowTotal += amount;
+      rowHTML += `<td class="num amount-format">${amount > 0 ? inr(amount) : ''}</td>`;
+    });
+    
+    rowHTML += `<td class="num amount-format" style="font-weight:600;color:var(--gold-soft);">${rowTotal > 0 ? inr(rowTotal) : ''}</td>`;
+    
+    if (hasData) {
+      bodyHTML += `<tr>${rowHTML}</tr>`;
+    }
+  });
+  
+  let totalHTML = `<td style="font-weight:700;color:var(--gold-soft);font-size:13px;">Grand Total</td>`;
+  let grandTotal = 0;
+  staffNames.forEach(name => {
+    const total = summaryData[name].totalWeeks;
+    grandTotal += total;
+    totalHTML += `<td class="num" style="font-weight:700;color:var(--gold-soft);font-size:13px;">${total > 0 ? inr(total) : ''}</td>`;
+  });
+  totalHTML += `<td class="num" style="font-weight:700;color:var(--gold-soft);font-size:13px;">${grandTotal > 0 ? inr(grandTotal) : ''}</td>`;
+  bodyHTML += `<tr class="grand-total">${totalHTML}</tr>`;
+  
+  tbody.innerHTML = bodyHTML;
+  
+  document.getElementById('weeklySub').textContent = `${datesWithData.length} days, ${activeWeeks.length} weeks`;
+}
+
+function renderLog() {
+  const loading = document.getElementById('logLoading');
+  const table = document.getElementById('logTable');
+  const empty = document.getElementById('emptyState');
+  const scrollContainer = document.getElementById('logScrollContainer');
+  
+  loading.style.display = 'none';
+
+  if (entries.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  scrollContainer.style.display = 'block';
+
+  const sorted = [...entries].sort((a, b) => {
+    const dateCompare = b.date.localeCompare(a.date);
+    if (dateCompare !== 0) return dateCompare;
+    
+    if (a.rawTimestamp && b.rawTimestamp) {
+      const aParsed = parseTimestamp(a.rawTimestamp);
+      const bParsed = parseTimestamp(b.rawTimestamp);
+      const aDate = new Date(aParsed);
+      const bDate = new Date(bParsed);
+      if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+        return bDate.getTime() - aDate.getTime();
+      }
+    }
+    return b.id - a.id;
+  });
+  
+  const body = document.getElementById('logBody');
+  body.innerHTML = '';
+  
+  sorted.forEach(e => {
+    const displayDate = e.rawTimestamp || e.date;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${displayDate}</td>
+      <td>${e.employee}</td>
+      <td class="num">${inr(e.amount)}</td>
+      <td class="num">${e.paymentMode || '-'}</td>
+      <td class="num">${inr(e.saving)}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function renderAll() {
+  renderStats();
+  renderMatrix();
+  renderWeeklySummary();
+  renderLog();
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// ========================================
+// MODAL / POPUP FUNCTIONS
+// ========================================
+
+function openModal(title, entriesForDate) {
+  const overlay = document.getElementById('modalOverlay');
+  const modalBody = document.getElementById('modalBody');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalTotal = document.getElementById('modalTotal');
+  
+  modalTitle.textContent = title;
+  modalBody.innerHTML = '';
+  
+  let totalAmount = 0;
+  
+  const sorted = [...entriesForDate].sort((a, b) => {
+    if (a.rawTimestamp && b.rawTimestamp) {
+      const aParsed = parseTimestamp(a.rawTimestamp);
+      const bParsed = parseTimestamp(b.rawTimestamp);
+      const aDate = new Date(aParsed);
+      const bDate = new Date(bParsed);
+      if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+        return bDate.getTime() - aDate.getTime();
+      }
+    }
+    return b.id - a.id;
+  });
+  
+  sorted.forEach((e, index) => {
+    totalAmount += e.amount;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${e.employee}</td>
+      <td class="num">${e.paymentMode || '-'}</td>
+      <td class="num">${inr(e.amount)}</td>
+      <td class="num">${inr(e.saving)}</td>
+    `;
+    modalBody.appendChild(tr);
+  });
+  
+  modalTotal.textContent = `Total: ${inr(totalAmount)} | ${sorted.length} entries`;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function openStaffModal(staffName, date) {
+  const staffEntries = entries.filter(e => e.employee === staffName && e.date === date);
+  
+  if (staffEntries.length === 0) {
+    showToast(`ℹ️ No entries found for ${staffName} on ${date}`, 'info');
+    return;
+  }
+  
+  openModal(`👤 ${staffName} - ${date}`, staffEntries);
+}
+
+function openTotalModal() {
+  const todayEntries = getSelectedDateEntries();
+  const displayDate = selectedDate || todayStr();
+  
+  if (todayEntries.length === 0) {
+    showToast('ℹ️ No entries found for this date.', 'info');
+    return;
+  }
+  
+  openModal(`📋 All Entries - ${displayDate}`, todayEntries);
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ========================================
+// EVENT HANDLERS
+// ========================================
+
+document.getElementById('totalAttendBtn').addEventListener('click', openTotalModal);
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeModal();
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+document.getElementById('datePicker').addEventListener('change', function() {
+  selectedDate = this.value;
+  console.log('Date changed to:', selectedDate);
+  renderAll();
+});
+
+document.getElementById('todayBtn').addEventListener('click', function() {
+  const today = todayStr();
+  document.getElementById('datePicker').value = today;
+  selectedDate = today;
+  console.log('Reset to today:', today);
+  renderAll();
+});
+
+document.getElementById('manualSyncBtn').addEventListener('click', () => {
+  syncWithGoogleSheets(false);
+});
+
+// ========================================
+// AUTO-SYNC
+// ========================================
+
+function startAutoSync() {
+  if (autoSyncInterval) {
+    clearInterval(autoSyncInterval);
+  }
+  
+  autoSyncInterval = setInterval(() => {
+    console.log('🔄 Auto-sync triggered (every 1 minute)');
+    syncWithGoogleSheets(true);
+  }, 60000);
+  
+  console.log('✅ Auto-sync enabled - syncing every 1 minute');
+}
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
+(async function init() {
+  console.log('Dashboard initializing...');
+  
+  document.getElementById('datePicker').value = todayStr();
+  selectedDate = todayStr();
+  
+  await loadEntries();
+  console.log('Local entries loaded:', entries.length);
+  
+  staffList = extractStaffNames(entries);
+  updateSubtitle();
+  console.log('Staff list from localStorage:', staffList);
+  
+  await syncWithGoogleSheets(false);
+  
+  renderAll();
+  
+  startAutoSync();
+  
+  document.getElementById('syncText').textContent = 'Auto ON';
+  document.getElementById('syncDot').className = 'dot';
+  console.log('Dashboard ready - auto-sync every 1 minute');
+})();
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    console.log('Tab visible - auto syncing...');
+    syncWithGoogleSheets(true);
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (autoSyncInterval) {
+    clearInterval(autoSyncInterval);
+  }
+});
+</script>
+</body>
+</html>
