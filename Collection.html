@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>YOURS SALON — Add Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12100E;
+    --surface: #1B1815;
+    --surface-2: #242019;
+    --line: #332C22;
+    --gold: #C9A227;
+    --gold-soft: #E4C55C;
+    --text: #F3EEE3;
+    --muted: #9C9284;
+    --faint: #5E574A;
+    --radius: 12px;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .form-container {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 24px 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .form-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .logo-mark {
+    display: flex;
+    gap: 2px;
+    background: rgba(201, 162, 39, 0.08);
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 4px 10px;
+  }
+
+  .logo-initial {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .logo-initial:first-child {
+    color: var(--gold-soft);
+  }
+
+  .logo-text {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .logo-text span {
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .logo-tagline {
+    font-size: 9px;
+    color: var(--gold-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 1px;
+  }
+
+  .form-title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .form-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--gold);
+  }
+
+  .form-group input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .form-group input[type="number"]::-webkit-outer-spin-button,
+  .form-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239C9284' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--gold);
+    color: #1B1508;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .submit-btn:active {
+    transform: scale(0.97);
+  }
+
+  .submit-btn:hover {
+    background: var(--gold-soft);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  #statusMessage {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+
+  #statusMessage.success {
+    display: block;
+    background: rgba(62, 130, 114, 0.2);
+    border: 1px solid #3E8272;
+    color: #8FD4C4;
+  }
+
+  #statusMessage.error {
+    display: block;
+    background: rgba(181, 71, 63, 0.2);
+    border: 1px solid #B5473F;
+    color: #E88A82;
+  }
+
+  #statusMessage.info {
+    display: block;
+    background: rgba(201, 162, 39, 0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold-soft);
+  }
+
+  #statusMessage.loading {
+    display: block;
+    background: rgba(201, 162, 39, 0.05);
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  #toast-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 400px;
+    margin: 0 auto;
+    pointer-events: none;
+  }
+
+  .toast {
+    padding: 12px 18px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 13px;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    pointer-events: auto;
+  }
+
+  .toast-success {
+    border-left: 3px solid #3E8272;
+  }
+
+  .toast-error {
+    border-left: 3px solid #B5473F;
+  }
+
+  .toast-info {
+    border-left: 3px solid var(--gold);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @media(max-width: 480px) {
+    .form-container {
+      padding: 20px 16px 24px;
+    }
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+    .form-title {
+      font-size: 18px;
+    }
+    .logo-text {
+      font-size: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="form-container">
+  <div class="form-logo">
+    <div class="logo-mark">
+      <span class="logo-initial">Y</span>
+      <span class="logo-initial">S</span>
+    </div>
+    <div>
+      <div class="logo-text">YOURS <span>SALON</span></div>
+      <div class="logo-tagline">✦ Look Good, Feel Confident</div>
+    </div>
+  </div>
+
+  <div class="form-title">📝 Add New Entry</div>
+  <div class="form-sub">Enter transaction details to save to Google Sheet</div>
+
+  <form id="entryForm" autocomplete="off">
+    <div class="form-group">
+      <label>Staff Name</label>
+      <select id="formStaff" required>
+        <option value="">— Select Staff —</option>
+        <option value="Suhail Khan">Suhail Khan</option>
+        <option value="Jaan Mohd">Jaan Mohd</option>
+        <option value="Amir Khan">Amir Khan</option>
+        <option value="Ashu Kumar">Ashu Kumar</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Payment Mode</label>
+        <select id="formPayment">
+          <option value="Cash">Cash</option>
+          <option value="Online">Online</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="formAmount" placeholder="0" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Cost Cutting (₹)</label>
+      <input type="number" id="formCostCutting" placeholder="0" min="0" step="1" value="0">
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">+ Add Entry</button>
+  </form>
+
+  <div id="statusMessage"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ========================================
+// ✅ YOUR WEB APP URL (Google Apps Script)
+// ========================================
+
+// Is URL ko apne Google Apps Script deployment URL se replace karein
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxH0QTKvEDNrht0nO3Jay_M_jma2pZOPa_teB2fl1bARKlWahpg5btQAvT_1jNk0Wdldg/exec';
+
+// ========================================
+// LOCAL STORAGE - Offline Backup
+// ========================================
+
+const STORAGE_KEY = 'salon_offline_entries';
+
+// ========================================
+// APPLICATION CODE
+// ========================================
+
+let isSubmitting = false;
+
+// ========================================
+// TOAST NOTIFICATIONS
+// ========================================
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
+  }, 3500);
+}
+
+// ========================================
+= STATUS MESSAGES
+// ========================================
+
+function showStatus(message, type = 'info') {
+  const el = document.getElementById('statusMessage');
+  el.textContent = message;
+  el.className = type;
+  el.style.display = 'block';
+}
+
+function hideStatus() {
+  const el = document.getElementById('statusMessage');
+  el.className = '';
+  el.textContent = '';
+  el.style.display = 'none';
+}
+
+// ========================================
+// SAVE TO LOCAL STORAGE (Offline Backup)
+// ========================================
+
+function saveToLocalStorage(entry) {
+  try {
+    let saved = localStorage.getItem(STORAGE_KEY);
+    let entries = saved ? JSON.parse(saved) : [];
+    entries.push({
+      ...entry,
+      timestamp: new Date().toISOString(),
+      synced: false
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    console.log('💾 Saved to local storage:', entry);
+    return true;
+  } catch (e) {
+    console.error('Local storage error:', e);
+    return false;
+  }
+}
+
+// ========================================
+// SEND TO GOOGLE SHEET
+// ========================================
+
+async function sendToGoogleSheet(data) {
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Send to sheet error:', error);
+    throw error;
+  }
+}
+
+// ========================================
+// FORM SUBMIT
+// ========================================
+
+document.getElementById('entryForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideStatus();
+
+  if (isSubmitting) return;
+
+  const staff = document.getElementById('formStaff').value;
+  const paymentMode = document.getElementById('formPayment').value;
+  const amount = parseFloat(document.getElementById('formAmount').value) || 0;
+  const costCutting = parseFloat(document.getElementById('formCostCutting').value) || 0;
+
+  // Validation
+  if (!staff) {
+    showStatus('⚠️ Please select a staff member.', 'error');
+    return;
+  }
+
+  if (amount <= 0 && costCutting <= 0) {
+    showStatus('⚠️ Please enter at least one amount (Amount or Cost Cutting).', 'error');
+    return;
+  }
+
+  const entryData = {
+    staff: staff,
+    paymentMode: paymentMode,
+    amount: amount,
+    costCutting: costCutting
+  };
+
+  isSubmitting = true;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  showStatus('⏳ Saving entry...', 'loading');
+
+  try {
+    // Step 1: Save to Local Storage (always)
+    const localSaved = saveToLocalStorage(entryData);
+    if (localSaved) {
+      console.log('✅ Saved locally');
+    }
+
+    // Step 2: Send to Google Sheet
+    const result = await sendToGoogleSheet(entryData);
+
+    if (result.success) {
+      // Clear form
+      document.getElementById('formAmount').value = '';
+      document.getElementById('formCostCutting').value = '0';
+      
+      showStatus('✅ Entry saved successfully to Google Sheet!', 'success');
+      showToast('✅ Entry saved to Google Sheet!', 'success');
+      
+      // Mark as synced in local storage
+      updateLocalSyncStatus(entryData);
+    } else {
+      throw new Error(result.message || 'Unknown error from server');
+    }
+
+  } catch (error) {
+    console.error('Submit error:', error);
+    
+    // If online fails but local save succeeded
+    if (localSaved) {
+      showStatus('⚠️ Saved locally but failed to sync to Google Sheet. Will retry later.', 'error');
+      showToast('⚠️ Saved locally. Will sync when online.', 'error');
+    } else {
+      showStatus('❌ Failed to save: ' + error.message, 'error');
+      showToast('❌ ' + error.message, 'error');
+    }
+  }
+
+  isSubmitting = false;
+  btn.disabled = false;
+  btn.textContent = '+ Add Entry';
+});
+
+// ========================================
+// UPDATE LOCAL SYNC STATUS
+// ========================================
+
+function updateLocalSyncStatus(entryData) {
+  try {
+    let saved = localStorage.getItem(STORAGE_KEY);
+    let entries = saved ? JSON.parse(saved) : [];
+    
+    // Find and update the most recent unsynced entry with matching data
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (!entries[i].synced && 
+          entries[i].staff === entryData.staff && 
+          entries[i].amount === entryData.amount &&
+          entries[i].paymentMode === entryData.paymentMode) {
+        entries[i].synced = true;
+        break;
+      }
+    }
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.error('Update sync status error:', e);
+  }
+}
+
+// ========================================
+// RETRY UNSYNCED ENTRIES (on page load)
+// ========================================
+
+async function retryUnsyncedEntries() {
+  try {
+    let saved = localStorage.getItem(STORAGE_KEY);
+    let entries = saved ? JSON.parse(saved) : [];
+    
+    const unsynced = entries.filter(e => !e.synced);
+    if (unsynced.length === 0) return;
+    
+    console.log(`🔄 Retrying ${unsynced.length} unsynced entries...`);
+    
+    for (let entry of unsynced) {
+      try {
+        const result = await sendToGoogleSheet({
+          staff: entry.staff,
+          paymentMode: entry.paymentMode,
+          amount: entry.amount,
+          costCutting: entry.costCutting || 0
+        });
+        
+        if (result.success) {
+          entry.synced = true;
+          console.log('✅ Synced:', entry);
+        }
+      } catch (e) {
+        console.log('⏳ Still pending:', entry.staff, entry.amount);
+      }
+    }
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    
+    const stillUnsynced = entries.filter(e => !e.synced);
+    if (stillUnsynced.length > 0) {
+      console.log(`⏳ ${stillUnsynced.length} entries still pending`);
+    } else {
+      console.log('✅ All entries synced!');
+    }
+    
+  } catch (e) {
+    console.error('Retry error:', e);
+  }
+}
+
+// ========================================
+// CHECK NETWORK STATUS
+// ========================================
+
+function isOnline() {
+  return navigator.onLine !== false;
+}
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
+// Retry unsynced entries on page load
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(retryUnsyncedEntries, 2000);
+});
+
+// Retry when coming back online
+window.addEventListener('online', function() {
+  console.log('🔄 Back online - retrying...');
+  showToast('🔄 Back online! Retrying unsynced entries...', 'info');
+  retryUnsyncedEntries();
+});
+
+console.log('📋 Form ready!');
+console.log('📡 Script URL:', SCRIPT_URL);
+console.log('💾 Local storage key:', STORAGE_KEY);
+</script>
+</body>
+</html>
