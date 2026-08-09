@@ -606,6 +606,7 @@ async function sendToSheet(data) {
     data.costCutting
   );
 
+  // ✅ FIXED: Service Type is now properly appended
   formData.append(
     'serviceType',
     data.serviceType
@@ -615,6 +616,15 @@ async function sendToSheet(data) {
     'credential',
     googleCredential
   );
+
+  console.log('📤 Sending data to sheet:', {
+    staff: data.staff,
+    paymentMode: data.paymentMode,
+    amount: data.amount,
+    costCutting: data.costCutting,
+    serviceType: data.serviceType,  // ✅ Now included
+    credential: googleCredential.substring(0, 20) + '...'
+  });
 
   // Note: Using mode: 'no-cors' - ensure Apps Script handles CORS
   await fetch(SCRIPT_URL, {
@@ -729,8 +739,11 @@ document
         paymentMode: payment,
         amount: amount,
         costCutting: cost,
-        serviceType: serviceType
+        serviceType: serviceType  // ✅ Now included in data object
       };
+
+      // Log the data being sent
+      console.log('📝 Form Data:', data);
 
       isSubmitting = true;
 
@@ -778,7 +791,7 @@ document
 
       } catch (error) {
 
-        console.error('Submission error:', error);
+        console.error('❌ Submission error:', error);
 
         showStatus(
           '❌ Failed to save: ' + error.message,
