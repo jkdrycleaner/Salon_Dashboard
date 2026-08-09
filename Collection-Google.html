@@ -84,7 +84,23 @@ h2 {
   word-break: break-all;
 }
 
-/* Form */
+#userEmail.authenticated {
+  display: block;
+  color: #8FD4C4;
+  background: rgba(62,130,114,0.15);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #3E8272;
+}
+
+/* Form - Initially Hidden */
+#entryForm {
+  display: none;
+}
+
+#entryForm.visible {
+  display: block;
+}
 
 .form-group {
   margin-bottom: 16px;
@@ -96,6 +112,7 @@ h2 {
   color: #9C9284;
   margin-bottom: 5px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-group input,
@@ -108,11 +125,16 @@ h2 {
   color: #F3EEE3;
   font-size: 15px;
   outline: none;
+  transition: border-color 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   border-color: #C9A227;
+}
+
+.form-group input::placeholder {
+  color: #5A5042;
 }
 
 .form-row {
@@ -132,6 +154,7 @@ h2 {
   font-weight: 700;
   cursor: pointer;
   margin-top: 4px;
+  transition: background 0.3s ease, opacity 0.3s ease;
 }
 
 .btn:disabled {
@@ -139,8 +162,20 @@ h2 {
   cursor: not-allowed;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   background: #E4C55C;
+}
+
+.btn-logout {
+  background: #332C22;
+  color: #F3EEE3;
+  margin-top: 8px;
+  font-size: 13px;
+  padding: 8px;
+}
+
+.btn-logout:hover:not(:disabled) {
+  background: #4A3F33;
 }
 
 #status {
@@ -172,9 +207,29 @@ h2 {
   color: #9C9284;
 }
 
+#status.info {
+  display: block;
+  background: rgba(201,162,39,0.1);
+  border: 1px solid #C9A227;
+  color: #E4C55C;
+}
+
+/* Hide Google Sign-In button after authentication */
+#g_id_signin {
+  transition: opacity 0.3s ease;
+}
+
+#g_id_signin.hidden {
+  display: none;
+}
+
 @media(max-width:480px) {
   .form-row {
     grid-template-columns: 1fr;
+  }
+  
+  .container {
+    padding: 20px 16px 24px;
   }
 }
 </style>
@@ -191,7 +246,7 @@ h2 {
   <h2>📝 Add New Entry</h2>
 
   <div class="sub">
-    Enter transaction details to save to Google Sheet
+    Sign in to add transaction details
   </div>
 
 
@@ -213,6 +268,7 @@ h2 {
     </div>
 
     <div
+      id="g_id_signin"
       class="g_id_signin"
       data-type="standard"
       data-size="large"
@@ -223,69 +279,61 @@ h2 {
 
     <div id="userEmail"></div>
 
+    <!-- Logout Button (hidden initially) -->
+    <button 
+      id="logoutBtn" 
+      class="btn btn-logout" 
+      style="display: none;"
+      onclick="logoutUser()">
+      Sign Out
+    </button>
+
   </div>
 
 
   <!-- ========================================
-       ENTRY FORM
+       ENTRY FORM (Hidden until auth)
        ======================================== -->
 
   <form id="entryForm">
 
     <div class="form-group">
-
       <label>Staff Name</label>
-
-      <input
-        type="text"
-        id="staff"
-        placeholder="Enter staff name"
-        required
-      >
-
+      <select id="staff" required>
+        <option value="">Select Staff Member</option>
+        <option value="Amir Khan">Amir Khan</option>
+        <option value="Ashu Kumar">Ashu Kumar</option>
+        <option value="Jaan Mohd">Jaan Mohd</option>
+        <option value="Suhail Khan">Suhail Khan</option>
+      </select>
     </div>
-
 
     <div class="form-row">
 
       <div class="form-group">
-
         <label>Payment Mode</label>
-
         <select id="payment">
-
           <option value="Cash">Cash</option>
           <option value="Online">Online</option>
-          <option value="UPI">UPI</option>
-          <option value="Card">Card</option>
-
         </select>
-
       </div>
 
-
       <div class="form-group">
-
         <label>Amount (₹)</label>
-
         <input
           type="number"
           id="amount"
           placeholder="0"
-          min="0"
+          min="1"
           step="1"
           required
         >
-
       </div>
 
     </div>
 
-
     <div class="form-group">
-
       <label>Cost Cutting (₹)</label>
-
       <input
         type="number"
         id="cost"
@@ -294,9 +342,18 @@ h2 {
         step="1"
         value="0"
       >
-
     </div>
 
+    <!-- NEW FIELD: Service Type -->
+    <div class="form-group">
+      <label>Service Type</label>
+      <input
+        type="text"
+        id="serviceType"
+        placeholder="e.g., Haircut, Coloring, Facial, etc."
+        required
+      >
+    </div>
 
     <button
       type="submit"
@@ -337,6 +394,39 @@ const GOOGLE_CLIENT_ID =
 
 let googleCredential = null;
 let userEmail = '';
+let isAuthenticated = false;
+
+// Check for existing session on page load
+window.addEventListener('load', function() {
+  checkExistingSession();
+});
+
+
+// ========================================
+// CHECK EXISTING SESSION
+// ========================================
+
+function checkExistingSession() {
+  // Check if we have a stored credential in sessionStorage
+  const storedCredential = sessionStorage.getItem('googleCredential');
+  const storedEmail = sessionStorage.getItem('userEmail');
+  
+  if (storedCredential && storedEmail) {
+    // Restore session
+    googleCredential = storedCredential;
+    userEmail = storedEmail;
+    isAuthenticated = true;
+    
+    // Update UI
+    updateUIAfterLogin();
+    
+    console.log('Session restored for:', userEmail);
+    showStatus('Session restored. Welcome back!', 'info');
+    
+    // Auto-hide status after 3 seconds
+    setTimeout(hideStatus, 3000);
+  }
+}
 
 
 // ========================================
@@ -348,12 +438,14 @@ function handleGoogleLogin(response) {
   console.log('Google login successful');
 
   googleCredential = response.credential;
+  
+  // Store in sessionStorage for persistence
+  sessionStorage.setItem('googleCredential', googleCredential);
 
   // JWT payload decode
   try {
 
     const parts = response.credential.split('.');
-
     const payload =
       JSON.parse(
         atob(
@@ -364,14 +456,16 @@ function handleGoogleLogin(response) {
       );
 
     userEmail = payload.email || '';
+    
+    // Store email in sessionStorage
+    sessionStorage.setItem('userEmail', userEmail);
 
-    const emailBox =
-      document.getElementById('userEmail');
+    isAuthenticated = true;
+    
+    // Update UI
+    updateUIAfterLogin();
 
-    emailBox.textContent =
-      '✅ Signed in as: ' + userEmail;
-
-    emailBox.style.display = 'block';
+    showStatus('✅ Successfully authenticated as: ' + userEmail, 'success');
 
   } catch (error) {
 
@@ -390,6 +484,74 @@ function handleGoogleLogin(response) {
 
 
 // ========================================
+// UPDATE UI AFTER LOGIN
+// ========================================
+
+function updateUIAfterLogin() {
+  // Show user email
+  const emailBox = document.getElementById('userEmail');
+  emailBox.textContent = '✅ Authenticated as: ' + userEmail;
+  emailBox.className = 'authenticated';
+  emailBox.style.display = 'block';
+
+  // Hide Google Sign-In button
+  document.getElementById('g_id_signin').classList.add('hidden');
+
+  // Show Logout button
+  document.getElementById('logoutBtn').style.display = 'block';
+
+  // Show the entry form
+  document.getElementById('entryForm').classList.add('visible');
+  document.getElementById('entryForm').style.display = 'block';
+}
+
+
+// ========================================
+// LOGOUT FUNCTION
+// ========================================
+
+function logoutUser() {
+  // Clear session data
+  googleCredential = null;
+  userEmail = '';
+  isAuthenticated = false;
+  
+  // Clear sessionStorage
+  sessionStorage.removeItem('googleCredential');
+  sessionStorage.removeItem('userEmail');
+  
+  // Reset UI
+  const emailBox = document.getElementById('userEmail');
+  emailBox.textContent = '';
+  emailBox.className = '';
+  emailBox.style.display = 'none';
+  
+  // Show Google Sign-In button
+  document.getElementById('g_id_signin').classList.remove('hidden');
+  
+  // Hide Logout button
+  document.getElementById('logoutBtn').style.display = 'none';
+  
+  // Hide the entry form
+  document.getElementById('entryForm').classList.remove('visible');
+  document.getElementById('entryForm').style.display = 'none';
+  
+  // Reset form fields
+  document.getElementById('entryForm').reset();
+  document.getElementById('cost').value = '0';
+  
+  // Clear status
+  hideStatus();
+  
+  // Show logout message
+  showStatus('🔒 Signed out successfully', 'info');
+  setTimeout(hideStatus, 3000);
+  
+  console.log('User logged out');
+}
+
+
+// ========================================
 // STATUS
 // ========================================
 
@@ -399,9 +561,7 @@ function showStatus(message, type) {
     document.getElementById('status');
 
   status.textContent = message;
-
   status.className = type;
-
   status.style.display = 'block';
 }
 
@@ -412,9 +572,7 @@ function hideStatus() {
     document.getElementById('status');
 
   status.textContent = '';
-
   status.className = '';
-
   status.style.display = 'none';
 }
 
@@ -449,11 +607,16 @@ async function sendToSheet(data) {
   );
 
   formData.append(
+    'serviceType',
+    data.serviceType
+  );
+
+  formData.append(
     'credential',
     googleCredential
   );
 
-
+  // Note: Using mode: 'no-cors' - ensure Apps Script handles CORS
   await fetch(SCRIPT_URL, {
 
     method: 'POST',
@@ -488,18 +651,14 @@ document
 
       e.preventDefault();
 
-
       if (isSubmitting) {
         return;
       }
 
-
       hideStatus();
 
-
       // Google login check
-
-      if (!googleCredential) {
+      if (!googleCredential || !isAuthenticated) {
 
         showStatus(
           '⚠️ Please sign in with Google first.',
@@ -509,21 +668,16 @@ document
         return;
       }
 
-
-      // Values
-
+      // Get Values
       const staff =
         document
           .getElementById('staff')
-          .value
-          .trim();
-
+          .value;
 
       const payment =
         document
           .getElementById('payment')
           .value;
-
 
       const amount =
         parseFloat(
@@ -532,120 +686,110 @@ document
             .value
         ) || 0;
 
-
       const cost =
         parseFloat(
           document
             .getElementById('cost')
             .value
         ) || 0;
-
+        
+      const serviceType =
+        document
+          .getElementById('serviceType')
+          .value
+          .trim();
 
       // Validation
-
       if (!staff) {
-
         showStatus(
-          'Please enter staff name.',
+          'Please select a staff member.',
           'error'
         );
-
         return;
       }
-
 
       if (amount <= 0) {
-
         showStatus(
-          'Please enter valid amount.',
+          'Please enter a valid amount (greater than 0).',
           'error'
         );
-
+        return;
+      }
+      
+      if (!serviceType) {
+        showStatus(
+          'Please enter the service type.',
+          'error'
+        );
         return;
       }
 
-
       const data = {
-
         staff: staff,
-
         paymentMode: payment,
-
         amount: amount,
-
-        costCutting: cost
-
+        costCutting: cost,
+        serviceType: serviceType
       };
 
-
       isSubmitting = true;
-
 
       const button =
         document.getElementById(
           'submitBtn'
         );
 
-
       button.disabled = true;
-
-      button.textContent =
-        'Saving...';
-
+      button.textContent = 'Saving...';
 
       showStatus(
         'Saving...',
         'loading'
       );
 
-
       try {
 
         await sendToSheet(data);
 
-
-        // Clear form
-
+        // Clear form on success
         document
           .getElementById('staff')
           .value = '';
-
 
         document
           .getElementById('amount')
           .value = '';
 
-
         document
           .getElementById('cost')
           .value = '0';
-
+          
+        document
+          .getElementById('serviceType')
+          .value = '';
 
         showStatus(
           '✅ Saved successfully!',
           'success'
         );
 
+        // Auto-hide success message after 5 seconds
+        setTimeout(hideStatus, 5000);
 
       } catch (error) {
 
-        console.error(error);
+        console.error('Submission error:', error);
 
         showStatus(
-          '❌ Failed: ' +
-          error.message,
+          '❌ Failed to save: ' + error.message,
           'error'
         );
 
       }
 
-
       isSubmitting = false;
-
       button.disabled = false;
-
-      button.textContent =
-        '+ Add Entry';
+      button.textContent = '+ Add Entry';
 
     }
   );
