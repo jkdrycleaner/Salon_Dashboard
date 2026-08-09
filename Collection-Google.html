@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>YOURS SALON — Add Entry</title>
+
+<!-- Google Sign-In -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #12100E;
+  color: #F3EEE3;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  background: #1B1815;
+  border: 1px solid #332C22;
+  border-radius: 12px;
+  padding: 28px 24px 32px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #C9A227;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #332C22;
+  padding-bottom: 16px;
+}
+
+.logo span {
+  color: #E4C55C;
+}
+
+h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.sub {
+  color: #9C9284;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+/* Google login area */
+
+.login-box {
+  background: #242019;
+  border: 1px solid #332C22;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.login-title {
+  font-size: 12px;
+  color: #9C9284;
+  margin-bottom: 10px;
+}
+
+#userEmail {
+  display: none;
+  color: #8FD4C4;
+  font-size: 13px;
+  margin-top: 10px;
+  word-break: break-all;
+}
+
+/* Form */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 10px;
+  color: #9C9284;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  background: #242019;
+  border: 1px solid #332C22;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #F3EEE3;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #C9A227;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn {
+  width: 100%;
+  background: #C9A227;
+  color: #1B1508;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:hover {
+  background: #E4C55C;
+}
+
+#status {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: none;
+}
+
+#status.success {
+  display: block;
+  background: rgba(62,130,114,0.2);
+  border: 1px solid #3E8272;
+  color: #8FD4C4;
+}
+
+#status.error {
+  display: block;
+  background: rgba(181,71,63,0.2);
+  border: 1px solid #B5473F;
+  color: #E88A82;
+}
+
+#status.loading {
+  display: block;
+  background: rgba(201,162,39,0.05);
+  border: 1px solid #332C22;
+  color: #9C9284;
+}
+
+@media(max-width:480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">
+    YOURS <span>SALON</span>
+  </div>
+
+  <h2>📝 Add New Entry</h2>
+
+  <div class="sub">
+    Enter transaction details to save to Google Sheet
+  </div>
+
+
+  <!-- ========================================
+       GOOGLE SIGN IN
+       ======================================== -->
+
+  <div class="login-box">
+
+    <div class="login-title">
+      Sign in with your Google account
+    </div>
+
+    <div
+      id="g_id_onload"
+      data-client_id="326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false">
+    </div>
+
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="signin_with"
+      data-shape="rectangular">
+    </div>
+
+    <div id="userEmail"></div>
+
+  </div>
+
+
+  <!-- ========================================
+       ENTRY FORM
+       ======================================== -->
+
+  <form id="entryForm">
+
+    <div class="form-group">
+
+      <label>Staff Name</label>
+
+      <input
+        type="text"
+        id="staff"
+        placeholder="Enter staff name"
+        required
+      >
+
+    </div>
+
+
+    <div class="form-row">
+
+      <div class="form-group">
+
+        <label>Payment Mode</label>
+
+        <select id="payment">
+
+          <option value="Cash">Cash</option>
+          <option value="Online">Online</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>Amount (₹)</label>
+
+        <input
+          type="number"
+          id="amount"
+          placeholder="0"
+          min="0"
+          step="1"
+          required
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>Cost Cutting (₹)</label>
+
+      <input
+        type="number"
+        id="cost"
+        placeholder="0"
+        min="0"
+        step="1"
+        value="0"
+      >
+
+    </div>
+
+
+    <button
+      type="submit"
+      class="btn"
+      id="submitBtn">
+      + Add Entry
+    </button>
+
+  </form>
+
+
+  <div id="status"></div>
+
+</div>
+
+
+<script>
+
+// ========================================
+// GOOGLE APPS SCRIPT URL
+// ========================================
+
+const SCRIPT_URL =
+'https://script.google.com/macros/s/AKfycbz6zO6TXGWx78gtTxr1ADKbwgXjBr6hr75DdRKQawTbMJYHLBt5y6Lv8FvIaHhTjESY7g/exec';
+
+
+// ========================================
+// GOOGLE CLIENT ID
+// ========================================
+
+const GOOGLE_CLIENT_ID =
+'326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+
+
+// ========================================
+// CURRENT GOOGLE USER
+// ========================================
+
+let googleCredential = null;
+let userEmail = '';
+
+
+// ========================================
+// GOOGLE LOGIN CALLBACK
+// ========================================
+
+function handleGoogleLogin(response) {
+
+  console.log('Google login successful');
+
+  googleCredential = response.credential;
+
+  // JWT payload decode
+  try {
+
+    const parts = response.credential.split('.');
+
+    const payload =
+      JSON.parse(
+        atob(
+          parts[1]
+            .replace(/-/g, '+')
+            .replace(/_/g, '/')
+        )
+      );
+
+    userEmail = payload.email || '';
+
+    const emailBox =
+      document.getElementById('userEmail');
+
+    emailBox.textContent =
+      '✅ Signed in as: ' + userEmail;
+
+    emailBox.style.display = 'block';
+
+  } catch (error) {
+
+    console.error(
+      'Google credential decode error:',
+      error
+    );
+
+    showStatus(
+      'Google login error. Please try again.',
+      'error'
+    );
+
+  }
+}
+
+
+// ========================================
+// STATUS
+// ========================================
+
+function showStatus(message, type) {
+
+  const status =
+    document.getElementById('status');
+
+  status.textContent = message;
+
+  status.className = type;
+
+  status.style.display = 'block';
+}
+
+
+function hideStatus() {
+
+  const status =
+    document.getElementById('status');
+
+  status.textContent = '';
+
+  status.className = '';
+
+  status.style.display = 'none';
+}
+
+
+// ========================================
+// SEND DATA TO GOOGLE SHEET
+// ========================================
+
+async function sendToSheet(data) {
+
+  const formData =
+    new URLSearchParams();
+
+  formData.append(
+    'staff',
+    data.staff
+  );
+
+  formData.append(
+    'paymentMode',
+    data.paymentMode
+  );
+
+  formData.append(
+    'amount',
+    data.amount
+  );
+
+  formData.append(
+    'costCutting',
+    data.costCutting
+  );
+
+  formData.append(
+    'credential',
+    googleCredential
+  );
+
+
+  await fetch(SCRIPT_URL, {
+
+    method: 'POST',
+
+    mode: 'no-cors',
+
+    headers: {
+      'Content-Type':
+        'application/x-www-form-urlencoded;charset=UTF-8'
+    },
+
+    body: formData.toString()
+
+  });
+
+  return true;
+}
+
+
+// ========================================
+// FORM SUBMIT
+// ========================================
+
+let isSubmitting = false;
+
+
+document
+  .getElementById('entryForm')
+  .addEventListener(
+    'submit',
+    async function(e) {
+
+      e.preventDefault();
+
+
+      if (isSubmitting) {
+        return;
+      }
+
+
+      hideStatus();
+
+
+      // Google login check
+
+      if (!googleCredential) {
+
+        showStatus(
+          '⚠️ Please sign in with Google first.',
+          'error'
+        );
+
+        return;
+      }
+
+
+      // Values
+
+      const staff =
+        document
+          .getElementById('staff')
+          .value
+          .trim();
+
+
+      const payment =
+        document
+          .getElementById('payment')
+          .value;
+
+
+      const amount =
+        parseFloat(
+          document
+            .getElementById('amount')
+            .value
+        ) || 0;
+
+
+      const cost =
+        parseFloat(
+          document
+            .getElementById('cost')
+            .value
+        ) || 0;
+
+
+      // Validation
+
+      if (!staff) {
+
+        showStatus(
+          'Please enter staff name.',
+          'error'
+        );
+
+        return;
+      }
+
+
+      if (amount <= 0) {
+
+        showStatus(
+          'Please enter valid amount.',
+          'error'
+        );
+
+        return;
+      }
+
+
+      const data = {
+
+        staff: staff,
+
+        paymentMode: payment,
+
+        amount: amount,
+
+        costCutting: cost
+
+      };
+
+
+      isSubmitting = true;
+
+
+      const button =
+        document.getElementById(
+          'submitBtn'
+        );
+
+
+      button.disabled = true;
+
+      button.textContent =
+        'Saving...';
+
+
+      showStatus(
+        'Saving...',
+        'loading'
+      );
+
+
+      try {
+
+        await sendToSheet(data);
+
+
+        // Clear form
+
+        document
+          .getElementById('staff')
+          .value = '';
+
+
+        document
+          .getElementById('amount')
+          .value = '';
+
+
+        document
+          .getElementById('cost')
+          .value = '0';
+
+
+        showStatus(
+          '✅ Saved successfully!',
+          'success'
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        showStatus(
+          '❌ Failed: ' +
+          error.message,
+          'error'
+        );
+
+      }
+
+
+      isSubmitting = false;
+
+      button.disabled = false;
+
+      button.textContent =
+        '+ Add Entry';
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
