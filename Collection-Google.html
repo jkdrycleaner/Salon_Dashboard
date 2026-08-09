@@ -43,37 +43,10 @@ body {
   margin-bottom: 20px;
   border-bottom: 1px solid #332C22;
   padding-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .logo span {
   color: #E4C55C;
-}
-
-/* ✅ Last Commit Badge - GitHub Style */
-.last-commit {
-  font-size: 11px;
-  color: #9C9284;
-  background: #242019;
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid #332C22;
-  font-weight: normal;
-  white-space: nowrap;
-}
-
-.last-commit .commit-hash {
-  color: #C9A227;
-  font-family: monospace;
-  font-size: 10px;
-}
-
-.last-commit .commit-time {
-  color: #8FD4C4;
 }
 
 h2 {
@@ -103,6 +76,7 @@ h2 {
   margin-bottom: 10px;
 }
 
+/* ✅ SIMPLE EMAIL TEXT - No Popup Style */
 #userEmail {
   display: none;
   color: #8FD4C4;
@@ -114,6 +88,7 @@ h2 {
 #userEmail.authenticated {
   display: block;
   color: #8FD4C4;
+  /* ✅ Popup style removed - sirf simple text */
 }
 
 /* Form - Initially Hidden */
@@ -201,48 +176,6 @@ h2 {
   background: #4A3F33;
 }
 
-/* ✅ GitHub Style Commit Info Bar */
-.commit-info {
-  background: #242019;
-  border: 1px solid #332C22;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-top: 14px;
-  display: none;
-  font-size: 12px;
-  color: #9C9284;
-}
-
-.commit-info.visible {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.commit-info .commit-time {
-  color: #8FD4C4;
-}
-
-.commit-info .commit-count {
-  color: #C9A227;
-}
-
-.commit-info .commit-icon {
-  color: #E4C55C;
-  margin-right: 6px;
-}
-
-.commit-info .commit-hash {
-  color: #C9A227;
-  font-family: monospace;
-  font-size: 11px;
-  background: #12100E;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
 #status {
   margin-top: 14px;
   padding: 10px 14px;
@@ -296,17 +229,6 @@ h2 {
   .container {
     padding: 20px 16px 24px;
   }
-  
-  .commit-info.visible {
-    flex-direction: column;
-    gap: 4px;
-    text-align: center;
-  }
-  
-  .logo {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 </style>
 </head>
@@ -317,12 +239,6 @@ h2 {
 
   <div class="logo">
     YOURS <span>SALON</span>
-    <!-- ✅ Last Commit Badge - GitHub Style -->
-    <span class="last-commit" id="lastCommitBadge">
-      <span id="commitIcon">📦</span>
-      Last commit: <span class="commit-time" id="lastCommitTime">Loading...</span>
-      <span class="commit-hash" id="commitHash"></span>
-    </span>
   </div>
 
   <h2>📝 Add New Entry</h2>
@@ -394,6 +310,7 @@ h2 {
 
       <div class="form-group">
         <label>Payment Mode</label>
+        <!-- ✅ ONLINE BY DEFAULT SELECTED -->
         <select id="payment">
           <option value="Cash">Cash</option>
           <option value="Online" selected>Online</option>
@@ -416,6 +333,7 @@ h2 {
 
     <div class="form-group">
       <label>Cost Cutting (₹)</label>
+      <!-- ✅ VALUE HATAYA, SIRF PLACEHOLDER MEIN 0 -->
       <input
         type="number"
         id="cost"
@@ -444,21 +362,6 @@ h2 {
 
   </form>
 
-  <!-- ✅ GitHub Style Commit Info Bar -->
-  <div class="commit-info" id="commitInfo">
-    <span>
-      <span class="commit-icon">📦</span> 
-      Latest commit: <span class="commit-time" id="latestCommitTime">Loading...</span>
-    </span>
-    <span>
-      <span class="commit-icon">🔑</span> 
-      Commit: <span class="commit-hash" id="latestCommitHash">------</span>
-    </span>
-    <span>
-      <span class="commit-icon">📊</span> 
-      Total entries: <span class="commit-count" id="totalEntries">0</span>
-    </span>
-  </div>
 
   <div id="status"></div>
 
@@ -468,197 +371,33 @@ h2 {
 <script>
 
 // ========================================
-// ⚙️ CONFIGURATION - GITHUB REPO DETAILS
+// GOOGLE APPS SCRIPT URL
 // ========================================
 
-// ✅ APNA GITHUB REPO DETAILS YAHAN DAALO
-const GITHUB_USERNAME = 'YOUR_GITHUB_USERNAME';     // GitHub username
-const GITHUB_REPO = 'YOUR_REPO_NAME';               // Repository name
-const GITHUB_BRANCH = 'main';                       // Branch name (main or master)
-const GITHUB_FILE = 'index.html';                   // File name (jo commit karte ho)
-
-// ✅ Google Apps Script URL
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6zO6TXGWx78gtTxr1ADKbwgXjBr6hr75DdRKQawTbMJYHLBt5y6Lv8FvIaHhTjESY7g/exec';
-
-// ✅ Google Client ID
-const GOOGLE_CLIENT_ID = '326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+const SCRIPT_URL =
+'https://script.google.com/macros/s/AKfycbz6zO6TXGWx78gtTxr1ADKbwgXjBr6hr75DdRKQawTbMJYHLBt5y6Lv8FvIaHhTjESY7g/exec';
 
 
 // ========================================
-// STATE
+// GOOGLE CLIENT ID
+// ========================================
+
+const GOOGLE_CLIENT_ID =
+'326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+
+
+// ========================================
+// CURRENT GOOGLE USER
 // ========================================
 
 let googleCredential = null;
 let userEmail = '';
 let isAuthenticated = false;
-let isSubmitting = false;
 
-
-// ========================================
-// PAGE LOAD
-// ========================================
-
+// Check for existing session on page load
 window.addEventListener('load', function() {
   checkExistingSession();
-  getGitHubLastCommit();  // ✅ GitHub se last commit fetch karo
-  loadCommitInfoFromSheet();
 });
-
-
-// ========================================
-// ✅ GITHUB API - LAST COMMIT FETCH
-// ========================================
-
-async function getGitHubLastCommit() {
-  try {
-    // GitHub API URL
-    const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/commits?path=${GITHUB_FILE}&page=1&per_page=1`;
-    
-    console.log('📡 Fetching GitHub commit info...');
-    
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      const commit = data[0];
-      const commitDate = new Date(commit.commit.author.date);
-      const commitHash = commit.sha.substring(0, 7);
-      const commitMessage = commit.commit.message;
-      
-      // Format time
-      const timeStr = formatTime(commitDate);
-      const timeAgo = getTimeAgo(commitDate);
-      
-      // Update UI
-      document.getElementById('lastCommitTime').textContent = timeAgo;
-      document.getElementById('latestCommitTime').textContent = timeStr;
-      document.getElementById('commitHash').textContent = commitHash;
-      document.getElementById('latestCommitHash').textContent = commitHash;
-      
-      // Tooltip - full details
-      document.getElementById('lastCommitBadge').title = `${commitMessage} (${timeStr})`;
-      
-      console.log('✅ GitHub commit found:', { hash: commitHash, time: timeStr, message: commitMessage });
-      
-      // Save to localStorage
-      localStorage.setItem('githubLastCommit', JSON.stringify({
-        time: timeStr,
-        timeAgo: timeAgo,
-        hash: commitHash,
-        message: commitMessage,
-        timestamp: commitDate.getTime()
-      }));
-      
-      return { time: timeStr, timeAgo: timeAgo, hash: commitHash };
-      
-    } else {
-      console.log('No commits found for this file');
-      document.getElementById('lastCommitTime').textContent = 'No commits yet';
-      document.getElementById('latestCommitTime').textContent = 'No commits yet';
-    }
-    
-  } catch (error) {
-    console.error('❌ GitHub API error:', error);
-    
-    // Try to load from localStorage if API fails
-    const cached = localStorage.getItem('githubLastCommit');
-    if (cached) {
-      try {
-        const data = JSON.parse(cached);
-        document.getElementById('lastCommitTime').textContent = data.timeAgo || data.time;
-        document.getElementById('latestCommitTime').textContent = data.time;
-        document.getElementById('commitHash').textContent = data.hash;
-        document.getElementById('latestCommitHash').textContent = data.hash;
-        console.log('📦 Using cached commit info');
-      } catch(e) {
-        document.getElementById('lastCommitTime').textContent = 'Unknown';
-      }
-    } else {
-      document.getElementById('lastCommitTime').textContent = 'GitHub API error';
-    }
-  }
-}
-
-
-// ========================================
-// ✅ TIME FORMAT FUNCTIONS
-// ========================================
-
-function formatTime(date) {
-  const options = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  };
-  return date.toLocaleString('en-IN', options);
-}
-
-function getTimeAgo(date) {
-  const now = new Date();
-  const diff = Math.floor((now - date) / 1000);
-  
-  if (diff < 60) return 'Just now';
-  if (diff < 120) return '1 minute ago';
-  if (diff < 3600) return Math.floor(diff / 60) + ' minutes ago';
-  if (diff < 7200) return '1 hour ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
-  if (diff < 172800) return 'Yesterday';
-  if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
-  if (diff < 2592000) return Math.floor(diff / 604800) + ' weeks ago';
-  return date.toLocaleDateString('en-IN');
-}
-
-
-// ========================================
-// ✅ LOAD COMMIT INFO FROM SHEET
-// ========================================
-
-function loadCommitInfoFromSheet() {
-  try {
-    const savedTime = localStorage.getItem('lastCommitTime');
-    const savedCount = localStorage.getItem('totalEntries');
-    
-    if (savedTime && savedCount) {
-      document.getElementById('latestCommitTime').textContent = savedTime;
-      document.getElementById('totalEntries').textContent = savedCount;
-      document.getElementById('commitInfo').classList.add('visible');
-    }
-  } catch (e) {
-    console.log('Could not load sheet info');
-  }
-}
-
-
-// ========================================
-// ✅ UPDATE COMMIT INFO AFTER SAVE
-// ========================================
-
-function updateCommitInfoAfterSave() {
-  const now = new Date();
-  const timeStr = formatTime(now);
-  
-  let count = parseInt(document.getElementById('totalEntries').textContent) || 0;
-  count++;
-  
-  document.getElementById('latestCommitTime').textContent = timeStr;
-  document.getElementById('totalEntries').textContent = count;
-  document.getElementById('commitInfo').classList.add('visible');
-  
-  localStorage.setItem('lastCommitTime', timeStr);
-  localStorage.setItem('totalEntries', count);
-  
-  // Also update the badge
-  const timeAgo = getTimeAgo(now);
-  document.getElementById('lastCommitTime').textContent = timeAgo;
-}
 
 
 // ========================================
@@ -720,6 +459,7 @@ function handleGoogleLogin(response) {
 // ========================================
 
 function updateUIAfterLogin() {
+  // ✅ SIMPLE EMAIL TEXT - No Popup Style
   const emailBox = document.getElementById('userEmail');
   emailBox.textContent = '✅ Authenticated as: ' + userEmail;
   emailBox.className = 'authenticated';
@@ -754,6 +494,7 @@ function logoutUser() {
   document.getElementById('entryForm').style.display = 'none';
   document.getElementById('entryForm').reset();
   
+  // ✅ Cost Cutting placeholder reset
   document.getElementById('cost').value = '';
   
   hideStatus();
@@ -821,6 +562,9 @@ async function sendToSheet(data) {
 // FORM SUBMIT
 // ========================================
 
+let isSubmitting = false;
+
+
 document
   .getElementById('entryForm')
   .addEventListener(
@@ -841,6 +585,7 @@ document
       const payment = document.getElementById('payment').value;
       const amount = parseFloat(document.getElementById('amount').value) || 0;
       
+      // ✅ Cost Cutting - agar khaali hai toh 0
       const costInput = document.getElementById('cost').value;
       const cost = costInput === '' ? 0 : parseFloat(costInput) || 0;
       
@@ -881,11 +626,8 @@ document
 
         document.getElementById('staff').value = '';
         document.getElementById('amount').value = '';
-        document.getElementById('cost').value = '';
+        document.getElementById('cost').value = '';  // ✅ Empty karo
         document.getElementById('serviceType').value = '';
-
-        // ✅ Update commit info after successful save
-        updateCommitInfoAfterSave();
 
         showStatus('✅ Saved successfully!', 'success');
         setTimeout(hideStatus, 5000);
