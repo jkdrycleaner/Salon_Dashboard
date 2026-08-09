@@ -7,7 +7,7 @@
 <title>YOURS SALON — Add Entry</title>
 
 <!-- Google Sign-In -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.comgsi/client" async defer></script>
 
 <style>
 * {
@@ -81,6 +81,7 @@ h2 {
   margin-bottom: 10px;
 }
 
+/* ✅ Email display - Simple text, no popup */
 #userEmail {
   display: none;
   color: #8FD4C4;
@@ -327,6 +328,7 @@ h2 {
       data-shape="rectangular">
     </div>
 
+    <!-- ✅ Email Display - Simple Text -->
     <div id="userEmail"></div>
 
     <!-- Logout Button (hidden initially) -->
@@ -393,6 +395,7 @@ h2 {
       >
     </div>
 
+    <!-- ✅ Service Type Field - Present -->
     <div class="form-group">
       <label>Service Type</label>
       <input
@@ -636,6 +639,7 @@ function handleGoogleLogin(response) {
       )
     );
 
+    // ✅ Email Extract
     userEmail = payload.email || '';
     sessionStorage.setItem('userEmail', userEmail);
     isAuthenticated = true;
@@ -657,6 +661,7 @@ function handleGoogleLogin(response) {
 // ========================================
 
 function updateUIAfterLogin() {
+  // ✅ Email Display
   const emailBox = document.getElementById('userEmail');
   emailBox.textContent = '✅ Authenticated as: ' + userEmail;
   emailBox.className = 'authenticated';
@@ -733,7 +738,7 @@ async function sendToSheet(data) {
   formData.append('paymentMode', data.paymentMode);
   formData.append('amount', data.amount);
   formData.append('costCutting', data.costCutting);
-  formData.append('serviceType', data.serviceType);
+  formData.append('serviceType', data.serviceType);  // ✅ Service Type Send
   formData.append('credential', googleCredential);
 
   console.log('📤 Sending data:', {
@@ -741,7 +746,7 @@ async function sendToSheet(data) {
     paymentMode: data.paymentMode,
     amount: data.amount,
     costCutting: data.costCutting,
-    serviceType: data.serviceType
+    serviceType: data.serviceType  // ✅ Service Type Log
   });
 
   await fetch(SCRIPT_URL, {
@@ -784,7 +789,7 @@ document
       const costInput = document.getElementById('cost').value;
       const cost = costInput === '' ? 0 : parseFloat(costInput) || 0;
       
-      const serviceType = document.getElementById('serviceType').value.trim();
+      const serviceType = document.getElementById('serviceType').value.trim();  // ✅ Service Type Read
 
       // Validation
       if (!staff) {
@@ -807,7 +812,7 @@ document
         paymentMode: payment,
         amount: amount,
         costCutting: cost,
-        serviceType: serviceType
+        serviceType: serviceType  // ✅ Service Type in Data
       };
 
       isSubmitting = true;
@@ -822,7 +827,7 @@ document
         document.getElementById('staff').value = '';
         document.getElementById('amount').value = '';
         document.getElementById('cost').value = '';
-        document.getElementById('serviceType').value = '';
+        document.getElementById('serviceType').value = '';  // ✅ Clear Service Type
 
         showStatus('✅ Saved successfully!', 'success');
         setTimeout(hideStatus, 5000);
