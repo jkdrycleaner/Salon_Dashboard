@@ -179,7 +179,7 @@ h2 {
   background: #4A3F33;
 }
 
-/* ✅ GitHub Style Commit Info Bar - Hidden by default */
+/* ✅ GitHub Style Commit Info Bar - Sirf GitHub Commit Time */
 .commit-info {
   background: #242019;
   border: 1px solid #332C22;
@@ -201,10 +201,6 @@ h2 {
 
 .commit-info .commit-time {
   color: #8FD4C4;
-}
-
-.commit-info .commit-count {
-  color: #C9A227;
 }
 
 .commit-info .commit-icon {
@@ -416,19 +412,15 @@ h2 {
 
   </form>
 
-  <!-- ✅ GitHub Style Commit Info Bar - Sirf Login Ke Baad Dikhega -->
+  <!-- ✅ SIRF GITHUB COMMIT TIME - Entry Time Nahi -->
   <div class="commit-info" id="commitInfo">
     <span>
       <span class="commit-icon">📦</span> 
-      Latest commit: <span class="commit-time" id="latestCommitTime">Loading...</span>
+      GitHub last commit: <span class="commit-time" id="latestCommitTime">Loading...</span>
     </span>
     <span>
       <span class="commit-icon">🔑</span> 
       Commit: <span class="commit-hash" id="latestCommitHash">------</span>
-    </span>
-    <span>
-      <span class="commit-icon">📊</span> 
-      Total entries: <span class="commit-count" id="totalEntries">0</span>
     </span>
   </div>
 
@@ -476,7 +468,7 @@ window.addEventListener('load', function() {
 
 
 // ========================================
-// ✅ GITHUB API - LAST COMMIT FETCH (Sirf Login Ke Baad)
+// ✅ GITHUB API - LAST COMMIT FETCH (Sirf GitHub Commit Time)
 // ========================================
 
 async function getGitHubLastCommit() {
@@ -503,22 +495,32 @@ async function getGitHubLastCommit() {
       const commit = data[0];
       const commitDate = new Date(commit.commit.author.date);
       const commitHash = commit.sha.substring(0, 7);
+      const commitMessage = commit.commit.message;
       
       const timeStr = formatTime(commitDate);
       const timeAgo = getTimeAgo(commitDate);
       
-      // ✅ UPDATE UI - Bottom Info Bar
+      // ✅ UPDATE UI - Sirf GitHub Commit Time
       document.getElementById('latestCommitTime').textContent = timeStr + ' (' + timeAgo + ')';
       document.getElementById('latestCommitHash').textContent = commitHash;
       document.getElementById('commitInfo').classList.add('visible');
       
-      console.log('✅ GitHub commit found:', { hash: commitHash, time: timeStr });
+      // Tooltip
+      document.getElementById('commitInfo').title = commitMessage;
+      
+      console.log('✅ GitHub commit found:', { 
+        hash: commitHash, 
+        time: timeStr, 
+        timeAgo: timeAgo,
+        message: commitMessage 
+      });
       
       // Save to localStorage
       const commitData = {
         time: timeStr,
         timeAgo: timeAgo,
         hash: commitHash,
+        message: commitMessage,
         timestamp: commitDate.getTime()
       };
       localStorage.setItem('githubLastCommit', JSON.stringify(commitData));
@@ -526,7 +528,7 @@ async function getGitHubLastCommit() {
       return commitData;
       
     } else {
-      console.log('No commits found');
+      console.log('No commits found for this file');
       document.getElementById('latestCommitTime').textContent = 'No commits yet';
       document.getElementById('latestCommitHash').textContent = '------';
       document.getElementById('commitInfo').classList.add('visible');
@@ -591,47 +593,6 @@ function getTimeAgo(date) {
 
 
 // ========================================
-// ✅ LOAD COMMIT INFO FROM SHEET
-// ========================================
-
-function loadCommitInfoFromSheet() {
-  try {
-    const savedTime = localStorage.getItem('lastCommitTime');
-    const savedCount = localStorage.getItem('totalEntries');
-    
-    if (savedTime && savedCount) {
-      document.getElementById('latestCommitTime').textContent = savedTime;
-      document.getElementById('totalEntries').textContent = savedCount;
-      document.getElementById('commitInfo').classList.add('visible');
-    }
-  } catch (e) {
-    console.log('Could not load sheet info');
-  }
-}
-
-
-// ========================================
-// ✅ UPDATE COMMIT INFO AFTER SAVE
-// ========================================
-
-function updateCommitInfoAfterSave() {
-  const now = new Date();
-  const timeStr = formatTime(now);
-  const timeAgo = getTimeAgo(now);
-  
-  let count = parseInt(document.getElementById('totalEntries').textContent) || 0;
-  count++;
-  
-  document.getElementById('latestCommitTime').textContent = timeStr + ' (' + timeAgo + ')';
-  document.getElementById('totalEntries').textContent = count;
-  document.getElementById('commitInfo').classList.add('visible');
-  
-  localStorage.setItem('lastCommitTime', timeStr);
-  localStorage.setItem('totalEntries', count);
-}
-
-
-// ========================================
 // CHECK EXISTING SESSION
 // ========================================
 
@@ -650,7 +611,6 @@ function checkExistingSession() {
     
     // ✅ Login ke baad GitHub commit info fetch karo
     getGitHubLastCommit();
-    loadCommitInfoFromSheet();
   }
 }
 
@@ -684,7 +644,6 @@ function handleGoogleLogin(response) {
 
     // ✅ Login ke baad GitHub commit info fetch karo
     getGitHubLastCommit();
-    loadCommitInfoFromSheet();
 
   } catch (error) {
     console.error('Google credential decode error:', error);
@@ -864,9 +823,6 @@ document
         document.getElementById('amount').value = '';
         document.getElementById('cost').value = '';
         document.getElementById('serviceType').value = '';
-
-        // ✅ Update commit info after successful save
-        updateCommitInfoAfterSave();
 
         showStatus('✅ Saved successfully!', 'success');
         setTimeout(hideStatus, 5000);
