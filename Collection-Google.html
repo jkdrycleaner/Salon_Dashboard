@@ -1,54 +1,53 @@
 // ========================================
-// YOURS SALON — GOOGLE APPS SCRIPT (WITH LOGS)
+// YOURS SALON — GOOGLE APPS SCRIPT (FIXED)
 // ========================================
 
 const SHEET_ID = '14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo';
 const SHEET_NAME = 'Form responses 1';
 
 
+// ========================================
+// POST — HTML FORM SE DATA RECEIVE KAREGA
+// ========================================
+
 function doPost(e) {
   try {
-    // ✅ LOG 1: Execution start
-    console.log('===== EXECUTION STARTED =====');
     
-    // ✅ LOG 2: Check data
+    // ✅ CHECK KARO DATA AAYA YA NAHI
     if (!e || !e.parameter) {
-      console.log('ERROR: No data received');
       return ContentService
-        .createTextOutput(JSON.stringify({ success: false, message: 'No data' }))
+        .createTextOutput(JSON.stringify({
+          success: false,
+          message: 'No data received'
+        }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    const data = e.parameter;
-    
-    // ✅ LOG 3: ALL DATA RECEIVED
-    console.log('All data received:', JSON.stringify(data));
-    
-    // ✅ LOG 4: Service Type specifically
-    console.log('SERVICE TYPE VALUE:', data.serviceType);
-    console.log('SERVICE TYPE TYPE:', typeof data.serviceType);
-    
-    // ✅ LOG 5: Other fields
-    console.log('Staff:', data.staff);
-    console.log('Payment:', data.paymentMode);
-    console.log('Amount:', data.amount);
-    console.log('Cost:', data.costCutting);
-
-    // Google Sheet
+    // ✅ GOOGLE SHEET CONNECT
     const ss = SpreadsheetApp.openById(SHEET_ID);
     let sheet = ss.getSheetByName(SHEET_NAME);
 
+    // ✅ AGAR SHEET NAHI HAI TO CREATE KARO
     if (!sheet) {
       sheet = ss.insertSheet(SHEET_NAME);
       sheet.appendRow([
-        'Timestamp', 'Email address', 'Staff Name', 
-        'Service Type', 'Payment Mode', 'Amount', 'Cost Cutting'
+        'Timestamp',
+        'Email address',
+        'Staff Name',
+        'Service Type',
+        'Payment Mode',
+        'Amount',
+        'Cost Cutting'
       ]);
     }
 
-    // Email extract
+    // ✅ HTML SE DATA RECEIVE KARO
+    const data = e.parameter;
+
+    // ✅ 1. EMAIL EXTRACT KARO - GOOGLE TOKEN SE
     let email = 'manual-entry@dashboard.com';
     const credential = data.credential || '';
+    
     if (credential) {
       try {
         const parts = credential.split('.');
@@ -60,12 +59,13 @@ function doPost(e) {
           );
           email = payload.email || 'manual-entry@dashboard.com';
         }
-      } catch(e) {
-        console.log('Token decode error');
+      } catch(tokenError) {
+        console.log('Token decode error: ' + tokenError);
+        email = 'manual-entry@dashboard.com';
       }
     }
 
-    // Timestamp
+    // ✅ 2. TIMESTAMP
     const timestamp = new Date();
     const formattedTimestamp = Utilities.formatDate(
       timestamp,
@@ -73,67 +73,223 @@ function doPost(e) {
       'dd/MM/yyyy HH:mm:ss'
     );
 
-    // ✅ LOG 6: Data being saved
-    console.log('===== SAVING TO SHEET =====');
-    console.log('Timestamp:', formattedTimestamp);
-    console.log('Email:', email);
-    console.log('Staff:', data.staff || '');
-    console.log('Service Type:', data.serviceType || '');
-    console.log('Payment:', data.paymentMode || 'Cash');
-    console.log('Amount:', Number(data.amount) || 0);
-    console.log('Cost Cutting:', Number(data.costCutting) || 0);
-    console.log('===========================');
+    // ✅ 3. SABHI FIELDS LO - SERVICE TYPE INCLUDED
+    const staff = data.staff || '';
+    const serviceType = data.serviceType || '';    // ✅ YEH IMPORTANT HAI
+    const paymentMode = data.paymentMode || 'Cash';
+    const amount = Number(data.amount) || 0;
+    const costCutting = Number(data.costCutting) || 0;
 
-    // ✅ SAVE TO SHEET
+    // ✅ 4. DEBUG LOG - CHECK KARO KONSA DATA AA RAHA HAI
+    console.log('===== DATA RECEIVED =====');
+    console.log('All parameters:', JSON.stringify(data));
+    console.log('Staff:', staff);
+    console.log('Service Type RAW:', data.serviceType);  // ✅ RAW VALUE
+    console.log('Service Type FINAL:', serviceType);     // ✅ FINAL VALUE
+    console.log('Payment Mode:', paymentMode);
+    console.log('Amount:', amount);
+    console.log('Cost Cutting:', costCutting);
+    console.log('Email:', email);
+    console.log('Credential:', credential ? credential.substring(0, 30) + '...' : 'No token');
+    console.log('==========================');
+
+    // ✅ 5. GOOGLE SHEET ME ENTRY ADD KARO
     sheet.appendRow([
       formattedTimestamp,
       email,
-      data.staff || '',
-      data.serviceType || '',    // ✅ SERVICE TYPE
-      data.paymentMode || 'Cash',
-      Number(data.amount) || 0,
-      Number(data.costCutting) || 0
+      staff,
+      serviceType,      // ✅ SERVICE TYPE AB SAVE HOGA
+      paymentMode,
+      amount,
+      costCutting
     ]);
 
-    console.log('✅ Data saved successfully!');
+    console.log('✅ Data saved to row:', sheet.getLastRow());
+
+    // ✅ 6. SUCCESS RESPONSE
+    const response = {
+      success: true,
+      message: 'Entry added successfully!',
+      data: {
+        staff: staff,
+        serviceType: serviceType,
+        paymentMode: paymentMode,
+        amount: amount,
+        costCutting: costCutting,
+        email: email
+      }
+    };
 
     return ContentService
-      .createTextOutput(JSON.stringify({
-        success: true,
-        message: 'Entry added!',
-        serviceType: data.serviceType || ''
-      }))
+      .createTextOutput(JSON.stringify(response))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    console.error('ERROR:', error.toString());
+
+    console.error('ERROR:', error);
+
+    const errorResponse = {
+      success: false,
+      message: error.toString()
+    };
+
     return ContentService
-      .createTextOutput(JSON.stringify({
-        success: false,
-        message: error.toString()
-      }))
+      .createTextOutput(JSON.stringify(errorResponse))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 
 // ========================================
-// TEST FUNCTION
+// GET — SCRIPT TEST KARNE KE LIYE
 // ========================================
-
-function testLogs() {
-  console.log('===== TEST LOGS =====');
-  console.log('This is a test log');
-  console.log('Service Type test: Haircut');
-  console.log('===== TEST END =====');
-}
-
 
 function doGet() {
   return ContentService
-    .createTextOutput(JSON.stringify({
-      status: 'OK',
-      message: 'Script is running!'
-    }))
+    .createTextOutput(
+      JSON.stringify({
+        status: 'OK',
+        message: 'Script is running!'
+      })
+    )
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ========================================
+// TEST FUNCTION — MANUALLY DATA ADD KARNE KE LIYE
+// ========================================
+
+function testAddEntry() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow([
+        'Timestamp',
+        'Email address',
+        'Staff Name',
+        'Service Type',
+        'Payment Mode',
+        'Amount',
+        'Cost Cutting'
+      ]);
+    }
+
+    const timestamp = new Date();
+    const formattedTimestamp = Utilities.formatDate(
+      timestamp,
+      Session.getScriptTimeZone(),
+      'dd/MM/yyyy HH:mm:ss'
+    );
+
+    // ✅ TEST DATA - SERVICE TYPE INCLUDED
+    sheet.appendRow([
+      formattedTimestamp,
+      'test@example.com',
+      'Amir Khan',
+      'Haircut - Test',   // ✅ SERVICE TYPE
+      'Cash',
+      500,
+      50
+    ]);
+
+    console.log('✅ Test entry added successfully!');
+    return 'Test entry added!';
+
+  } catch (error) {
+    console.error('Test failed:', error);
+    return 'Error: ' + error.toString();
+  }
+}
+
+
+// ========================================
+// CHECK SHEET STRUCTURE
+// ========================================
+
+function checkSheetStructure() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (!sheet) {
+      return 'Sheet not found!';
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    const expectedHeaders = [
+      'Timestamp',
+      'Email address',
+      'Staff Name',
+      'Service Type',
+      'Payment Mode',
+      'Amount',
+      'Cost Cutting'
+    ];
+
+    console.log('Current Headers:', headers);
+    console.log('Expected Headers:', expectedHeaders);
+    console.log('Match:', JSON.stringify(headers) === JSON.stringify(expectedHeaders));
+
+    return {
+      currentHeaders: headers,
+      expectedHeaders: expectedHeaders,
+      match: JSON.stringify(headers) === JSON.stringify(expectedHeaders)
+    };
+
+  } catch (error) {
+    return 'Error: ' + error.toString();
+  }
+}
+
+
+// ========================================
+// GET ALL ENTRIES — SABHI ENTRIES DEKHKARNE KE LIYE
+// ========================================
+
+function getAllEntries() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (!sheet) {
+      return 'Sheet not found!';
+    }
+
+    const data = sheet.getDataRange().getValues();
+    return data;
+
+  } catch (error) {
+    return 'Error: ' + error.toString();
+  }
+}
+
+
+// ========================================
+// RESET SHEET — PURANI ENTRIES HATANE KE LIYE
+// ========================================
+
+function resetSheet() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (sheet) {
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.deleteRows(2, lastRow - 1);
+      }
+      console.log('✅ Sheet reset successfully!');
+      return 'Sheet reset!';
+    } else {
+      return 'Sheet not found!';
+    }
+  } catch (error) {
+    console.error('Reset failed:', error);
+    return 'Error: ' + error.toString();
+  }
 }
