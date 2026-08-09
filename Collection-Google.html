@@ -1,649 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>YOURS SALON — Add Entry</title>
-
-<!-- Google Sign-In -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #12100E;
-  color: #F3EEE3;
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.container {
-  background: #1B1815;
-  border: 1px solid #332C22;
-  border-radius: 12px;
-  padding: 28px 24px 32px;
-  max-width: 480px;
-  width: 100%;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: 700;
-  color: #C9A227;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #332C22;
-  padding-bottom: 16px;
-}
-
-.logo span {
-  color: #E4C55C;
-}
-
-h2 {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
-
-.sub {
-  color: #9C9284;
-  font-size: 12px;
-  margin-bottom: 20px;
-}
-
-/* Google login area */
-
-.login-box {
-  background: #242019;
-  border: 1px solid #332C22;
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 20px;
-}
-
-.login-title {
-  font-size: 12px;
-  color: #9C9284;
-  margin-bottom: 10px;
-}
-
-/* ✅ SIMPLE EMAIL TEXT - No Popup Style */
-#userEmail {
-  display: none;
-  color: #8FD4C4;
-  font-size: 13px;
-  margin-top: 10px;
-  word-break: break-all;
-}
-
-#userEmail.authenticated {
-  display: block;
-  color: #8FD4C4;
-  /* ✅ Popup style removed - sirf simple text */
-}
-
-/* Form - Initially Hidden */
-#entryForm {
-  display: none;
-}
-
-#entryForm.visible {
-  display: block;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 10px;
-  color: #9C9284;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  background: #242019;
-  border: 1px solid #332C22;
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: #F3EEE3;
-  font-size: 15px;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #C9A227;
-}
-
-.form-group input::placeholder {
-  color: #5A5042;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.btn {
-  width: 100%;
-  background: #C9A227;
-  color: #1B1508;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 4px;
-  transition: background 0.3s ease, opacity 0.3s ease;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn:hover:not(:disabled) {
-  background: #E4C55C;
-}
-
-.btn-logout {
-  background: #332C22;
-  color: #F3EEE3;
-  margin-top: 8px;
-  font-size: 13px;
-  padding: 8px;
-}
-
-.btn-logout:hover:not(:disabled) {
-  background: #4A3F33;
-}
-
-#status {
-  margin-top: 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  display: none;
-}
-
-#status.success {
-  display: block;
-  background: rgba(62,130,114,0.2);
-  border: 1px solid #3E8272;
-  color: #8FD4C4;
-}
-
-#status.error {
-  display: block;
-  background: rgba(181,71,63,0.2);
-  border: 1px solid #B5473F;
-  color: #E88A82;
-}
-
-#status.loading {
-  display: block;
-  background: rgba(201,162,39,0.05);
-  border: 1px solid #332C22;
-  color: #9C9284;
-}
-
-#status.info {
-  display: block;
-  background: rgba(201,162,39,0.1);
-  border: 1px solid #C9A227;
-  color: #E4C55C;
-}
-
-/* Hide Google Sign-In button after authentication */
-#g_id_signin {
-  transition: opacity 0.3s ease;
-}
-
-#g_id_signin.hidden {
-  display: none;
-}
-
-@media(max-width:480px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .container {
-    padding: 20px 16px 24px;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <div class="logo">
-    YOURS <span>SALON</span>
-  </div>
-
-  <h2>📝 Add New Entry</h2>
-
-  <div class="sub">
-    Sign in to add transaction details
-  </div>
-
-
-  <!-- ========================================
-       GOOGLE SIGN IN
-       ======================================== -->
-
-  <div class="login-box">
-
-    <div class="login-title">
-      Sign in with your Google account
-    </div>
-
-    <div
-      id="g_id_onload"
-      data-client_id="326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com"
-      data-callback="handleGoogleLogin"
-      data-auto_prompt="false">
-    </div>
-
-    <div
-      id="g_id_signin"
-      class="g_id_signin"
-      data-type="standard"
-      data-size="large"
-      data-theme="outline"
-      data-text="signin_with"
-      data-shape="rectangular">
-    </div>
-
-    <div id="userEmail"></div>
-
-    <!-- Logout Button (hidden initially) -->
-    <button 
-      id="logoutBtn" 
-      class="btn btn-logout" 
-      style="display: none;"
-      onclick="logoutUser()">
-      Sign Out
-    </button>
-
-  </div>
-
-
-  <!-- ========================================
-       ENTRY FORM (Hidden until auth)
-       ======================================== -->
-
-  <form id="entryForm">
-
-    <div class="form-group">
-      <label>Staff Name</label>
-      <select id="staff" required>
-        <option value="">Select Staff Member</option>
-        <option value="Amir Khan">Amir Khan</option>
-        <option value="Ashu Kumar">Ashu Kumar</option>
-        <option value="Jaan Mohd">Jaan Mohd</option>
-        <option value="Suhail Khan">Suhail Khan</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-
-      <div class="form-group">
-        <label>Payment Mode</label>
-        <!-- ✅ ONLINE BY DEFAULT SELECTED -->
-        <select id="payment">
-          <option value="Cash">Cash</option>
-          <option value="Online" selected>Online</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Amount (₹)</label>
-        <input
-          type="number"
-          id="amount"
-          placeholder="0"
-          min="1"
-          step="1"
-          required
-        >
-      </div>
-
-    </div>
-
-    <div class="form-group">
-      <label>Cost Cutting (₹)</label>
-      <!-- ✅ VALUE HATAYA, SIRF PLACEHOLDER MEIN 0 -->
-      <input
-        type="number"
-        id="cost"
-        placeholder="0"
-        min="0"
-        step="1"
-      >
-    </div>
-
-    <div class="form-group">
-      <label>Service Type</label>
-      <input
-        type="text"
-        id="serviceType"
-        placeholder="e.g., Haircut, Coloring, Facial, etc."
-        required
-      >
-    </div>
-
-    <button
-      type="submit"
-      class="btn"
-      id="submitBtn">
-      + Add Entry
-    </button>
-
-  </form>
-
-
-  <div id="status"></div>
-
-</div>
-
-
-<script>
-
 // ========================================
-// GOOGLE APPS SCRIPT URL
+// YOURS SALON — GOOGLE APPS SCRIPT (WITH LOGS)
 // ========================================
 
-const SCRIPT_URL =
-'https://script.google.com/macros/s/AKfycbz6zO6TXGWx78gtTxr1ADKbwgXjBr6hr75DdRKQawTbMJYHLBt5y6Lv8FvIaHhTjESY7g/exec';
+const SHEET_ID = '14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo';
+const SHEET_NAME = 'Form responses 1';
 
 
-// ========================================
-// GOOGLE CLIENT ID
-// ========================================
-
-const GOOGLE_CLIENT_ID =
-'326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
-
-
-// ========================================
-// CURRENT GOOGLE USER
-// ========================================
-
-let googleCredential = null;
-let userEmail = '';
-let isAuthenticated = false;
-
-// Check for existing session on page load
-window.addEventListener('load', function() {
-  checkExistingSession();
-});
-
-
-// ========================================
-// CHECK EXISTING SESSION
-// ========================================
-
-function checkExistingSession() {
-  const storedCredential = sessionStorage.getItem('googleCredential');
-  const storedEmail = sessionStorage.getItem('userEmail');
-  
-  if (storedCredential && storedEmail) {
-    googleCredential = storedCredential;
-    userEmail = storedEmail;
-    isAuthenticated = true;
-    updateUIAfterLogin();
-    console.log('Session restored for:', userEmail);
-    showStatus('Session restored. Welcome back!', 'info');
-    setTimeout(hideStatus, 3000);
-  }
-}
-
-
-// ========================================
-// GOOGLE LOGIN CALLBACK
-// ========================================
-
-function handleGoogleLogin(response) {
-
-  console.log('Google login successful');
-
-  googleCredential = response.credential;
-  sessionStorage.setItem('googleCredential', googleCredential);
-
+function doPost(e) {
   try {
-    const parts = response.credential.split('.');
-    const payload = JSON.parse(
-      atob(
-        parts[1]
-          .replace(/-/g, '+')
-          .replace(/_/g, '/')
-      )
+    // ✅ LOG 1: Execution start
+    console.log('===== EXECUTION STARTED =====');
+    
+    // ✅ LOG 2: Check data
+    if (!e || !e.parameter) {
+      console.log('ERROR: No data received');
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, message: 'No data' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const data = e.parameter;
+    
+    // ✅ LOG 3: ALL DATA RECEIVED
+    console.log('All data received:', JSON.stringify(data));
+    
+    // ✅ LOG 4: Service Type specifically
+    console.log('SERVICE TYPE VALUE:', data.serviceType);
+    console.log('SERVICE TYPE TYPE:', typeof data.serviceType);
+    
+    // ✅ LOG 5: Other fields
+    console.log('Staff:', data.staff);
+    console.log('Payment:', data.paymentMode);
+    console.log('Amount:', data.amount);
+    console.log('Cost:', data.costCutting);
+
+    // Google Sheet
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    let sheet = ss.getSheetByName(SHEET_NAME);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow([
+        'Timestamp', 'Email address', 'Staff Name', 
+        'Service Type', 'Payment Mode', 'Amount', 'Cost Cutting'
+      ]);
+    }
+
+    // Email extract
+    let email = 'manual-entry@dashboard.com';
+    const credential = data.credential || '';
+    if (credential) {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(
+            Utilities.newBlob(
+              Utilities.base64Decode(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+            ).getDataAsString()
+          );
+          email = payload.email || 'manual-entry@dashboard.com';
+        }
+      } catch(e) {
+        console.log('Token decode error');
+      }
+    }
+
+    // Timestamp
+    const timestamp = new Date();
+    const formattedTimestamp = Utilities.formatDate(
+      timestamp,
+      Session.getScriptTimeZone(),
+      'dd/MM/yyyy HH:mm:ss'
     );
 
-    userEmail = payload.email || '';
-    sessionStorage.setItem('userEmail', userEmail);
-    isAuthenticated = true;
-    updateUIAfterLogin();
-    showStatus('✅ Successfully authenticated as: ' + userEmail, 'success');
+    // ✅ LOG 6: Data being saved
+    console.log('===== SAVING TO SHEET =====');
+    console.log('Timestamp:', formattedTimestamp);
+    console.log('Email:', email);
+    console.log('Staff:', data.staff || '');
+    console.log('Service Type:', data.serviceType || '');
+    console.log('Payment:', data.paymentMode || 'Cash');
+    console.log('Amount:', Number(data.amount) || 0);
+    console.log('Cost Cutting:', Number(data.costCutting) || 0);
+    console.log('===========================');
+
+    // ✅ SAVE TO SHEET
+    sheet.appendRow([
+      formattedTimestamp,
+      email,
+      data.staff || '',
+      data.serviceType || '',    // ✅ SERVICE TYPE
+      data.paymentMode || 'Cash',
+      Number(data.amount) || 0,
+      Number(data.costCutting) || 0
+    ]);
+
+    console.log('✅ Data saved successfully!');
+
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Entry added!',
+        serviceType: data.serviceType || ''
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    console.error('Google credential decode error:', error);
-    showStatus('Google login error. Please try again.', 'error');
+    console.error('ERROR:', error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        message: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 
 // ========================================
-// UPDATE UI AFTER LOGIN
+// TEST FUNCTION
 // ========================================
 
-function updateUIAfterLogin() {
-  // ✅ SIMPLE EMAIL TEXT - No Popup Style
-  const emailBox = document.getElementById('userEmail');
-  emailBox.textContent = '✅ Authenticated as: ' + userEmail;
-  emailBox.className = 'authenticated';
-  emailBox.style.display = 'block';
-
-  document.getElementById('g_id_signin').classList.add('hidden');
-  document.getElementById('logoutBtn').style.display = 'block';
-  document.getElementById('entryForm').classList.add('visible');
-  document.getElementById('entryForm').style.display = 'block';
+function testLogs() {
+  console.log('===== TEST LOGS =====');
+  console.log('This is a test log');
+  console.log('Service Type test: Haircut');
+  console.log('===== TEST END =====');
 }
 
 
-// ========================================
-// LOGOUT FUNCTION
-// ========================================
-
-function logoutUser() {
-  googleCredential = null;
-  userEmail = '';
-  isAuthenticated = false;
-  sessionStorage.removeItem('googleCredential');
-  sessionStorage.removeItem('userEmail');
-  
-  const emailBox = document.getElementById('userEmail');
-  emailBox.textContent = '';
-  emailBox.className = '';
-  emailBox.style.display = 'none';
-  
-  document.getElementById('g_id_signin').classList.remove('hidden');
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('entryForm').classList.remove('visible');
-  document.getElementById('entryForm').style.display = 'none';
-  document.getElementById('entryForm').reset();
-  
-  // ✅ Cost Cutting placeholder reset
-  document.getElementById('cost').value = '';
-  
-  hideStatus();
-  showStatus('🔒 Signed out successfully', 'info');
-  setTimeout(hideStatus, 3000);
+function doGet() {
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      status: 'OK',
+      message: 'Script is running!'
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
-
-
-// ========================================
-// STATUS
-// ========================================
-
-function showStatus(message, type) {
-  const status = document.getElementById('status');
-  status.textContent = message;
-  status.className = type;
-  status.style.display = 'block';
-}
-
-
-function hideStatus() {
-  const status = document.getElementById('status');
-  status.textContent = '';
-  status.className = '';
-  status.style.display = 'none';
-}
-
-
-// ========================================
-// SEND DATA TO GOOGLE SHEET
-// ========================================
-
-async function sendToSheet(data) {
-  const formData = new URLSearchParams();
-
-  formData.append('staff', data.staff);
-  formData.append('paymentMode', data.paymentMode);
-  formData.append('amount', data.amount);
-  formData.append('costCutting', data.costCutting);
-  formData.append('serviceType', data.serviceType);
-  formData.append('credential', googleCredential);
-
-  console.log('📤 Sending data:', {
-    staff: data.staff,
-    paymentMode: data.paymentMode,
-    amount: data.amount,
-    costCutting: data.costCutting,
-    serviceType: data.serviceType
-  });
-
-  await fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-    },
-    body: formData.toString()
-  });
-
-  return true;
-}
-
-
-// ========================================
-// FORM SUBMIT
-// ========================================
-
-let isSubmitting = false;
-
-
-document
-  .getElementById('entryForm')
-  .addEventListener(
-    'submit',
-    async function(e) {
-
-      e.preventDefault();
-
-      if (isSubmitting) return;
-      hideStatus();
-
-      if (!googleCredential || !isAuthenticated) {
-        showStatus('⚠️ Please sign in with Google first.', 'error');
-        return;
-      }
-
-      const staff = document.getElementById('staff').value;
-      const payment = document.getElementById('payment').value;
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      
-      // ✅ Cost Cutting - agar khaali hai toh 0
-      const costInput = document.getElementById('cost').value;
-      const cost = costInput === '' ? 0 : parseFloat(costInput) || 0;
-      
-      const serviceType = document.getElementById('serviceType').value.trim();
-
-      // Validation
-      if (!staff) {
-        showStatus('Please select a staff member.', 'error');
-        return;
-      }
-
-      if (amount <= 0) {
-        showStatus('Please enter a valid amount (greater than 0).', 'error');
-        return;
-      }
-      
-      if (!serviceType) {
-        showStatus('Please enter the service type.', 'error');
-        return;
-      }
-
-      const data = {
-        staff: staff,
-        paymentMode: payment,
-        amount: amount,
-        costCutting: cost,
-        serviceType: serviceType
-      };
-
-      isSubmitting = true;
-      const button = document.getElementById('submitBtn');
-      button.disabled = true;
-      button.textContent = 'Saving...';
-      showStatus('Saving...', 'loading');
-
-      try {
-        await sendToSheet(data);
-
-        document.getElementById('staff').value = '';
-        document.getElementById('amount').value = '';
-        document.getElementById('cost').value = '';  // ✅ Empty karo
-        document.getElementById('serviceType').value = '';
-
-        showStatus('✅ Saved successfully!', 'success');
-        setTimeout(hideStatus, 5000);
-
-      } catch (error) {
-        console.error('Submission error:', error);
-        showStatus('❌ Failed to save: ' + error.message, 'error');
-      }
-
-      isSubmitting = false;
-      button.disabled = false;
-      button.textContent = '+ Add Entry';
-    }
-  );
-
-</script>
-
-</body>
-</html>
