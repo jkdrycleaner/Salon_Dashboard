@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YOURS SALON — Daily Ops Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12100E; --surface:#1B1815; --surface-2:#242019; --line:#332C22;
+    --gold:#C9A227; --gold-soft:#E4C55C; --teal:#3E8272; --rust:#B5473F;
+    --text:#F3EEE3; --muted:#9C9284; --faint:#5E574A; --radius:12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% -10%, rgba(201,162,39,0.08), transparent 40%), var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; padding:16px 12px 40px;
+  }
+  .wrap{max-width:1400px; margin:0 auto;}
+
+
+  /* Dashboard / Entry Navigation */
+  .nav-buttons{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .nav-btn{background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:7px 13px;font-size:10px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:.2s;}
+  .nav-btn:hover{border-color:var(--gold);color:var(--text);}
+  .nav-btn.active{background:var(--gold);border-color:var(--gold);color:#1B1508;}
+  .entry-view{margin-top:4px;}
+  .entry-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+  .entry-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .entry-kicker{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+  .entry-heading h2{font-family:'Fraunces',serif;font-size:21px;font-weight:600;}
+  .back-dashboard-btn{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer;}
+  .back-dashboard-btn:hover{border-color:var(--gold);color:var(--text);}
+  .entry-form-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;}
+  .field input,.field select{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;}
+  .field input:focus,.field select:focus{border-color:var(--gold);}
+  .entry-action{display:flex;}
+  .entry-action .add-btn{height:37px;white-space:nowrap;}
+  .entry-note{margin-top:12px;font-size:9px;color:var(--faint);}
+  @media(max-width:900px){.entry-form-grid{grid-template-columns:1fr 1fr;}.entry-action{grid-column:1/-1;}.entry-action .add-btn{width:100%;}}
+  @media(max-width:480px){.nav-buttons{width:100%;}.nav-btn{flex:1;}.entry-heading{flex-direction:column;}.entry-form-grid{grid-template-columns:1fr;}.entry-action{grid-column:auto;}}
+
+
+  .week-expand-cell{cursor:pointer;user-select:none;transition:background .15s,color .15s;}
+  .week-expand-cell:hover{background:rgba(214,174,74,.08);color:var(--gold-soft);}
+  .week-arrow{display:inline-block;width:12px;font-size:9px;color:var(--gold);transition:transform .15s;}
+  .week-arrow.open{transform:rotate(90deg);}
+  .week-detail-row td{padding:0!important;background:var(--surface-2);}
+  .week-detail-wrap{padding:10px 12px 12px 28px;border-left:2px solid var(--gold);}
+  .week-detail-table{width:100%;border-collapse:collapse;font-size:9px;}
+  .week-detail-table th{padding:6px 8px;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);text-align:right;}
+  .week-detail-table th:first-child,.week-detail-table td:first-child{text-align:left;}
+  .week-detail-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;}
+  .week-detail-table .date-cell{color:var(--gold-soft);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .week-detail-table .detail-total td{font-weight:700;color:var(--gold-soft);border-top:1px solid var(--gold);}
+
+  /* Header */
+  header{display:flex; flex-direction:column; gap:12px; margin-bottom:4px;}
+  .header-main{width:100%;}
+  .brand-section{margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line); position:relative;}
+  .brand-section::after{content:''; position:absolute; bottom:-1px; left:0; width:60px; height:2px; background:linear-gradient(90deg, var(--gold), var(--gold-soft));}
+  .brand-logo{display:flex; align-items:center; gap:12px; padding:2px 0;}
+  .logo-mark{display:flex; gap:2px; background:linear-gradient(135deg, rgba(201,162,39,0.12), rgba(201,162,39,0.04)); border:1.5px solid var(--gold); border-radius:10px; padding:4px 8px; position:relative; min-width:42px; justify-content:center; flex-shrink:0;}
+  .logo-initial{font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:var(--gold); letter-spacing:-1px; line-height:1;}
+  .logo-initial:first-child{color:var(--gold-soft);}
+  .logo-mark::after{content:'✦'; position:absolute; font-size:6px; bottom:-4px; right:-4px; color:var(--gold-soft); background:var(--bg); padding:0 2px;}
+  .brand-info{display:flex; flex-direction:column;}
+  .brand-name{font-family:'Fraunces',serif; font-weight:600; font-size:16px; letter-spacing:.02em; color:var(--text); line-height:1.2;}
+  .brand-name span{font-weight:300; color:var(--muted); letter-spacing:.06em;}
+  .brand-tagline{font-family:'Inter',sans-serif; font-size:9px; color:var(--gold-soft); letter-spacing:.06em; text-transform:uppercase; margin-top:1px; opacity:.8;}
+  .brand-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; margin-bottom:2px;}
+  h1{font-family:'Fraunces',serif; font-weight:600; font-size:24px; letter-spacing:-.01em; margin-bottom:2px;}
+  h1 span{color:var(--gold-soft); font-style:italic; font-weight:400;}
+  .subtitle{color:var(--muted); font-size:11px; margin-top:2px; opacity:.8; line-height:1.4;}
+
+  /* Top Row */
+  .top-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; padding:6px 0; width:100%;}
+  .top-row-left,.top-row-right{display:flex; align-items:center; gap:8px; flex:1; min-width:200px; flex-wrap:wrap;}
+  .total-attend{display:flex; align-items:center; gap:6px; padding:4px 12px 4px 10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); white-space:nowrap; flex-shrink:0; cursor:pointer; transition:.2s;}
+  .total-attend:hover{border-color:var(--gold);}
+  .total-attend .label{font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+  .total-attend .count{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--gold-soft); line-height:1; cursor:pointer;}
+  .total-attend .count-sub{font-size:9px; color:var(--faint); font-weight:400;}
+  .date-controls{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:3px 8px 3px 10px; flex-shrink:0; flex-wrap:wrap;}
+  .date-controls label{font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+  .date-controls input[type="date"]{background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:4px 8px; color:var(--text); font-family:'Inter',sans-serif; font-size:11px; outline:none; width:120px;}
+  .date-controls input[type="date"]:focus{border-color:var(--gold);}
+  .date-controls .today-btn{background:var(--gold); color:#1B1508; border:none; border-radius:4px; padding:4px 10px; font-size:9px; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; flex-shrink:0;}
+  .date-controls .today-btn:hover{background:var(--gold-soft);}
+  .sync-status{font-size:9px; color:var(--muted); font-family:'IBM Plex Mono',monospace; display:flex; align-items:center; gap:4px; flex-shrink:0;}
+  .sync-status .dot{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--teal);}
+  .sync-status .dot.error{background:var(--rust);}
+  .sync-btn{background:var(--surface-2); border:1px solid var(--line); color:var(--muted); padding:4px 10px; border-radius:6px; font-size:10px; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; flex-shrink:0;}
+  .sync-btn:hover{border-color:var(--gold); color:var(--text);}
+  .last-sync{font-size:8px; color:var(--faint); font-family:'IBM Plex Mono',monospace; flex-shrink:0;}
+  .razor-line{height:1px; margin:12px 0 18px; background:linear-gradient(90deg, var(--gold) 0%, var(--line) 18%, var(--line) 82%, var(--gold) 100%); opacity:.6;}
+
+  /* Stats */
+  .stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px;}
+  .stat-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px 10px; transition:transform .2s, box-shadow .2s; cursor:default;}
+  .stat-card:hover{transform:translateY(-2px); box-shadow:0 8px 25px rgba(201,162,39,0.06);}
+  .stat-label{font-size:8px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600;}
+  .stat-value{font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; margin-top:4px; letter-spacing:-.02em; color:var(--text);}
+  .stat-sub{font-size:8px; color:var(--faint); margin-top:2px;}
+  .stat-cost{font-size:8px; color:var(--gold-soft); margin-top:1px;}
+
+  /* Panels */
+  .panel-grid-2{display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:14px;}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .panel h2{font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin-bottom:2px;}
+  .panel .panel-sub{font-size:10px; color:var(--muted); margin-bottom:10px;}
+
+  /* Tables */
+  table{width:100%; border-collapse:collapse; font-size:11px;}
+  th{text-align:left; font-size:8px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); padding:4px 6px; border-bottom:1px solid var(--line); font-weight:600;}
+  td{padding:5px 6px; border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .staff-name{display:flex; align-items:center; gap:6px; font-weight:600; font-size:11px;}
+  .avatar{width:22px; height:22px; border-radius:50%; background:var(--surface-2); border:1px solid var(--gold); color:var(--gold-soft); font-family:'IBM Plex Mono',monospace; font-size:8px; display:flex; align-items:center; justify-content:center; font-weight:600; flex-shrink:0;}
+  .num{font-family:'IBM Plex Mono',monospace; text-align:right; font-size:11px;}
+  .clickable-count{cursor:pointer; transition:.2s; padding:1px 4px; border-radius:4px; display:inline-block; font-weight:600;}
+  .clickable-count:hover{background:rgba(201,162,39,0.2); color:var(--gold-soft);}
+  .log-panel table td,.log-panel table th{padding:6px 6px;}
+  .empty-state{color:var(--faint); font-size:12px; padding:16px 0; text-align:center;}
+  .loading{color:var(--muted); font-size:12px; padding:10px 0;}
+
+  /* Staff Matrix - Grand Total only */
+  .staff-matrix .grand-total-row td{font-weight:700; border-top:2px solid var(--gold-soft); color:var(--gold-soft); font-size:12px; background:rgba(201,162,39,0.08);}
+  .staff-matrix .staff-row td{border-bottom:1px solid var(--line);}
+
+
+  /* Month-wise Summary */
+  .month-summary table{font-size:11px;}
+  .month-summary table th{font-size:8px;padding:4px 5px;}
+  .month-summary table td{padding:5px 5px;font-size:11px;}
+  .month-summary .month-label{color:var(--muted);font-size:10px;font-weight:500;}
+  .month-summary .month-total-row td{font-weight:700;border-top:2px solid var(--gold);color:var(--gold-soft);font-size:12px;background:rgba(201,162,39,0.06);}
+
+
+  .month-click-row{cursor:pointer;user-select:none;transition:background .15s,color .15s;}
+  .month-click-row:hover{background:rgba(214,174,74,.08);color:var(--gold-soft);}
+  .month-arrow{display:inline-block;width:12px;font-size:8px;color:var(--gold);transition:transform .15s;}
+  .month-arrow.open{transform:rotate(90deg);}
+  .month-week-row td{padding:0!important;background:var(--surface-2);}
+  .month-week-wrap{padding:10px 12px 12px 28px;border-left:2px solid var(--gold);}
+  .month-week-table{width:100%;border-collapse:collapse;font-size:9px;}
+  .month-week-table th{padding:6px 8px;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);text-align:right;}
+  .month-week-table th:first-child,.month-week-table td:first-child{text-align:left;}
+  .month-week-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;}
+  .month-week-table .week-name{color:var(--gold-soft);font-weight:600;}
+  .month-week-table .week-total td{font-weight:700;color:var(--gold-soft);border-top:1px solid var(--gold);}
+
+
+  /* Time-wise Collection */
+  .time-collection table{font-size:11px;}
+  .time-collection table th{font-size:8px;padding:5px 6px;white-space:nowrap;}
+  .time-collection table td{padding:6px;font-size:11px;}
+  .time-month-row{cursor:pointer;user-select:none;}
+  .time-month-row:hover{background:rgba(214,174,74,.08);}
+  .time-month-arrow{display:inline-block;width:11px;font-size:8px;color:var(--gold);transition:transform .15s;}
+  .time-month-arrow.open{transform:rotate(90deg);}
+  .time-date-row td{padding:0!important;background:var(--surface-2);}
+  .time-date-wrap{padding:10px 12px 12px 28px;border-left:2px solid var(--gold);}
+
+  .time-date-row{display:none;}
+  .time-date-row td{padding:0!important;background:var(--surface-2);}
+  .time-date-wrap{display:block;width:100%;box-sizing:border-box;padding:12px 14px 14px 32px;border-left:2px solid var(--gold);}
+
+  .time-date-table{
+    width:100%;
+    border-collapse:collapse !important;
+    border:1px solid var(--line);
+  }
+  .time-date-table th,
+  .time-date-table td{
+    border:1px solid var(--line) !important;
+  }
+  .time-date-table thead th{
+    border-bottom:2px solid var(--line) !important;
+  }
+  .time-date-table tbody tr:last-child td{
+    border-bottom:1px solid var(--line) !important;
+  }
+
+  .time-date-table{width:100%;border-collapse:collapse;table-layout:auto;}
+  .time-date-table thead{display:table-header-group;}
+  .time-date-table tbody{display:table-row-group;}
+  .time-date-table tr{display:table-row;}
+  .time-date-table th,.time-date-table td{display:table-cell;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .time-date-table th{font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right;}
+  .time-date-table th:first-child,.time-date-table td:first-child{text-align:left;}
+  .time-date-table td{font-size:10px;text-align:right;}
+
+  .time-date-table{width:100%;border-collapse:collapse;font-size:9px;}
+  .time-date-table th{padding:6px 8px;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);text-align:right;}
+  .time-date-table th:first-child,.time-date-table td:first-child{text-align:left;}
+  .time-date-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;}
+
+  /* Weekly Summary */
+  .weekly-summary table{font-size:11px;}
+  .weekly-summary table th{font-size:8px; padding:4px 5px;}
+  .weekly-summary table td{padding:5px 5px; font-size:11px;}
+  .weekly-summary .grand-total td{font-weight:700; border-top:2px solid var(--gold); color:var(--gold-soft); font-size:12px; background:rgba(201,162,39,0.06);}
+  .weekly-summary .period-label{color:var(--muted); font-size:10px; font-weight:500;}
+  .weekly-summary .day-label{color:var(--faint); font-size:9px;}
+  .weekly-summary .amount-format{font-size:11px;}
+
+  /* Today's Entries */
+  .today-entries table td, .today-entries table th{padding:5px 6px;}
+  .today-entries .entry-time{color:var(--muted); font-size:9px;}
+
+  /* Add Entry Form */
+  .add-entry-form{background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius); padding:14px; margin-bottom:16px;}
+  .add-entry-form .form-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .add-entry-form input, .add-entry-form select{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:6px 10px; color:var(--text); font-family:'Inter',sans-serif; font-size:12px; outline:none; flex:1; min-width:80px;}
+  .add-entry-form input:focus, .add-entry-form select:focus{border-color:var(--gold);}
+  .add-entry-form .add-btn{background:var(--gold); color:#1B1508; border:none; border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; flex-shrink:0;}
+  .add-entry-form .add-btn:hover{background:var(--gold-soft);}
+  .add-entry-form .add-btn:disabled{opacity:0.5; cursor:not-allowed;}
+
+  /* Modal */
+  .modal-overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; backdrop-filter:blur(4px); padding:16px;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px 16px 16px; max-width:550px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.8);}
+  .modal-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);}
+  .modal-header h3{font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--text);}
+  .modal-header h3 span{color:var(--gold-soft);}
+  .modal-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; transition:.2s; padding:0 4px;}
+  .modal-close:hover{color:var(--rust);}
+  .modal table{font-size:11px;}
+  .modal table th{font-size:8px; padding:4px 6px;}
+  .modal table td{padding:5px 6px; font-size:10px;}
+  .modal .modal-total{margin-top:10px; padding-top:10px; border-top:1px solid var(--line); text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--gold-soft);}
+  .modal .modal-time{color:var(--muted); font-size:9px;}
+  .modal::-webkit-scrollbar{width:4px;}
+  .modal::-webkit-scrollbar-track{background:var(--surface-2); border-radius:2px;}
+  .modal::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
+
+  /* Scroll */
+  .scroll-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -4px; padding:0 4px;}
+  .scroll-wrap::-webkit-scrollbar{height:4px;}
+  .scroll-wrap::-webkit-scrollbar-track{background:var(--surface-2); border-radius:2px;}
+  .scroll-wrap::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
+  .scroll-wrap::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+  .log-scroll{max-height:300px; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .log-scroll::-webkit-scrollbar{width:4px;}
+  .log-scroll::-webkit-scrollbar-track{background:var(--surface-2); border-radius:2px;}
+  .log-scroll::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
+  .log-scroll::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+  .log-scroll table{font-size:10px;}
+  .log-scroll table th{font-size:8px; padding:4px 6px;}
+  .log-scroll table td{padding:5px 6px; font-size:10px;}
+
+  /* Toast */
+  #toast-container{position:fixed; top:12px; right:12px; left:12px; z-index:9999; display:flex; flex-direction:column; gap:6px; max-width:400px; margin:0 auto;}
+  .toast{padding:10px 16px; border-radius:8px; background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:12px; animation:slideIn .3s ease; box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+  .toast-success{border-left:3px solid var(--teal);}
+  .toast-error{border-left:3px solid var(--rust);}
+  .toast-info{border-left:3px solid var(--gold);}
+  @keyframes slideIn{from{transform:translateX(100%); opacity:0;} to{transform:translateX(0); opacity:1;}}
+
+  @media(min-width:768px){body{padding:24px 20px 50px;} .brand-name{font-size:18px;} h1{font-size:28px;} .stats{grid-template-columns:repeat(3,1fr);} .panel-grid-2{grid-template-columns:1fr 1fr;} .top-row{flex-wrap:nowrap;}}
+  @media(min-width:1024px){body{padding:32px 28px 60px;} .brand-name{font-size:20px;} h1{font-size:32px;} .stats{grid-template-columns:repeat(5,1fr);} .panel-grid-2{grid-template-columns:.9fr 1.1fr;}}
+  @media(max-width:480px){.top-row-left,.top-row-right{min-width:100%; justify-content:flex-start;} .date-controls{width:100%;} .date-controls input[type="date"]{flex:1; min-width:80px;} .total-attend{flex:1; justify-content:center;} .stat-value{font-size:16px;} .weekly-summary table{font-size:10px;} .weekly-summary table td{font-size:10px; padding:4px 4px;} .weekly-summary table th{font-size:7px; padding:3px 4px;} .staff-matrix table{font-size:10px;} .staff-matrix table td{font-size:10px; padding:4px 4px;} .staff-matrix table th{font-size:7px; padding:3px 4px;} .staff-name{font-size:10px;} .num{font-size:10px;} .log-scroll table{font-size:9px;} .log-scroll table td{font-size:9px; padding:4px 4px;} .log-scroll table th{font-size:7px; padding:3px 4px;} .modal{padding:14px 12px;} .modal table td,.modal table th{font-size:9px; padding:3px 4px;} .add-entry-form .form-row{flex-direction:column;}}
+
+/* Time-wise Collection - visible table grid */
+.time-date-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  border: 1px solid #5a5548 !important;
+}
+.time-date-table th,
+.time-date-table td {
+  border: 1px solid #5a5548 !important;
+  border-right: 1px solid #5a5548 !important;
+  border-bottom: 1px solid #5a5548 !important;
+}
+.time-date-table thead th {
+  border-top: 1px solid #5a5548 !important;
+  border-bottom: 1px solid #5a5548 !important;
+}
+.time-date-table tbody tr {
+  border-bottom: 1px solid #5a5548 !important;
+}
+.time-date-table tbody tr:hover {
+  background: rgba(255,255,255,.025) !important;
+}
+
+
+  .report-nav-btn{min-width:76px;}
+  .report-nav-btn.active{background:var(--gold);color:#111;border-color:var(--gold);}
+
+
+/* Dashboard 1.28 — visual redesign, functional core preserved */
+body{
+  background:
+    radial-gradient(circle at 8% 0%,rgba(214,174,74,.075),transparent 28%),
+    radial-gradient(circle at 92% 5%,rgba(75,110,160,.055),transparent 30%),
+    #11100f !important;
+}
+header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(16px);
+  background:rgba(17,16,15,.91) !important;
+}
+.report-nav-btn{
+  min-width:88px !important;height:36px !important;
+  border-radius:10px !important;font-weight:800 !important;
+  letter-spacing:.01em;transition:.18s ease;
+}
+.report-nav-btn:hover{transform:translateY(-1px);}
+.report-nav-btn.active{box-shadow:0 8px 24px rgba(214,174,74,.16);}
+.stat-card,.panel{
+  border:1px solid rgba(255,255,255,.075) !important;
+  background:linear-gradient(145deg,rgba(31,29,26,.97),rgba(20,19,18,.98)) !important;
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+}
+.stat-card{border-radius:14px !important;}
+.panel{border-radius:14px !important;}
+.panel h2{letter-spacing:.01em;}
+.scroll-wrap{
+  border:1px solid rgba(255,255,255,.065) !important;
+  border-radius:10px !important;
+}
+#todayTable th,#todayTable td,
+#weeklyTable th,#weeklyTable td,
+#monthSummaryTable th,#monthSummaryTable td,
+.time-date-table th,.time-date-table td{
+  border:1px solid rgba(150,140,120,.23) !important;
+}
+.analytics-card{
+  min-width:0;padding:14px;border-radius:13px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(9,9,8,.35);
+}
+.analytics-card h3{
+  margin:0 0 2px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;color:#cfc7b8;
+}
+.analytics-card p{margin:0 0 8px;color:#726e66;font-size:8px;}
+.analytics-chart{width:100%;height:170px;display:block;}
+.analytics-empty{
+  height:170px;display:flex;align-items:center;justify-content:center;
+  color:#6e6a62;font-size:9px;
+}
+@media(max-width:900px){}
+
+
+/* Dashboard 1.29 — attractive analytics cards */
+.analytics-card{
+  position:relative;
+  overflow:hidden;
+  min-height:205px;
+  padding:16px 17px 14px !important;
+  border:1px solid rgba(214,174,74,.16) !important;
+  border-radius:16px !important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(214,174,74,.10),transparent 38%),
+    linear-gradient(145deg,rgba(34,32,28,.98),rgba(20,19,18,.98)) !important;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.analytics-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(214,174,74,.32) !important;
+  box-shadow:0 16px 32px rgba(0,0,0,.28),0 0 0 1px rgba(214,174,74,.05);
+}
+.analytics-card:before{
+  content:"";position:absolute;left:0;top:0;width:42%;height:2px;
+  background:linear-gradient(90deg,#d6ae4a,transparent);
+}
+.analytics-card h3{
+  margin:0 !important;font-size:10px !important;font-weight:900 !important;
+  letter-spacing:.11em !important;text-transform:uppercase;
+  color:#e2bd62 !important;
+}
+.analytics-card p{
+  margin:3px 0 10px !important;color:#817b70 !important;font-size:8px !important;
+}
+.analytics-chart{height:150px !important;}
+.analytics-empty{
+  height:150px !important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#6f6a61;font-size:9px;
+}
+.analytics-value{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin:4px 0 10px;
+}
+.analytics-value strong{font-size:22px;color:#f1e6c8;letter-spacing:-.02em;}
+.analytics-value span{font-size:8px;color:#777167;}
+.analytics-bars{display:flex;flex-direction:column;gap:7px;margin-top:6px;}
+.analytics-bar-row{display:grid;grid-template-columns:76px 1fr 66px;gap:7px;align-items:center;}
+.analytics-bar-name{font-size:8px;color:#aaa49a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.analytics-bar-track{height:7px;border-radius:99px;background:rgba(255,255,255,.055);overflow:hidden;}
+.analytics-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#d6ae4a,#f0cf78);box-shadow:0 0 10px rgba(214,174,74,.16);}
+.analytics-bar-amt{text-align:right;font-size:8px;color:#d9d0bd;}
+@media(max-width:900px){}
+
+
+.analytics-card .analytics-value strong{
+  font-size:25px !important;
+  font-weight:900;
+  color:#f3e7c8;
+}
+.analytics-card .analytics-value{
+  padding:5px 0 9px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.analytics-card .analytics-bar-row{
+  min-height:20px;
+}
+.analytics-card .analytics-bar-track{
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+
+
+/* 1.31 — trend scope labels */
+.today-analytics .analytics-card:nth-child(1) h3::after{content:" · TODAY";color:#8e805e;font-weight:700;}
+.today-analytics .analytics-card:nth-child(2) h3::after{content:" · TODAY";color:#8e805e;font-weight:700;}
+.today-analytics .analytics-card:nth-child(3) h3::after{content:" · TODAY";color:#8e805e;font-weight:700;}
+
+</style>
+<style>
+.trend-dashboard{padding:16px 18px 24px}
+.trend-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 14px;padding:2px 2px 12px;border-bottom:1px solid #303640}
+.trend-kicker{font-size:8px;letter-spacing:.16em;color:#5da9ff;font-weight:900}
+.trend-head h2{margin:2px 0;font-size:20px;color:#e8edf3}
+.trend-head p{margin:0;color:#8c96a3;font-size:8px}
+.trend-period{padding:7px 10px;border:1px solid #343b45;border-radius:8px;color:#b8c4d2;background:#232830;font-size:8px;font-weight:800}
+.trend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.trend-card{min-height:205px;position:relative;overflow:hidden;border:1px solid #343b45;border-radius:10px;background:#20252c;box-shadow:none;padding:11px 12px 9px}
+.trend-wide{grid-column:span 1}
+.trend-card:before{display:none!important}
+.trend-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.trend-card-head div{display:flex;flex-direction:column;gap:2px}
+.trend-card-head b{font-size:10px;color:#e6ebf1}
+.trend-card-head small{font-size:7px;color:#8b95a2}
+.trend-card-head strong{font-size:12px;color:#5da9ff;white-space:nowrap}
+.bar3d-wrap{height:145px;margin-top:8px;display:flex;align-items:flex-end;justify-content:space-around;gap:5px;padding:8px 5px 0;border-bottom:1px solid #343b45;position:relative}
+.bar3d-wrap:before{content:"";position:absolute;left:0;right:0;top:45%;border-top:1px dashed #343b45}
+.bar3d{height:100%;flex:1;max-width:55px;min-width:20px;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.bar3d-body{width:58%;min-height:3px;height:var(--h);position:relative;background:#4d91dc!important;border-radius:3px 3px 0 0;box-shadow:none!important;transform:none!important}
+.bar3d-body:before,.bar3d-body:after{display:none!important;content:none!important}
+.bar3d-value{position:absolute;bottom:calc(var(--h) + 7px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:6px;font-weight:800;color:#b8d9ff}
+.bar3d-label{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;max-width:58px;overflow:hidden;text-overflow:ellipsis;font-size:6px;color:#9099a6}
+.bar3d-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#727c88;font-size:8px}
+@media(max-width:700px){.trend-grid{grid-template-columns:1fr}.trend-wide{grid-column:span 1}.trend-head{align-items:flex-start;flex-direction:column}}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-main">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <div class="logo-mark"><span class="logo-initial">Y</span><span class="logo-initial">S</span></div>
+          <div class="brand-info">
+            <div class="brand-name">YOURS <span>SALON</span></div>
+            <div class="brand-tagline">✦ Look Good, Feel Confident</div>
+          </div>
+        </div>
+      </div>
+      <div class="brand-eyebrow">Salon Operations · Daily Ledger</div>
+      <h1>Chair<span>&</span>Ledger</h1>
+      <div class="subtitle" id="staffSubtitle">Loading staff list...</div>
+      <div class="top-row">
+        <div class="top-row-left">
+          <div class="nav-buttons">
+            <button class="nav-btn active report-nav-btn" id="reportTodayBtn">Today</button>
+            <button class="nav-btn report-nav-btn" id="reportWeeklyBtn">Weekly</button>
+            <button class="nav-btn report-nav-btn" id="reportMonthlyBtn">Monthly</button>
+            <button class="nav-btn report-nav-btn" id="reportTimeBtn">Time Wise</button>
+            <button class="nav-btn report-nav-btn" id="reportTrendBtn">📊 Trend</button>
+            <button class="nav-btn" id="entryBtn">➕ Entry</button>
+          </div>
+          <div class="date-controls" id="dashboardDateControls">
+            <label>📅</label>
+            <input type="date" id="datePicker">
+            <button class="today-btn" id="todayBtn">Today</button>
+          </div>
+        </div>
+        <div class="top-row-right">
+          <div class="total-attend" id="totalAttendBtn" title="Click to view all entries">
+            <span class="label">👥</span>
+            <span class="count" id="totalAttendCount">0</span>
+            <span class="count-sub" id="totalAttendSub">txns</span>
+          </div>
+          <div class="sync-status" id="syncStatus">
+            <span class="dot" id="syncDot"></span>
+            <span id="syncText">Loading</span>
+          </div>
+          <span class="last-sync" id="lastSyncTime"></span>
+          <button class="sync-btn" id="manualSyncBtn">⟳ Sync</button>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="razor-line"></div>
+
+  <!-- Stats -->
+  <div class="stats" id="statCards">
+    <div class="stat-card staff"><div class="stat-label">1. Staff Collection</div><div class="stat-value" id="statStaff">₹0</div></div>
+    <div class="stat-card cost"><div class="stat-label">2. Cost Cutting</div><div class="stat-value" id="statCost">₹0</div></div>
+    <div class="stat-card cash"><div class="stat-label">3. Cash Collection</div><div class="stat-value" id="statCash">₹0</div><div class="stat-cost" id="statCashCost">✂️ ₹0 Cost</div><div class="stat-sub" id="statCashSub">Cash</div></div>
+    <div class="stat-card online"><div class="stat-label">4. Online Collection</div><div class="stat-value" id="statOnline">₹0</div><div class="stat-cost" id="statOnlineCost">✂️ ₹0 Cost</div><div class="stat-sub" id="statOnlineSub">Online</div></div>
+    <div class="stat-card total"><div class="stat-label">5. Collection Today</div><div class="stat-value" id="statTotal">₹0</div><div class="stat-sub" id="statTotalSub">Staff + Cost</div></div>
+  </div>
+
+  <!-- Dashboard View -->
+  <section id="dashboardView">
+<section id="trendDashboard" class="trend-dashboard" style="display:none;">
+  <div class="trend-head"><div><div class="trend-kicker">ANALYTICS</div><h2>Collection Trends</h2><p>Dynamic 3D view — collection, staff, payment mode and cost cutting.</p></div><div class="trend-period" id="trendPeriodLabel">Current Month</div></div>
+  <div class="trend-grid">
+    <div class="trend-card trend-wide"><div class="trend-card-head"><div><b>Collection Trend</b><small>Week 1 · Week 2 · Week 3 · Week 4</small></div><strong id="trendCollectionTotal">₹0</strong></div><div class="bar3d-wrap" id="trendCollectionBars"></div></div>
+    <div class="trend-card"><div class="trend-card-head"><div><b>Staff-wise Trend</b><small>Current Month</small></div><strong id="trendStaffTotal">₹0</strong></div><div class="bar3d-wrap" id="trendStaffBars"></div></div>
+    <div class="trend-card"><div class="trend-card-head"><div><b>Payment Mode</b><small>Current Month</small></div><strong id="trendPaymentTotal">₹0</strong></div><div class="bar3d-wrap" id="trendPaymentBars"></div></div>
+    <div class="trend-card trend-wide"><div class="trend-card-head"><div><b>Monthly Collection Trend</b><small>Available Data</small></div><strong id="trendMonthlyTotal">₹0</strong></div><div class="bar3d-wrap" id="trendMonthlyBars"></div></div>
+    <div class="trend-card trend-wide"><div class="trend-card-head"><div><b>Cost Cutting Trend</b><small>Available Data</small></div><strong id="trendCostTotal">₹0</strong></div><div class="bar3d-wrap" id="trendCostBars"></div></div>
+  </div>
+</section>
+
+  <!-- Staff Matrix -->
+  <div class="panel staff-matrix">
+    <h2>Staff Matrix</h2>
+    <div class="panel-sub" id="matrixSub">Totals per staff</div>
+    <div class="scroll-wrap">
+      <table id="matrixTable">
+        <thead>
+          <tr>
+            <th>Staff</th>
+            <th style="text-align:right">Collection</th>
+            <th style="text-align:right">Cost</th>
+            <th style="text-align:right">Total</th>
+            <th style="text-align:right">Attend</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+  </div>
+<!-- Today's Entries -->
+  <div class="panel today-entries">
+    <h2>Today's Entries</h2>
+    <div class="panel-sub" id="todaySub">All entries for selected date</div>
+    <div id="todayLoading" class="loading">Loading entries…</div>
+    <div class="log-scroll" id="todayScrollContainer">
+      <table id="todayTable" style="display:none">
+        <thead><tr><th>#</th><th>Time</th><th>Staff</th><th style="text-align:right">Amount</th><th style="text-align:right">Payment</th><th style="text-align:right">Cost</th></tr></thead>
+        <tbody id="todayBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="todayEmpty" style="display:none">No entries for this date.</div>
+  </div>
+
+  <!-- Weekly Summary -->
+<div class="panel weekly-summary">
+    <h2>Weekly Summary</h2>
+    <div class="panel-sub" id="weeklySub">Data-driven summary</div>
+    <div class="scroll-wrap">
+      <table id="weeklyTable">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th style="text-align:right">Collection</th>
+            <th style="text-align:right">Cost</th>
+            <th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="weeklyBody"></tbody>
+      </table>
+    </div>
+  </div>
+  </section>
+
+
+  <!-- Month-wise Summary -->
+<div class="panel month-summary">
+    <h2>Month-wise Summary</h2>
+    <div class="panel-sub" id="monthSummarySub">Staff-wise monthly totals</div>
+    <div class="scroll-wrap">
+      <table id="monthSummaryTable">
+        <thead id="monthSummaryHead">
+          <tr>
+            <th>Month</th>
+            <th style="text-align:right">Staff A</th>
+            <th style="text-align:right">Staff B</th>
+            <th style="text-align:right">Cost</th>
+            <th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="monthSummaryBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Entry View -->
+  <section class="entry-view" id="entryView" style="display:none;">
+    <div class="entry-card">
+      <div class="entry-heading">
+        <div>
+          <div class="entry-kicker">Daily Ledger</div>
+          <h2>➕ Add New Entry</h2>
+          <div class="panel-sub">Staff list is loaded from the same dashboard data.</div>
+        </div>
+        <button class="back-dashboard-btn" id="backDashboardBtn">← Dashboard</button>
+      </div>
+      <div class="entry-form-grid">
+        <div class="field">
+          <label for="inputName">Staff Name</label>
+          <select id="inputName">
+            <option value="">Select Staff</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inputAmount">Amount</label>
+          <input type="number" id="inputAmount" placeholder="Enter amount" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label for="inputPayment">Payment Mode</label>
+          <select id="inputPayment">
+            <option value="Cash">Cash</option>
+            <option value="Online">Online</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inputCost">Cost Cutting</label>
+          <input type="number" id="inputCost" placeholder="Enter cost" min="0" step="0.01" value="0">
+        </div>
+        <div class="entry-action">
+          <button class="add-btn" id="addEntryBtn">➕ Add Entry</button>
+        </div>
+      </div>
+      <div class="entry-note">Google Sheets WRITE is intentionally unchanged for now. This Entry form is only prepared for the next integration step.</div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header"><h3>📋 <span id="modalTitle">Customer Entries</span></h3><button class="modal-close" id="modalCloseBtn">✕</button></div>
+    <div class="scroll-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Time</th>
+            <th>Staff</th>
+            <th style="text-align:right">Payment</th>
+            <th style="text-align:right">Amount</th>
+            <th style="text-align:right">Cost</th>
+          </tr>
+        </thead>
+        <tbody id="modalBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-total" id="modalTotal">Total: ₹0</div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+
+  <!-- Time-wise Collection -->
+  <div class="panel time-collection">
+    <h2>Time-wise Collection</h2>
+    <div class="panel-sub" id="timeCollectionSub">
+      Collection by time slot · Click a month for date-wise summary
+    </div>
+    <div class="scroll-wrap">
+      <table id="timeCollectionTable">
+        <thead id="timeCollectionHead"></thead>
+        <tbody id="timeCollectionBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const CONFIG = {
+  SHEET_ID: '14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo',
+  API_KEY: 'AIzaSyAtJX7FtwdHzQCFP4LPVKgt7FrOEUdG-bQ',
+  STORAGE_KEY: 'salon-entries',
+  STAFF_STORAGE_KEY: 'salon-staff-list',
+  SYNC_INTERVAL: 60000,
+  MIN_SYNC_INTERVAL: 30000,
+  MAX_AMOUNT: 1000000
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  entries: [],
+  staffList: [],
+  isSyncing: false,
+  selectedDate: null,
+  lastSync: 0,
+  isAdding: false,
+  activeReport: 'today'
+};
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+const $ = (id) => document.getElementById(id);
+const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+const todayStr = () => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+};
+const nowTimestamp = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+const formatDate = (d) => {
+  const dt = new Date(d + 'T00:00:00');
+  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
+};
+const initials = (name) => name ? name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) : '?';
+const sanitize = (str) => { const d=document.createElement('div'); d.textContent=str; return d.innerHTML; };
+const validateAmount = (val) => {
+  const num = parseFloat(val);
+  if (isNaN(num) || num < 0 || num > CONFIG.MAX_AMOUNT) return 0;
+  return Math.round(num * 100) / 100;
+};
+
+// ============================================================
+// DEBOUNCE
+// ============================================================
+function debounce(fn, delay = 300) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ============================================================
+// GOOGLE SHEETS - WRITE
+// ============================================================
+async function addEntryToSheet(name, amount, paymentMode, costCutting) {
+  // TEMPORARY: Entry WRITE is local only. Google Sheets READ/SYNC remains unchanged.
+  try {
+    const timestamp = nowTimestamp();
+    const entry = {
+      id: Date.now() + Math.random(),
+      date: todayStr(),
+      rawTimestamp: timestamp,
+      employee: name,
+      amount: validateAmount(amount),
+      paymentMode: paymentMode,
+      saving: validateAmount(costCutting)
+    };
+
+    state.entries.push(entry);
+    saveEntries();
+
+    if (!state.staffList.includes(name)) {
+      state.staffList.push(name);
+      state.staffList.sort((a,b) => a.localeCompare(b));
+      saveStaffList();
+      updateSubtitle();
+    }
+
+    return true;
+  } catch (e) {
+    console.error('❌ Failed to add local entry:', e);
+    showToast('⚠️ Failed to save entry: ' + e.message, 'error');
+    return false;
+  }
+}
+// ============================================================
+// DATA PARSING
+// ============================================================
+function parseTimestamp(ts) {
+  if (!ts) return null;
+  const m = ts.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]} ${m[4]}:${m[5]}:${m[6]}`;
+  const d = new Date(ts);
+  return !isNaN(d.getTime()) ? d.toISOString() : ts;
+}
+
+function extractStaffNames(data) {
+  return [...new Set(data.map(e => e.employee).filter(Boolean))].sort();
+}
+
+function getTimeFromTimestamp(ts) {
+  if (!ts) return '';
+  const m = String(ts).match(/(?:^|[T\s])(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m) return `${String(m[1]).padStart(2,'0')}:${m[2]}${m[3] ? ':' + m[3] : ''}`;
+  const d = new Date(ts);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+  return '';
+}
+
+// ============================================================
+// GOOGLE SHEETS - READ
+// ============================================================
+async function fetchGoogleSheetsData() {
+  try {
+    console.log('📊 Fetching data from Google Sheets...');
+    
+    const sheetNames = ['Form responses 1', 'Sheet1', 'Responses'];
+    let data = null;
+    
+    for (const sheetName of sheetNames) {
+      try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}`;
+        console.log(`🔍 Trying sheet: ${sheetName}`);
+        
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        
+        const result = await res.json();
+        if (result.values && result.values.length > 1) {
+          console.log(`✅ Found data in sheet: "${sheetName}" with ${result.values.length} rows`);
+          data = result;
+          break;
+        }
+      } catch (e) {
+        console.log(`⚠️ Error with sheet "${sheetName}":`, e.message);
+      }
+    }
+    
+    if (!data) {
+      throw new Error('No data found. Please check sheet name.');
+    }
+
+    const headers = data.values[0];
+    console.log('📋 Headers:', headers);
+    
+    const idx = {
+      timestamp: headers.findIndex(h => h && (
+        h.toLowerCase().includes('timestamp') ||
+        h.toLowerCase().includes('time stamp') ||
+        h.toLowerCase() === 'time' ||
+        h.toLowerCase().includes('entry time') ||
+        h.toLowerCase().includes('date & time') ||
+        h.toLowerCase().includes('date/time')
+      )),
+      date: headers.findIndex(h => h && (
+        h.toLowerCase() === 'date' ||
+        h.toLowerCase().includes('entry date')
+      )), 
+      name: headers.findIndex(h => h && (h.toLowerCase().includes('your name') || h.toLowerCase().includes('name') || h.toLowerCase().includes('employee'))),
+      amount: headers.findIndex(h => h && (h.toLowerCase().includes('amount') || h.toLowerCase().includes('collection'))),
+      paymentMode: headers.findIndex(h => h && (h.toLowerCase().includes('payment') || h.toLowerCase().includes('mode'))),
+      costCutting: headers.findIndex(h => h && (h.toLowerCase().includes('cost') || h.toLowerCase().includes('cutting')))
+    };
+    
+    console.log('🔍 Column indices:', idx);
+    
+    if (idx.name === -1) {
+      throw new Error('Name column not found. Headers: ' + headers.join(', '));
+    }
+    
+    if (idx.amount === -1) {
+      throw new Error('Amount column not found. Headers: ' + headers.join(', '));
+    }
+
+    const result = data.values.slice(1)
+      .filter(row => row.length > idx.name && row[idx.name] && row[idx.name].trim())
+      .map((row, i) => {
+        const name = sanitize(row[idx.name].trim());
+        const amount = validateAmount(row[idx.amount] || 0);
+        const paymentMode = idx.paymentMode !== -1 && row[idx.paymentMode] ? sanitize(row[idx.paymentMode].trim()) : '';
+        const saving = idx.costCutting !== -1 ? validateAmount(row[idx.costCutting] || 0) : 0;
+        
+        let date = todayStr();
+        let rawTimestamp = idx.timestamp !== -1 && row[idx.timestamp]
+          ? String(row[idx.timestamp]).trim()
+          : '';
+
+        // Support sheets with separate Date and Time columns.
+        if (idx.date !== -1 && row[idx.date]) {
+          const ds = String(row[idx.date]).trim();
+          let dm = ds.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (dm) date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
+          else {
+            dm = ds.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (dm) date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
+          }
+        }
+
+        if (idx.timestamp !== -1 && row[idx.timestamp]) {
+          const ts = String(row[idx.timestamp]).trim();
+          if (!date || date === todayStr()) {
+            let dm = ts.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (dm) date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
+            else {
+              dm = ts.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+              if (dm) date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
+            }
+          }
+        }
+
+        return { 
+          id: Date.now() + i + Math.random(), 
+          date, 
+          rawTimestamp, 
+          employee: name, 
+          amount, 
+          paymentMode, 
+          saving 
+        };
+      })
+      .filter(e => e.employee && e.employee.length > 0);
+
+    console.log(`✅ Parsed ${result.length} valid entries`);
+    return result;
+    
+  } catch (e) {
+    console.error('❌ Fetch error:', e);
+    showToast('⚠️ ' + e.message, 'error');
+    return null;
+  }
+}
+
+// ============================================================
+// STORAGE
+// ============================================================
+function loadEntries() {
+  try {
+    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+    state.entries = saved ? JSON.parse(saved) : [];
+    return true;
+  } catch { state.entries = []; return false; }
+}
+
+function saveEntries() {
+  try { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.entries)); return true; }
+  catch { return false; }
+}
+
+// ============================================================
+// SYNC
+// ============================================================
+async function syncWithGoogleSheets(silent = false, force = false) {
+  if (state.isSyncing) return;
+  const now = Date.now();
+  if (now - state.lastSync < CONFIG.MIN_SYNC_INTERVAL && silent && !force) return;
+  
+  state.isSyncing = true;
+  const dot = $('syncDot'), text = $('syncText');
+  if (!silent) { dot.className = 'dot'; text.textContent = 'Syncing...'; }
+  
+  try {
+    const data = await fetchGoogleSheetsData();
+    if (data && data.length > 0) {
+      state.entries = data;
+      await saveEntries();
+      state.staffList = [...new Set([...loadStaffList(), ...extractStaffNames(data)])].sort((a,b) => a.localeCompare(b));
+      saveStaffList();
+      updateSubtitle();
+      const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      $('lastSyncTime').textContent = `⏱ ${time}`;
+      dot.className = 'dot';
+      text.textContent = `✓ ${data.length}`;
+      if (!silent) showToast(`✅ Synced ${data.length} records`, 'success');
+      setTimeout(() => {
+        try { renderAllAnalytics(); } catch (e) { console.error('Analytics after sync:', e); }
+      }, 0);
+    } else {
+      dot.className = 'dot error';
+      text.textContent = 'No data';
+      if (!silent) showToast('ℹ️ No data found. Please check Google Sheet.', 'info');
+    }
+    state.lastSync = Date.now();
+  } catch (e) {
+    dot.className = 'dot error';
+    text.textContent = 'Failed';
+    if (!silent) showToast('⚠️ Sync failed: ' + e.message, 'error');
+  }
+  state.isSyncing = false;
+  debouncedRender();
+}
+
+function loadStaffList() {
+  const fromData = [...new Set(state.entries.map(e => e.employee).filter(Boolean))];
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONFIG.STAFF_STORAGE_KEY) || '[]');
+    return [...new Set([...saved, ...fromData])].sort((a,b) => a.localeCompare(b));
+  } catch {
+    return fromData.sort((a,b) => a.localeCompare(b));
+  }
+}
+
+function saveStaffList() {
+  try {
+    localStorage.setItem(CONFIG.STAFF_STORAGE_KEY, JSON.stringify(state.staffList));
+  } catch {}
+}
+
+function populateStaffDropdown() {
+  const select = $('inputName');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '<option value="">Select Staff</option>';
+  state.staffList.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+  if (state.staffList.includes(current)) select.value = current;
+}
+
+// ============================================================
+// UPDATE SUBTITLE
+// ============================================================
+function updateSubtitle() {
+  $('staffSubtitle').textContent = state.staffList.length ?
+    `Collection & savings — ${state.staffList.join(', ')}` :
+    'No staff data available yet. Sync to load data.';
+  populateStaffDropdown();
+}
+
+// ============================================================
+// GETTERS
+// ============================================================
+function getSelectedDateEntries() {
+  const date = $('datePicker').value || todayStr();
+  state.selectedDate = date;
+  return state.entries.filter(e => e.date === date);
+}
+
+function getMonthlyEntries() {
+  const date = $('datePicker').value || todayStr();
+  return state.entries.filter(e => e.date.startsWith(date.slice(0, 7)));
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderMonthSummary() {
+  const body = $('monthSummaryBody');
+  const head = $('monthSummaryHead');
+
+  const staff = state.staffList.length
+    ? state.staffList
+    : [...new Set(state.entries.map(e => e.employee).filter(Boolean))];
+
+  if (!staff.length) {
+    head.innerHTML =
+      '<tr><th>Month</th><th style="text-align:right">Cost</th><th style="text-align:right">Total</th></tr>';
+    body.innerHTML =
+      '<tr><td colspan="3" style="text-align:center;color:var(--faint);">No staff data available</td></tr>';
+    $('monthSummarySub').textContent = 'No staff data available';
+    return;
+  }
+
+  let headHTML = '<th>Month</th>';
+  staff.forEach(name => {
+    headHTML += `<th style="text-align:right">${sanitize(name)}</th>`;
+  });
+  headHTML += '<th style="text-align:right">Cost</th><th style="text-align:right">Total</th>';
+  head.innerHTML = `<tr>${headHTML}</tr>`;
+
+  const monthMap = {};
+  state.entries.forEach(e => {
+    if (!e.date) return;
+    const key = e.date.slice(0, 7);
+    if (!monthMap[key]) monthMap[key] = [];
+    monthMap[key].push(e);
+  });
+
+  const months = Object.keys(monthMap).sort().reverse();
+
+  if (!months.length) {
+    body.innerHTML =
+      `<tr><td colspan="${staff.length + 3}" style="text-align:center;color:var(--faint);">No monthly data available</td></tr>`;
+    $('monthSummarySub').textContent = 'No monthly data available';
+    return;
+  }
+
+  let html = '';
+  const grand = {};
+  staff.forEach(name => grand[name] = 0);
+  let grandCost = 0;
+  let grandTotal = 0;
+
+  months.forEach(key => {
+    const entries = monthMap[key];
+    const [y, m] = key.split('-').map(Number);
+    const monthDate = new Date(y, m - 1, 1);
+    const label = monthDate.toLocaleDateString('en-IN', {
+      month: 'long',
+      year: '2-digit'
+    });
+
+    let row = `<td class="month-label">
+      <span class="month-arrow">▶</span>${label}
+    </td>`;
+    let monthCollection = 0;
+
+    staff.forEach(name => {
+      const amount = entries
+        .filter(e => e.employee === name)
+        .reduce((s, e) => s + e.amount, 0);
+
+      grand[name] += amount;
+      monthCollection += amount;
+      row += `<td class="num">${amount > 0 ? inr(amount) : ''}</td>`;
+    });
+
+    const monthCost = entries.reduce((s, e) => s + e.saving, 0);
+    const monthTotal = monthCollection + monthCost;
+
+    grandCost += monthCost;
+    grandTotal += monthTotal;
+
+    row += `<td class="num">${monthCost > 0 ? inr(monthCost) : ''}</td>`;
+    row += `<td class="num" style="font-weight:700;color:var(--gold-soft);">${
+      monthTotal > 0 ? inr(monthTotal) : ''
+    }</td>`;
+
+    html += `<tr class="month-click-row" data-month-key="${key}">${row}</tr>`;
+
+    // Weekly summary opens INSIDE this month table, directly below the month.
+    html += `<tr class="month-week-row" data-week-for="${key}" style="display:none;">
+      <td colspan="${staff.length + 3}">
+        <div class="month-week-wrap" id="month-week-${key}"></div>
+      </td>
+    </tr>`;
+  });
+
+  let totalRow = '<td class="month-label" style="font-weight:700;">Total</td>';
+  staff.forEach(name => {
+    totalRow += `<td class="num">${grand[name] > 0 ? inr(grand[name]) : ''}</td>`;
+  });
+  totalRow += `<td class="num">${grandCost > 0 ? inr(grandCost) : ''}</td>`;
+  totalRow += `<td class="num">${grandTotal > 0 ? inr(grandTotal) : ''}</td>`;
+  html += `<tr class="month-total-row">${totalRow}</tr>`;
+
+  body.innerHTML = html;
+
+  body.querySelectorAll('.month-click-row').forEach(row => {
+    row.addEventListener('click', function() {
+      const key = this.dataset.monthKey;
+      const detailRow = body.querySelector(`.month-week-row[data-week-for="${key}"]`);
+      const wrap = body.querySelector(`#month-week-${key}`);
+      const arrow = this.querySelector('.month-arrow');
+
+      if (!detailRow || !wrap) return;
+
+      if (detailRow.style.display === 'none') {
+        const [year, month] = key.split('-').map(Number);
+        const lastDay = new Date(year, month, 0).getDate();
+        const monthEntries = monthMap[key] || [];
+
+        const weeks = [
+          {label:'Week 1', start:1, end:7},
+          {label:'Week 2', start:8, end:14},
+          {label:'Week 3', start:15, end:21},
+          {label:'Week 4', start:22, end:lastDay}
+        ].filter(w => monthEntries.some(e => {
+          const d = parseInt(e.date.slice(8,10), 10);
+          return d >= w.start && d <= w.end;
+        }));
+
+        let h = '<th>Week</th>';
+        staff.forEach(name => h += `<th>${sanitize(name)}</th>`);
+        h += '<th>Cost</th><th>Total</th>';
+
+        let b = '';
+        let monthAmount = 0, monthCost = 0;
+
+        weeks.forEach(week => {
+          const rows = monthEntries.filter(e => {
+            const d = parseInt(e.date.slice(8,10), 10);
+            return d >= week.start && d <= week.end;
+          });
+
+          let r = `<td class="week-name">${week.label}<div style="font-size:8px;color:var(--faint);font-weight:400;">${week.start}–${week.end}</div></td>`;
+          let weekAmount = 0;
+
+          staff.forEach(name => {
+            const amount = rows.filter(e => e.employee === name)
+              .reduce((s,e) => s + e.amount, 0);
+            weekAmount += amount;
+            r += `<td>${amount > 0 ? inr(amount) : ''}</td>`;
+          });
+
+          const cost = rows.reduce((s,e) => s + e.saving, 0);
+          const total = weekAmount + cost;
+          monthAmount += weekAmount;
+          monthCost += cost;
+
+          r += `<td>${cost > 0 ? inr(cost) : ''}</td>`;
+          r += `<td style="font-weight:600;">${total > 0 ? inr(total) : ''}</td>`;
+          b += `<tr>${r}</tr>`;
+        });
+
+        const monthWeeklyTotal = monthAmount + monthCost;
+        let totalR = '<td>Month Total</td>';
+        staff.forEach(name => {
+          const amount = monthEntries.filter(e => e.employee === name)
+            .reduce((s,e) => s + e.amount, 0);
+          totalR += `<td>${amount > 0 ? inr(amount) : ''}</td>`;
+        });
+        totalR += `<td>${monthCost > 0 ? inr(monthCost) : ''}</td>`;
+        totalR += `<td>${monthWeeklyTotal > 0 ? inr(monthWeeklyTotal) : ''}</td>`;
+        b += `<tr class="week-total">${totalR}</tr>`;
+
+        wrap.innerHTML = `
+          <table class="month-week-table">
+            <thead><tr>${h}</tr></thead>
+            <tbody>${b}</tbody>
+          </table>`;
+
+        detailRow.style.display = 'table-row';
+        arrow.classList.add('open');
+      } else {
+        detailRow.style.display = 'none';
+        arrow.classList.remove('open');
+      }
+    });
+  });
+
+  $('monthSummarySub').textContent =
+    'Click a month to open its Weekly Summary inside this table · Monthly staff-wise collection & cost cutting';
+}
+
+
+function getTimeHourForEntry(e) {
+  const raw = e.rawTimestamp || e.time || e.entryTime || e.createdAt || e.timestamp || '';
+  const m = String(raw).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const ampm = m[4] ? m[4].toUpperCase() : '';
+  if (ampm === 'PM' && h < 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h >= 0 && h < 24 ? h : null;
+}
+
+function renderTimeCollection() {
+  const head = $('timeCollectionHead');
+  const body = $('timeCollectionBody');
+  if (!head || !body) return;
+
+  const slots = [
+    {label:'Before 09:00', start:0, end:9},
+    {label:'09:00–12:00', start:9, end:12},
+    {label:'12:00–15:00', start:12, end:15},
+    {label:'15:00–19:00', start:15, end:19},
+    {label:'19:00 onwards', start:19, end:24}
+  ];
+
+  head.innerHTML = `<tr><th>Month</th>${slots.map(s => `<th style="text-align:right">${s.label}</th>`).join('')}<th style="text-align:right">Total</th></tr>`;
+
+  const monthMap = {};
+  state.entries.forEach(e => {
+    if (!e.date) return;
+    const key = e.date.slice(0,7);
+    (monthMap[key] ||= []).push(e);
+  });
+
+  const months = Object.keys(monthMap).sort().reverse();
+  if (!months.length) {
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--faint);">No collection data available</td></tr>`;
+    return;
+  }
+
+  function getEntryHour(e) {
+  // Use the time associated with THIS entry, including cost-cutting entries.
+  const raw = e.rawTimestamp || e.time || e.entryTime || e.createdAt || e.timestamp || '';
+  const value = String(raw).trim();
+  const m = value.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const ampm = m[4] ? m[4].toUpperCase() : '';
+  if (ampm === 'PM' && h < 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h >= 0 && h < 24 ? h : null;
+}
+
+function getEntryCostCutting(e) {
+  return Number(e.saving || e.costCutting || e.cost || 0);
+}
+
+const slotAmount = (entries, slot) => entries.reduce((sum,e) => {
+    const h = getEntryHour(e);
+    if (h === null || h < slot.start || h >= slot.end) return sum;
+
+    // Both collection and Cost Cutting stay in the slot of their own time.
+    return sum + Number(e.amount || 0) + getEntryCostCutting(e);
+  }, 0);
+
+  let html = '';
+  months.forEach(key => {
+    const entries = monthMap[key];
+    const label = new Date(Number(key.slice(0,4)), Number(key.slice(5,7))-1, 1)
+      .toLocaleDateString('en-IN',{month:'long',year:'2-digit'});
+    const slotTotals = slots.map(s => slotAmount(entries,s));
+
+    const monthTotal = slotTotals.reduce((a,b)=>a+b,0);
+
+    html += `<tr class="time-month-row" data-time-month="${key}">
+      <td class="month-label"><span class="time-month-arrow">▶</span>${label}</td>
+      ${slotTotals.map(v => `<td class="num">${v ? inr(v) : ''}</td>`).join('')}
+      <td class="num" style="font-weight:700;color:var(--gold-soft);">${monthTotal ? inr(monthTotal) : ''}</td>
+    </tr>
+    <tr class="time-date-row" data-time-detail="${key}" style="display:none;">
+      <td colspan="7"><div class="time-date-wrap" id="time-detail-${key}"></div></td>
+    </tr>`;
+  });
+
+  body.innerHTML = html;
+
+  body.onclick = function(ev) {
+    const row = ev.target.closest('.time-month-row');
+    if (!row || !body.contains(row)) return;
+
+    const key = row.dataset.timeMonth;
+    const detail = body.querySelector(`[data-time-detail="${key}"]`);
+    const wrap = body.querySelector(`#time-detail-${key}`);
+    const arrow = row.querySelector('.time-month-arrow');
+    if (!detail || !wrap) return;
+
+    if (detail.style.display !== 'none') {
+      detail.style.display = 'none';
+      if (arrow) arrow.classList.remove('open');
+      return;
+    }
+
+    const entries = monthMap[key];
+    const dates = [...new Set(entries.map(e => e.date))].sort();
+    const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const dayMap = {};
+    weekdays.forEach(d => dayMap[d] = []);
+
+    dates.forEach(date => {
+      const parts = date.split('-').map(Number);
+      const d = new Date(parts[0], parts[1]-1, parts[2]);
+      dayMap[weekdays[d.getDay()]].push(date);
+    });
+
+    const calcTotals = dayDates => {
+      const dayEntries = entries.filter(e => dayDates.includes(e.date));
+      const vals = slots.map(s => slotAmount(dayEntries,s));
+      return vals;
+    };
+
+    let h = `<table class="time-date-table">
+      <thead><tr><th>Day</th>${slots.map(s=>`<th>${s.label}</th>`).join('')}<th>Total</th></tr></thead>
+      <tbody>`;
+
+    weekdays.forEach(day => {
+      if (!dayMap[day].length) return;
+      const vals = calcTotals(dayMap[day]);
+      const total = vals.reduce((a,b)=>a+b,0);
+
+      h += `<tr class="time-weekday-row" data-weekday="${key}|${day}">
+        <td style="font-weight:600;text-align:left;">
+          <span class="time-month-arrow weekday-arrow">▶</span>${day}
+        </td>
+        ${vals.map(v=>`<td>${v ? inr(v) : ''}</td>`).join('')}
+        <td style="font-weight:700;">${total ? inr(total) : ''}</td>
+      </tr>
+      <tr class="time-weekday-detail" data-weekday-detail="${key}|${day}" style="display:none;">
+        <td colspan="7">
+          <div class="time-date-wrap">
+            <table class="time-date-table">
+              <thead><tr><th>Date</th>${slots.map(s=>`<th>${s.label}</th>`).join('')}<th>Total</th></tr></thead>
+              <tbody>`;
+
+      dayMap[day].forEach(date => {
+        const dateEntries=entries.filter(e=>e.date===date);
+        const vals2=slots.map(s=>slotAmount(dateEntries,s));
+        const total2=vals2.reduce((a,b)=>a+b,0);
+
+        h += `<tr>
+          <td class="date-cell">${formatDate(date)}</td>
+          ${vals2.map(v=>`<td>${v ? inr(v) : ''}</td>`).join('')}
+          <td style="font-weight:700;">${total2 ? inr(total2) : ''}</td>
+        </tr>`;
+      });
+
+      h += `</tbody></table></div></td></tr>`;
+    });
+
+    h += `</tbody></table>`;
+    wrap.innerHTML=h;
+    detail.style.display='table-row';
+    if (arrow) arrow.classList.add('open');
+
+    // Delegated handler for weekday rows inside the newly-created table.
+    wrap.onclick=function(e2){
+      const dayRow=e2.target.closest('.time-weekday-row');
+      if(!dayRow || !wrap.contains(dayRow)) return;
+      const id=dayRow.dataset.weekday;
+      const dd=wrap.querySelector(`[data-weekday-detail="${id}"]`);
+      const da=dayRow.querySelector('.weekday-arrow');
+      if(!dd) return;
+      dd.style.display=dd.style.display==='none'?'table-row':'none';
+      if(da) da.classList.toggle('open',dd.style.display==='table-row');
+      e2.stopPropagation();
+    };
+  };
+  $('timeCollectionSub').textContent =
+    'Month → Day-wise → Date-wise · Cost Cutting counted in its actual time slot';
+}
+
+function renderStats() {
+  const today = getSelectedDateEntries();
+  const date = state.selectedDate || todayStr();
+  const count = today.length;
+  $('totalAttendCount').textContent = count;
+  $('totalAttendSub').textContent = count === 1 ? 'txn' : 'txns';
+
+  // Cash Collection - Amount + Cost Cutting
+  const cash = today.filter(e => {
+    const mode = (e.paymentMode || '').toLowerCase().trim();
+    return mode === 'cash' || mode.includes('cash');
+  });
+  const cashAmt = cash.reduce((s,e) => s + e.amount, 0);
+  const cashCost = cash.reduce((s,e) => s + e.saving, 0);
+  const cashTotal = cashAmt + cashCost;
+  $('statCash').textContent = inr(cashTotal);
+  $('statCashCost').textContent = `✂️ ${inr(cashCost)} Cost`;
+  $('statCashSub').textContent = cash.length + ' Cash';
+
+  // Online Collection - Amount + Cost Cutting
+  const online = today.filter(e => {
+    const mode = (e.paymentMode || '').toLowerCase().trim();
+    return mode === 'online' || mode.includes('online');
+  });
+  const onlineAmt = online.reduce((s,e) => s + e.amount, 0);
+  const onlineCost = online.reduce((s,e) => s + e.saving, 0);
+  const onlineTotal = onlineAmt + onlineCost;
+  $('statOnline').textContent = inr(onlineTotal);
+  $('statOnlineCost').textContent = `✂️ ${inr(onlineCost)} Cost`;
+  $('statOnlineSub').textContent = online.length + ' Online';
+
+  // Staff Collection (All)
+  const totalAmt = today.reduce((s,e) => s + e.amount, 0);
+  $('statStaff').textContent = inr(totalAmt);
+  
+  // Cost Cutting (All)
+  const totalCost = today.reduce((s,e) => s + e.saving, 0);
+  $('statCost').textContent = inr(totalCost);
+  
+  // Total Collection Today
+  $('statTotal').textContent = inr(totalAmt + totalCost);
+  $('statTotalSub').textContent = totalAmt + ' + ' + totalCost;
+}
+
+function renderMatrix() {
+  const today = getSelectedDateEntries();
+  const date = state.selectedDate || todayStr();
+  $('matrixSub').textContent = `Totals per staff (${date})`;
+  const body = $('matrixBody');
+  body.innerHTML = '';
+
+  if (!state.staffList.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--faint);">No staff data available</td></tr>';
+    return;
+  }
+
+  let grandTotalAmt = 0;
+  let grandTotalCost = 0;
+  let grandTotalEntries = 0;
+  let grandTotalCombined = 0;
+
+  state.staffList.forEach(name => {
+    const rows = today.filter(e => e.employee === name);
+    const col = rows.reduce((s,e) => s + e.amount, 0);
+    const sav = rows.reduce((s,e) => s + e.saving, 0);
+    const count = rows.length;
+    
+    grandTotalAmt += col;
+    grandTotalCost += sav;
+    grandTotalEntries += count;
+    grandTotalCombined += (col + sav);
+
+    const tr = document.createElement('tr');
+    tr.className = 'staff-row';
+    tr.innerHTML = `
+      <td class="staff-name"><span class="avatar">${initials(name)}</span>${sanitize(name)}</td>
+      <td class="num">${inr(col)}</td>
+      <td class="num">${inr(sav)}</td>
+      <td class="num">${inr(col + sav)}</td>
+      <td class="num"><span class="clickable-count" data-staff="${sanitize(name)}" data-date="${date}">${count}</span></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  // Grand Total Row ONLY
+  if (state.staffList.length > 0) {
+    const grandTotalRow = document.createElement('tr');
+    grandTotalRow.className = 'grand-total-row';
+    grandTotalRow.innerHTML = `
+      <td style="font-weight:700;">🏆 Grand Total</td>
+      <td class="num" style="font-weight:700;">${inr(grandTotalAmt)}</td>
+      <td class="num" style="font-weight:700;">${inr(grandTotalCost)}</td>
+      <td class="num" style="font-weight:700;">${inr(grandTotalCombined)}</td>
+      <td class="num" style="font-weight:700;">${grandTotalEntries}</td>
+    `;
+    body.appendChild(grandTotalRow);
+  }
+
+  document.querySelectorAll('.clickable-count').forEach(el => {
+    el.addEventListener('click', function() {
+      openStaffModal(this.dataset.staff, this.dataset.date);
+    });
+  });
+}
+
+function renderTodayEntries() {
+  const today = getSelectedDateEntries();
+  const date = state.selectedDate || todayStr();
+  $('todaySub').textContent = `All entries for ${date}`;
+  
+  const loading = $('todayLoading');
+  const table = $('todayTable');
+  const empty = $('todayEmpty');
+  
+  loading.style.display = 'none';
+  
+  if (!today.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  
+  // Sort by timestamp (ascending - oldest to newest)
+  const sorted = [...today].sort((a, b) => {
+    if (a.rawTimestamp && b.rawTimestamp) {
+      const aP = new Date(parseTimestamp(a.rawTimestamp));
+      const bP = new Date(parseTimestamp(b.rawTimestamp));
+      if (!isNaN(aP) && !isNaN(bP)) return aP - bP;
+    }
+    return a.id - b.id;
+  });
+
+  const body = $('todayBody');
+  body.innerHTML = '';
+  
+  sorted.forEach((e, index) => {
+    const time = getTimeFromTimestamp(e.rawTimestamp);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td class="entry-time">${time || '-'}</td>
+      <td>${sanitize(e.employee)}</td>
+      <td class="num">${inr(e.amount)}</td>
+      <td class="num">${sanitize(e.paymentMode || '-')}</td>
+      <td class="num">${inr(e.saving)}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function renderWeeklySummary() {
+  const monthly = getMonthlyEntries();
+  const curDate = new Date(state.selectedDate || todayStr());
+  const month = curDate.getMonth(), year = curDate.getFullYear();
+  const selectedDay = curDate.getDate();
+
+  const tbody = $('weeklyBody');
+  const thead = document.querySelector('#weeklyTable thead');
+
+  if (!monthly.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="4" style="text-align:center;color:var(--faint);">No data for this month</td></tr>';
+    $('weeklySub').textContent = 'No data available';
+    return;
+  }
+
+  const staff = state.staffList.length
+    ? state.staffList
+    : [...new Set(monthly.map(e => e.employee).filter(Boolean))];
+
+  // Existing locked ranges.
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const weeks = [
+    { label: 'Week 1', start: 1, end: 7 },
+    { label: 'Week 2', start: 8, end: 14 },
+    { label: 'Week 3', start: 15, end: 21 },
+    { label: 'Week 4', start: 22, end: lastDay }
+  ];
+
+  let hHTML = '<th>Week</th>';
+  staff.forEach(name => hHTML += `<th style="text-align:right">${sanitize(name)}</th>`);
+  hHTML += '<th style="text-align:right">Cost</th><th style="text-align:right">Total</th>';
+  thead.innerHTML = `<tr>${hHTML}</tr>`;
+
+  let bHTML = '';
+
+  // Latest two dates with data stay at the top.
+  [...new Set(monthly.map(e => e.date))]
+    .sort()
+    .slice(-2)
+    .reverse()
+    .forEach(date => {
+      const entries = monthly.filter(e => e.date === date);
+      let row = `<td class="period-label">Date (${formatDate(date)})</td>`;
+      let amountTotal = 0, costTotal = 0;
+
+      staff.forEach(name => {
+        const rows = entries.filter(e => e.employee === name);
+        const amount = rows.reduce((s,e) => s + e.amount, 0);
+        const cost = rows.reduce((s,e) => s + e.saving, 0);
+        amountTotal += amount;
+        costTotal += cost;
+        row += `<td class="num">${amount > 0 ? inr(amount) : ''}</td>`;
+      });
+
+      row += `<td class="num">${costTotal > 0 ? inr(costTotal) : ''}</td>`;
+      row += `<td class="num" style="font-weight:700;color:var(--gold-soft);">${
+        amountTotal + costTotal > 0 ? inr(amountTotal + costTotal) : ''
+      }</td>`;
+      bHTML += `<tr>${row}</tr>`;
+    });
+
+  // Active weeks only. Clicking a week expands the date-wise table directly underneath.
+  weeks.filter(w => selectedDay >= w.start).reverse().forEach(week => {
+    const weekEntries = monthly.filter(e => {
+      const day = parseInt(e.date.slice(8,10), 10);
+      return day >= week.start && day <= week.end;
+    });
+
+    let row = `<td class="period-label week-expand-cell"
+      data-week-start="${week.start}"
+      data-week-end="${week.end}"
+      data-week-label="${week.label}">
+      <span class="week-arrow">▶</span>
+      <div style="display:inline-block;vertical-align:middle;">
+        <div>${week.label}</div>
+        <div style="font-size:8px;color:var(--faint);font-weight:400;margin-top:2px;">${week.start}–${week.end}</div>
+      </div>
+    </td>`;
+
+    let weekAmount = 0, weekCost = 0;
+
+    staff.forEach(name => {
+      const rows = weekEntries.filter(e => e.employee === name);
+      const amount = rows.reduce((s,e) => s + e.amount, 0);
+      const cost = rows.reduce((s,e) => s + e.saving, 0);
+      weekAmount += amount;
+      weekCost += cost;
+      row += `<td class="num">${amount > 0 ? inr(amount) : ''}</td>`;
+    });
+
+    row += `<td class="num">${weekCost > 0 ? inr(weekCost) : ''}</td>`;
+    row += `<td class="num" style="font-weight:700;color:var(--gold-soft);">${
+      weekAmount + weekCost > 0 ? inr(weekAmount + weekCost) : ''
+    }</td>`;
+
+    bHTML += `<tr>${row}</tr>`;
+    bHTML += `<tr class="week-detail-row" data-detail-for="${week.label}" style="display:none;">
+      <td colspan="${staff.length + 3}">
+        <div class="week-detail-wrap" id="detail-${week.label.replace(/\s+/g,'-').toLowerCase()}"></div>
+      </td>
+    </tr>`;
+  });
+
+  // Grant Total — same monthly calculation as before.
+  let grandAmount = 0, grandCost = 0;
+  let grandRow = '<td style="font-weight:700;color:var(--gold-soft);font-size:13px;">Grant Total</td>';
+
+  staff.forEach(name => {
+    const rows = monthly.filter(e => e.employee === name);
+    const amount = rows.reduce((s,e) => s + e.amount, 0);
+    const cost = rows.reduce((s,e) => s + e.saving, 0);
+    grandAmount += amount;
+    grandCost += cost;
+    grandRow += `<td class="num" style="font-weight:700;color:var(--gold-soft);font-size:13px;">${amount > 0 ? inr(amount) : ''}</td>`;
+  });
+
+  grandRow += `<td class="num" style="font-weight:700;color:var(--gold-soft);font-size:13px;">${grandCost > 0 ? inr(grandCost) : ''}</td>`;
+  grandRow += `<td class="num" style="font-weight:700;color:var(--gold-soft);font-size:13px;">${
+    grandAmount + grandCost > 0 ? inr(grandAmount + grandCost) : ''
+  }</td>`;
+
+  bHTML += `<tr class="grand-total">${grandRow}</tr>`;
+  tbody.innerHTML = bHTML;
+
+  // Bind after the table is rendered. No popup/modal and no document-level handler.
+  tbody.querySelectorAll('.week-expand-cell').forEach(cell => {
+    cell.addEventListener('click', function() {
+      const label = this.dataset.weekLabel;
+      const detailRow = tbody.querySelector(`.week-detail-row[data-detail-for="${label}"]`);
+      const wrap = $(this.closest('tbody').querySelector(
+        `.week-detail-row[data-detail-for="${label}"] div[id]`
+      ).id);
+      const arrow = this.querySelector('.week-arrow');
+
+      if (!detailRow || !wrap) return;
+
+      if (detailRow.style.display === 'none') {
+        const startDay = Number(this.dataset.weekStart);
+        const endDay = Number(this.dataset.weekEnd);
+
+        const dates = [...new Set(
+          monthly.filter(e => {
+            const day = parseInt(e.date.slice(8,10), 10);
+            return day >= startDay && day <= endDay;
+          }).map(e => e.date)
+        )].sort();
+
+        let head = '<th>Date</th>';
+        staff.forEach(name => head += `<th>${sanitize(name)}</th>`);
+        head += '<th>Cost</th><th>Total</th>';
+
+        let body = '';
+        let totalAmount = 0, totalCost = 0;
+
+        dates.forEach(date => {
+          const entries = monthly.filter(e => e.date === date);
+          let dateAmount = 0, dateCost = 0;
+          let r = `<td class="date-cell">${formatDate(date)}</td>`;
+
+          staff.forEach(name => {
+            const rows = entries.filter(e => e.employee === name);
+            const amount = rows.reduce((s,e) => s + e.amount, 0);
+            const cost = rows.reduce((s,e) => s + e.saving, 0);
+            dateAmount += amount;
+            dateCost += cost;
+            r += `<td>${amount > 0 ? inr(amount) : ''}</td>`;
+          });
+
+          totalAmount += dateAmount;
+          totalCost += dateCost;
+          r += `<td>${dateCost > 0 ? inr(dateCost) : ''}</td>`;
+          r += `<td style="font-weight:600;">${dateAmount + dateCost > 0 ? inr(dateAmount + dateCost) : ''}</td>`;
+          body += `<tr>${r}</tr>`;
+        });
+
+        if (!dates.length) {
+          body = `<tr><td colspan="${staff.length + 3}" style="text-align:center;color:var(--faint);padding:15px;">No date-wise data available</td></tr>`;
+        } else {
+          let totalRow = '<td>Week Total</td>';
+          staff.forEach(name => {
+            const amount = dates.reduce((sum,date) =>
+              sum + monthly.filter(e => e.date === date && e.employee === name)
+                .reduce((s,e) => s + e.amount, 0), 0);
+            totalRow += `<td>${amount > 0 ? inr(amount) : ''}</td>`;
+          });
+          totalRow += `<td>${totalCost > 0 ? inr(totalCost) : ''}</td>`;
+          totalRow += `<td>${totalAmount + totalCost > 0 ? inr(totalAmount + totalCost) : ''}</td>`;
+          body += `<tr class="detail-total">${totalRow}</tr>`;
+        }
+
+        wrap.innerHTML = `<table class="week-detail-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+        detailRow.style.display = 'table-row';
+        arrow.classList.add('open');
+      } else {
+        detailRow.style.display = 'none';
+        arrow.classList.remove('open');
+      }
+    });
+  });
+
+  $('weeklySub').textContent = `Click a week to view date-wise data · ranges: 1–7, 8–14, 15–21, 22–${lastDay}`;
+}
+// Debounced render
+const debouncedRender = debounce(() => {
+  renderStats();
+  renderMatrix();
+  renderMonthSummary();
+  renderTimeCollection();
+  renderTodayEntries();
+  renderWeeklySummary();
+  setTimeout(() => {
+    try { renderAllAnalytics(); } catch (e) { console.error('Analytics render:', e); }
+  }, 0);
+}, 200);
+
+// ============================================================
+// ADD ENTRY - UI to Google Sheets
+// ============================================================
+async function handleAddEntry() {
+  if (state.isAdding) return;
+  
+  const nameInput = $('inputName');
+  const amountInput = $('inputAmount');
+  const paymentInput = $('inputPayment');
+  const costInput = $('inputCost');
+  const addBtn = $('addEntryBtn');
+  
+  const name = nameInput.value.trim();
+  const amount = parseFloat(amountInput.value);
+  const paymentMode = paymentInput.value;
+  const cost = parseFloat(costInput.value) || 0;
+  
+  // Validation
+  if (!name) {
+    showToast('⚠️ Please select a staff member', 'error');
+    nameInput.focus();
+    return;
+  }
+  
+  if (isNaN(amount) || amount <= 0) {
+    showToast('⚠️ Please enter a valid amount', 'error');
+    amountInput.focus();
+    return;
+  }
+  
+  // Disable button
+  state.isAdding = true;
+  addBtn.disabled = true;
+  addBtn.textContent = '⏳ Adding...';
+  
+  try {
+    // Save to Google Sheets
+    const success = await addEntryToSheet(name, amount, paymentMode, cost);
+    
+    if (success) {
+      showToast(`✅ Added: ${name} - ₹${amount} (${paymentMode})`, 'success');
+      
+      // Clear inputs
+      nameInput.value = '';
+      amountInput.value = '';
+      costInput.value = '0';
+      
+      // Refresh data
+      await syncWithGoogleSheets(false);
+    }
+  } catch (e) {
+    console.error('Add entry error:', e);
+    showToast('⚠️ Failed to add entry: ' + e.message, 'error');
+  }
+  
+  state.isAdding = false;
+  addBtn.disabled = false;
+  addBtn.textContent = '➕ Add';
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(title, entriesForDate) {
+  const overlay = $('modalOverlay');
+  $('modalTitle').textContent = title;
+  const body = $('modalBody');
+  body.innerHTML = '';
+  let total = 0;
+  
+  // Sort by timestamp (ascending - oldest to newest)
+  const sorted = [...entriesForDate].sort((a, b) => {
+    if (a.rawTimestamp && b.rawTimestamp) {
+      const aP = new Date(parseTimestamp(a.rawTimestamp));
+      const bP = new Date(parseTimestamp(b.rawTimestamp));
+      if (!isNaN(aP) && !isNaN(bP)) return aP - bP;
+    }
+    return a.id - b.id;
+  });
+  
+  sorted.forEach((e, i) => {
+    total += e.amount;
+    const time = getTimeFromTimestamp(e.rawTimestamp);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td class="modal-time">${time || '-'}</td>
+      <td>${sanitize(e.employee)}</td>
+      <td class="num">${sanitize(e.paymentMode || '-')}</td>
+      <td class="num">${inr(e.amount)}</td>
+      <td class="num">${inr(e.saving)}</td>
+    `;
+    body.appendChild(tr);
+  });
+  
+  $('modalTotal').textContent = `Total: ${inr(total)} | ${sorted.length} entries`;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function openStaffModal(name, date) {
+  const entries = state.entries.filter(e => e.employee === name && e.date === date);
+  if (!entries.length) { showToast(`ℹ️ No entries for ${name} on ${date}`, 'info'); return; }
+  openModal(`👤 ${name} - ${date}`, entries);
+}
+
+function openTotalModal() {
+  const entries = getSelectedDateEntries();
+  if (!entries.length) { showToast('ℹ️ No entries for this date', 'info'); return; }
+  openModal(`📋 All Entries - ${state.selectedDate || todayStr()}`, entries);
+}
+
+function closeModal() {
+  $('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+function setReportButtons(active) {
+  document.querySelectorAll('.report-nav-btn').forEach(btn => btn.classList.remove('active'));
+  const map = {
+    today: 'reportTodayBtn',
+    weekly: 'reportWeeklyBtn',
+    monthly: 'reportMonthlyBtn',
+    time: 'reportTimeBtn',
+    trend: 'reportTrendBtn'
+  };
+  const btn = $(map[active]);
+  if (btn) btn.classList.add('active');
+}
+
+function applyReportView(view) {
+  state.activeReport = view;
+  setReportButtons(view);
+
+  const show = (selector, visible) => {
+    document.querySelectorAll(selector).forEach(el => {
+      el.style.display = visible ? '' : 'none';
+    });
+  };
+
+  // Transaction count button is shown only on Today.
+  show('#totalAttendBtn', view === 'today');
+
+  // Today = current stats + staff matrix + today's entries.
+  show('#statCards', view === 'today');
+  show('.staff-matrix', view === 'today');
+  show('.today-entries', view === 'today');
+
+  // Each report opens only its own data section.
+  show('.weekly-summary', view === 'weekly');
+  show('.month-summary', view === 'monthly');
+  show('.time-collection', view === 'time');
+
+  // All trends are inside the dedicated Trend button.
+  show('.today-analytics', false);
+  show('.weekly-analytics', false);
+  show('.monthly-analytics', false);
+  show('#trendDashboard', view === 'trend');
+
+  if (view === 'today') {
+    $('dashboardDateControls').style.display = 'flex';
+  } else {
+    $('dashboardDateControls').style.display = 'none';
+  }
+
+  debouncedRender();
+  // Old report views are data-only. All graphs/trends belong only to Trend.
+  if(view !== 'trend'){
+    show('.today-analytics', false);
+    show('.weekly-analytics', false);
+    show('.monthly-analytics', false);
+    show('.time-analytics', false);
+  }
+}
+
+async function openReport(view) {
+  // Every report syncs only when the user opens it.
+  showView('dashboard');
+  applyReportView(view);
+  await syncWithGoogleSheets(false, true);
+  applyReportView(view);
+  setTimeout(() => {
+    try { renderAllAnalytics(); } catch(e) { console.error('Report trend:',e); }
+  }, 0);
+}
+
+function showView(view) {
+  const dashboard = $('dashboardView');
+  const entry = $('entryView');
+  const entryBtn = $('entryBtn');
+  const dateControls = $('dashboardDateControls');
+
+  if (view === 'entry') {
+    dashboard.style.display = 'none';
+    entry.style.display = 'block';
+    if (entryBtn) entryBtn.classList.add('active');
+    document.querySelectorAll('.report-nav-btn').forEach(btn => btn.classList.remove('active'));
+    dateControls.style.display = 'none';
+    populateStaffDropdown();
+  } else {
+    entry.style.display = 'none';
+    dashboard.style.display = 'block';
+    if (entryBtn) entryBtn.classList.remove('active');
+    applyReportView(state.activeReport || 'today');
+  }
+}
+
+$('reportTodayBtn').addEventListener('click', () => openReport('today'));
+$('reportWeeklyBtn').addEventListener('click', () => openReport('weekly'));
+$('reportMonthlyBtn').addEventListener('click', () => openReport('monthly'));
+$('reportTimeBtn').addEventListener('click', () => openReport('time'));
+$('reportTrendBtn').addEventListener('click', () => openReport('trend'));
+
+$('dashboardBtn')?.addEventListener('click', () => openReport('today'));
+$('entryBtn').addEventListener('click', () => showView('entry'));
+$('backDashboardBtn').addEventListener('click', () => {
+  showView('dashboard');
+  openReport('today');
+});
+
+$('totalAttendBtn').addEventListener('click', openTotalModal);
+$('modalCloseBtn').addEventListener('click', closeModal);
+$('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+$('datePicker').addEventListener('change', function() {
+  state.selectedDate = this.value;
+  debouncedRender();
+});
+
+$('todayBtn').addEventListener('click', function() {
+  const t = todayStr();
+  $('datePicker').value = t;
+  state.selectedDate = t;
+  openReport('today');
+});
+
+$('manualSyncBtn').addEventListener('click', () => syncWithGoogleSheets(false));
+
+// Add Entry Button
+$('addEntryBtn').addEventListener('click', handleAddEntry);
+
+// Enter key support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const active = document.activeElement;
+    if (active && ['inputName', 'inputAmount', 'inputPayment', 'inputCost'].includes(active.id)) {
+      handleAddEntry();
+    }
+  }
+});
+
+// ============================================================
+// AUTO SYNC
+// ============================================================
+let autoSyncInterval;
+function startAutoSync() {
+  if (autoSyncInterval) clearInterval(autoSyncInterval);
+  autoSyncInterval = setInterval(() => {
+    if (state.activeReport === 'today') syncWithGoogleSheets(true);
+  }, CONFIG.SYNC_INTERVAL);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async function init() {
+  $('datePicker').value = todayStr();
+  state.selectedDate = todayStr();
+  loadEntries();
+  state.staffList = loadStaffList();
+  updateSubtitle();
+  applyReportView('today');
+  await syncWithGoogleSheets(false, true);
+  applyReportView('today');
+  debouncedRender();
+  setTimeout(renderAllAnalytics, 250);
+  startAutoSync();
+  $('syncText').textContent = 'Auto ON';
+  $('syncDot').className = 'dot';
+  console.log('✅ Dashboard ready');
+})();
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.activeReport === 'today') syncWithGoogleSheets(true);
+});
+
+window.addEventListener('beforeunload', () => {
+  if (autoSyncInterval) clearInterval(autoSyncInterval);
+});
+
+/* 1.28 non-destructive trend layer */
+const A_PALETTE=['#d6ae4a','#78a8d6','#7fc5a2','#c48ac7','#d99070','#7bb8b1','#a99ad2','#c8be6b'];
+function aMoney(n){return '₹'+Math.round(Number(n)||0).toLocaleString('en-IN');}
+function aStaff(){
+  return state.staffList?.length ? [...state.staffList] :
+    [...new Set((state.entries||[]).map(e=>e.employee).filter(Boolean))];
+}
+function aChart(id,labels,series){
+  const el=$(id); if(!el)return;
+  series=(series||[]).filter(s=>s.values?.length);
+  if(!labels?.length||!series.length){el.innerHTML='<div class="analytics-empty">No trend data available</div>';return;}
+  const W=640,H=170,L=42,R=10,T=12,B=28,IW=W-L-R,IH=H-T-B;
+  const max=Math.max(1,...series.flatMap(s=>s.values.map(Number)))*1.12;
+  const x=i=>labels.length===1?L+IW/2:L+(IW*i/(labels.length-1));
+  const y=v=>T+IH-(Number(v||0)/max)*IH;
+  let s=`<svg class="analytics-chart" viewBox="0 0 ${W} ${H}">`;
+  for(let g=0;g<4;g++){let yy=T+IH*g/3;s+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="rgba(255,255,255,.07)"/>`;}
+  series.forEach((q,si)=>{
+    const pts=q.values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${q.color||A_PALETTE[si%A_PALETTE.length]}" stroke-width="${si?2:3}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    q.values.forEach((v,i)=>s+=`<circle cx="${x(i)}" cy="${y(v)}" r="2.8" fill="${q.color||A_PALETTE[si%A_PALETTE.length]}"/>`);
+  });
+  labels.forEach((l,i)=>s+=`<text x="${x(i)}" y="${H-7}" text-anchor="middle" fill="#77736b" font-size="8">${String(l).slice(0,14)}</text>`);
+  s+='</svg>';
+  el.innerHTML=s;
+}
+function renderTodayAnalytics(){
+  const selected = state.selectedDate || todayStr();
+  const rows = (state.entries || []).filter(e => String(e.date || '').slice(0,10) === selected);
+
+  const staffMap = {};
+  const modeMap = {};
+  let total = 0, cost = 0;
+
+  rows.forEach(e => {
+    const amount = Number(e.amount) || 0;
+    const saving = Number(e.saving) || 0;
+    const staff = String(e.employee || 'Unknown').trim() || 'Unknown';
+    const mode = String(e.paymentMode || 'Other').trim() || 'Other';
+
+    total += amount;
+    cost += saving;
+    staffMap[staff] = (staffMap[staff] || 0) + amount;
+    modeMap[mode] = (modeMap[mode] || 0) + amount;
+  });
+
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+
+  const bars = (map, empty='No data available') => {
+    const list = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+    if (!list.length) return `<div class="analytics-empty">${empty}</div>`;
+    const max = Math.max(...list.map(x=>x[1]),1);
+    return `<div class="analytics-bars">${list.slice(0,8).map(([name,val])=>`
+      <div class="analytics-bar-row">
+        <div class="analytics-bar-name" title="${esc(name)}">${esc(name)}</div>
+        <div class="analytics-bar-track">
+          <div class="analytics-bar-fill" style="width:${Math.max(3,val/max*100)}%"></div>
+        </div>
+        <div class="analytics-bar-amt">${aMoney(val)}</div>
+      </div>`).join('')}</div>`;
+  };
+
+  const dateLabel = new Date(selected+'T00:00:00')
+    .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  const totalEl=document.getElementById('aTodayCollection');
+  if(totalEl){
+    totalEl.innerHTML = `
+      <div class="analytics-value">
+        <strong>${aMoney(total)}</strong>
+        <span>${esc(dateLabel)}</span>
+      </div>
+      <div class="analytics-bars">
+        <div class="analytics-bar-row">
+          <div class="analytics-bar-name">Entries</div>
+          <div class="analytics-bar-track">
+            <div class="analytics-bar-fill" style="width:${rows.length?100:0}%"></div>
+          </div>
+          <div class="analytics-bar-amt">${rows.length}</div>
+        </div>
+        <div class="analytics-bar-row">
+          <div class="analytics-bar-name">Cost Cutting</div>
+          <div class="analytics-bar-track">
+            <div class="analytics-bar-fill" style="width:${total?Math.min(100,cost/total*100):0}%;opacity:.65"></div>
+          </div>
+          <div class="analytics-bar-amt">${aMoney(cost)}</div>
+        </div>
+      </div>`;
+  }
+
+  const staffEl=document.getElementById('aTodayStaff');
+  if(staffEl) staffEl.innerHTML=bars(staffMap,'No staff collection for this date');
+
+  const payEl=document.getElementById('aTodayPayment');
+  if(payEl) payEl.innerHTML=bars(modeMap,'No payment-mode collection for this date');
+}
+
+function renderWeeklyAnalytics(){
+  const selected = state.selectedDate || todayStr();
+  const d = new Date(selected+'T00:00:00');
+  const y=d.getFullYear(), m=d.getMonth();
+  const last=new Date(y,m+1,0).getDate();
+
+  // Exactly the same week ranges used by Weekly Summary.
+  const ranges=[
+    ['Week 1',1,7],
+    ['Week 2',8,14],
+    ['Week 3',15,21],
+    ['Week 4',22,last]
+  ].filter(w=>w[1] <= last);
+
+  const rows=(state.entries||[]).filter(e=>{
+    const ed=String(e.date||'').slice(0,10);
+    if(!ed) return false;
+    const x=new Date(ed+'T00:00:00');
+    return x.getFullYear()===y && x.getMonth()===m;
+  });
+
+  const rowsIn=(w)=>rows.filter(e=>{
+    const day=parseInt(String(e.date).slice(8,10),10);
+    return day>=w[1] && day<=w[2];
+  });
+
+  const totalVals=ranges.map(w=>
+    rowsIn(w).reduce((n,e)=>n+(Number(e.amount)||0),0)
+  );
+
+  const staff=aStaff();
+  aChart(
+    'aWeeklyTotal',
+    ranges.map(w=>w[0]),
+    [{label:'Collection',values:totalVals,color:A_PALETTE[0]}]
+  );
+
+  aChart(
+    'aWeeklyStaff',
+    ranges.map(w=>w[0]),
+    staff.slice(0,8).map((name,i)=>({
+      label:name,
+      values:ranges.map(w=>
+        rowsIn(w)
+          .filter(e=>String(e.employee||'').trim()===String(name).trim())
+          .reduce((n,e)=>n+(Number(e.amount)||0),0)
+      ),
+      color:A_PALETTE[i%A_PALETTE.length]
+    }))
+  );
+
+  const costVals=ranges.map(w=>
+    rowsIn(w).reduce((n,e)=>n+(Number(e.saving)||0),0)
+  );
+
+  aChart(
+    'aWeeklyCost',
+    ranges.map(w=>w[0]),
+    [{label:'Cost Cutting',values:costVals,color:A_PALETTE[3]}]
+  );
+}
+
+function renderMonthlyAnalytics(){
+  const monthMap={};
+
+  (state.entries||[]).forEach(e=>{
+    const date=String(e.date||'').slice(0,10);
+    if(!date) return;
+    const key=date.slice(0,7);
+    if(!monthMap[key]) monthMap[key]=[];
+    monthMap[key].push(e);
+  });
+
+  const keys=Object.keys(monthMap).sort();
+  const labels=keys.map(k=>{
+    const [y,m]=k.split('-').map(Number);
+    return new Date(y,m-1,1).toLocaleDateString('en-IN',{
+      month:'short',year:'2-digit'
+    });
+  });
+
+  const staff=aStaff();
+
+  aChart(
+    'aMonthlyTotal',
+    labels,
+    [{
+      label:'Collection',
+      values:keys.map(k=>
+        monthMap[k].reduce((n,e)=>n+(Number(e.amount)||0),0)
+      ),
+      color:A_PALETTE[0]
+    }]
+  );
+
+  aChart(
+    'aMonthlyStaff',
+    labels,
+    staff.slice(0,8).map((name,i)=>({
+      label:name,
+      values:keys.map(k=>
+        monthMap[k]
+          .filter(e=>String(e.employee||'').trim()===String(name).trim())
+          .reduce((n,e)=>n+(Number(e.amount)||0),0)
+      ),
+      color:A_PALETTE[i%A_PALETTE.length]
+    }))
+  );
+
+  aChart(
+    'aMonthlyCost',
+    labels,
+    [{
+      label:'Cost Cutting',
+      values:keys.map(k=>
+        monthMap[k].reduce((n,e)=>n+(Number(e.saving)||0),0)
+      ),
+      color:A_PALETTE[3]
+    }]
+  );
+}
+
+function renderAllAnalytics(){
+  const view = state.activeReport || 'today';
+  if(view === 'trend'){
+    try{renderDedicatedTrend();}catch(e){console.error('Trend:',e);}
+  }else if(view === 'today'){
+    try{renderTodayAnalytics();}catch(e){console.error('Today trend:',e);}
+  }else if(view === 'weekly'){
+    try{renderWeeklyAnalytics();}catch(e){console.error('Weekly trend:',e);}
+  }else if(view === 'monthly'){
+    try{renderMonthlyAnalytics();}catch(e){console.error('Monthly trend:',e);}
+  }
+}
+
+
+function trendMoney(n){return '₹'+Math.round(Number(n)||0).toLocaleString('en-IN');}
+function renderTrendBars(id,items){
+ const el=document.getElementById(id);if(!el)return;
+ items=(items||[]).filter(x=>Number(x.value)>0);
+ if(!items.length){el.innerHTML='<div class="bar3d-empty">No data available</div>';return;}
+ const max=Math.max(...items.map(x=>Number(x.value)||0),1);
+ el.innerHTML=items.map(x=>{const h=Math.max(5,(Number(x.value)||0)/max*78);const label=String(x.label||'').replace(/[&<>"']/g,'');return `<div class="bar3d"><div class="bar3d-body" style="--h:${h}%"></div><div class="bar3d-value">${trendMoney(x.value)}</div><div class="bar3d-label">${label}</div></div>`}).join('');
+}
+function renderDedicatedTrend(){
+ const entries=state.entries||[], selected=state.selectedDate||todayStr(), monthKey=selected.slice(0,7);
+ const monthRows=entries.filter(e=>String(e.date||'').slice(0,7)===monthKey);
+ const [yy,mm]=monthKey.split('-').map(Number), last=new Date(yy,mm,0).getDate();
+ const weeks=[['Week 1',1,7],['Week 2',8,14],['Week 3',15,21],['Week 4',22,last]].filter(w=>w[1]<=last).map(w=>({label:w[0],value:monthRows.filter(e=>{const d=+String(e.date||'').slice(8,10);return d>=w[1]&&d<=w[2]}).reduce((n,e)=>n+(+e.amount||0),0)}));
+ const staff={},modes={},months={},costs={};
+ monthRows.forEach(e=>{const s=String(e.employee||'Unknown').trim()||'Unknown';staff[s]=(staff[s]||0)+(+e.amount||0);const m=String(e.paymentMode||'Other').trim()||'Other';modes[m]=(modes[m]||0)+(+e.amount||0)});
+ entries.forEach(e=>{const k=String(e.date||'').slice(0,7);if(!k)return;months[k]=(months[k]||0)+(+e.amount||0);costs[k]=(costs[k]||0)+(+e.saving||0)});
+ const keys=Object.keys(months).sort().slice(-8),ml=k=>{const [y,m]=k.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'})},sum=o=>Object.values(o).reduce((n,v)=>n+v,0),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=trendMoney(v)};
+ set('trendCollectionTotal',weeks.reduce((n,x)=>n+x.value,0));set('trendStaffTotal',sum(staff));set('trendPaymentTotal',sum(modes));set('trendMonthlyTotal',keys.reduce((n,k)=>n+months[k],0));set('trendCostTotal',keys.reduce((n,k)=>n+costs[k],0));
+ const period=document.getElementById('trendPeriodLabel');if(period)period.textContent=new Date(monthKey+'-01T00:00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+ renderTrendBars('trendCollectionBars',weeks);renderTrendBars('trendStaffBars',Object.entries(staff).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value})));renderTrendBars('trendPaymentBars',Object.entries(modes).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})));renderTrendBars('trendMonthlyBars',keys.map(k=>({label:ml(k),value:months[k]})));renderTrendBars('trendCostBars',keys.map(k=>({label:ml(k),value:costs[k]})));
+}
+
+</script>
+</body>
+</html>
