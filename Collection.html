@@ -162,6 +162,16 @@ h2 {
   cursor: not-allowed;
 }
 
+.dashboard-btn {
+  margin-top: 8px;
+  background: #332C22;
+  color: #F3EEE3;
+}
+
+.dashboard-btn:hover:not(:disabled) {
+  background: #4A3F33;
+}
+
 .btn:hover:not(:disabled) {
   background: #E4C55C;
 }
@@ -565,7 +575,15 @@ h2 {
       type="submit"
       class="btn"
       id="submitBtn">
-      + Add Entry
+      Save and New Entry
+    </button>
+
+    <button
+      type="button"
+      class="btn dashboard-btn"
+      id="dashboardBtn"
+      onclick="window.location.href='https://jkdrycleaner.github.io/Salon_Dashboard/'">
+      Dashboard
     </button>
 
   </form>
@@ -1034,7 +1052,7 @@ document
 
       isSubmitting = false;
       button.disabled = false;
-      button.textContent = '+ Add Entry';
+      button.textContent = 'Save and New Entry';
 
     }
   );
