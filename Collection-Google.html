@@ -391,7 +391,7 @@ h2 {
 // ========================================
 
 const SCRIPT_URL =
-'https://script.google.com/macros/s/AKfycbz6zO6TXGWx78gtTxr1ADKbwgXjBr6hr75DdRKQawTbMJYHLBt5y6Lv8FvIaHhTjESY7g/exec';
+'https://script.google.com/macros/s/AKfycbySHxiWXlASq-njiZhPmCW9RVJvvWGAZCDq_IGa8lBg-RjzcMwqyLx6HbMsQdh-Iwjm/exec';
 
 
 // ========================================
@@ -643,6 +643,12 @@ async function sendToSheet(data) {
     googleCredential
   );
 
+  // Send the signed-in email as a fallback.
+  formData.append(
+    'email',
+    userEmail
+  );
+
   console.log('📤 Sending data to sheet:', {
     staff: data.staff,
     paymentMode: data.paymentMode,
@@ -766,7 +772,8 @@ document
         paymentMode: payment,
         amount: amount,
         costCutting: cost,
-        serviceType: serviceType  // ✅ Now included in data object
+        serviceType: serviceType,  // ✅ Now included in data object
+        entryNo: document.getElementById('entryNo').value.replace(/[^0-9]/g, '')
       };
 
       // Log the data being sent
@@ -806,6 +813,10 @@ document
           
         document
           .getElementById('serviceType')
+          .value = '';
+
+        document
+          .getElementById('entryNo')
           .value = '';
 
         showStatus(
