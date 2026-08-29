@@ -162,6 +162,16 @@ h2 {
   cursor: not-allowed;
 }
 
+.dashboard-btn {
+  margin-top: 8px;
+  background: #332C22;
+  color: #F3EEE3;
+}
+
+.dashboard-btn:hover:not(:disabled) {
+  background: #4A3F33;
+}
+
 .btn:hover:not(:disabled) {
   background: #E4C55C;
 }
@@ -459,7 +469,9 @@ h2 {
       id="g_id_onload"
       data-client_id="326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com"
       data-callback="handleGoogleLogin"
-      data-auto_prompt="false">
+      data-auto_prompt="true"
+      data-auto_select="true"
+      data-use_fedcm_for_prompt="true">
     </div>
 
     <div
@@ -565,7 +577,15 @@ h2 {
       type="submit"
       class="btn"
       id="submitBtn">
-      + Add Entry
+      Save and New Entry
+    </button>
+
+    <button
+      type="button"
+      class="btn dashboard-btn"
+      id="dashboardBtn"
+      onclick="window.location.href='https://jkdrycleaner.github.io/Salon_Dashboard/'">
+      Dashboard
     </button>
 
   </form>
@@ -605,6 +625,19 @@ let isAuthenticated = false;
 // Check for existing session on page load
 window.addEventListener('load', function() {
   checkExistingSession();
+
+  // If no valid local session exists, let Google Identity Services
+  // use auto-select/One Tap when the browser permits it.
+  setTimeout(function() {
+    if (
+      !isAuthenticated &&
+      window.google &&
+      google.accounts &&
+      google.accounts.id
+    ) {
+      google.accounts.id.prompt();
+    }
+  }, 300);
 });
 
 
@@ -612,30 +645,129 @@ window.addEventListener('load', function() {
 // CHECK EXISTING SESSION
 // ========================================
 
+const STORAGE_CREDENTIAL = 'salon_google_credential';
+const STORAGE_EMAIL = 'salon_user_email';
+
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    return JSON.parse(
+      atob(
+        parts[1]
+          .replace(/-/g, '+')
+          .replace(/_/g, '/')
+      )
+    );
+  } catch (error) {
+    console.error('JWT decode error:', error);
+    return null;
+  }
+}
+
+function isCredentialValid(token) {
+  const payload = decodeJwtPayload(token);
+
+  if (!payload) return false;
+
+  // ID tokens contain exp as Unix seconds.
+  // Keep a 60-second safety buffer.
+  if (payload.exp && (Date.now() / 1000) >= (payload.exp - 60)) {
+    return false;
+  }
+
+  return true;
+}
+
 function checkExistingSession() {
-  // Check if we have a stored credential in sessionStorage
-  const storedCredential = sessionStorage.getItem('googleCredential');
-  const storedEmail = sessionStorage.getItem('userEmail');
-  
-  if (storedCredential && storedEmail) {
-    // Restore session
+
+  // First use persistent storage so a page reload/new tab on the
+  // same phone does not force Google authentication again.
+  let storedCredential =
+    localStorage.getItem(STORAGE_CREDENTIAL);
+
+  let storedEmail =
+    localStorage.getItem(STORAGE_EMAIL);
+
+  // Migrate the previous sessionStorage values if they exist.
+  if (!storedCredential || !storedEmail) {
+    const oldCredential =
+      sessionStorage.getItem('googleCredential');
+
+    const oldEmail =
+      sessionStorage.getItem('userEmail');
+
+    if (oldCredential && oldEmail) {
+      storedCredential = oldCredential;
+      storedEmail = oldEmail;
+
+      localStorage.setItem(
+        STORAGE_CREDENTIAL,
+        storedCredential
+      );
+
+      localStorage.setItem(
+        STORAGE_EMAIL,
+        storedEmail
+      );
+    }
+  }
+
+  // Restore only a still-valid Google ID token.
+  if (
+    storedCredential &&
+    storedEmail &&
+    isCredentialValid(storedCredential)
+  ) {
+
     googleCredential = storedCredential;
     userEmail = storedEmail;
     isAuthenticated = true;
-    
-    // Update UI
+
     updateUIAfterLogin();
-    
-    console.log('Session restored for:', userEmail);
-    showStatus('Session restored. Welcome back!', 'info');
-    
-    // Auto-hide status after 3 seconds
-    setTimeout(hideStatus, 3000);
+
+    console.log(
+      'Persistent Google session restored for:',
+      userEmail
+    );
+
+    return;
+  }
+
+  // Expired/invalid credential: remove it and allow Google
+  // Identity Services to authenticate again.
+  localStorage.removeItem(STORAGE_CREDENTIAL);
+  localStorage.removeItem(STORAGE_EMAIL);
+
+  sessionStorage.removeItem('googleCredential');
+  sessionStorage.removeItem('userEmail');
+
+  googleCredential = null;
+  userEmail = '';
+  isAuthenticated = false;
+
+  // Make sure the Google sign-in control is available when
+  // a fresh authentication is actually required.
+  const signInButton =
+    document.getElementById('g_id_signin');
+
+  if (signInButton) {
+    signInButton.classList.remove('hidden');
+  }
+
+  const form =
+    document.getElementById('entryForm');
+
+  if (form) {
+    form.classList.remove('visible');
+    form.style.display = 'none';
   }
 }
 
 
 // ========================================
+
 // GOOGLE LOGIN CALLBACK
 // ========================================
 
@@ -645,8 +777,17 @@ function handleGoogleLogin(response) {
 
   googleCredential = response.credential;
   
-  // Store in sessionStorage for persistence
-  sessionStorage.setItem('googleCredential', googleCredential);
+  // Persist the Google session on this device/browser.
+  // The credential is restored only while its JWT is valid.
+  localStorage.setItem(
+    STORAGE_CREDENTIAL,
+    googleCredential
+  );
+
+  sessionStorage.setItem(
+    'googleCredential',
+    googleCredential
+  );
 
   // JWT payload decode
   try {
@@ -663,8 +804,17 @@ function handleGoogleLogin(response) {
 
     userEmail = payload.email || '';
     
-    // Store email in sessionStorage
-    sessionStorage.setItem('userEmail', userEmail);
+    // Persist the email so the same signed-in account
+    // is restored on the same device/browser.
+    localStorage.setItem(
+      STORAGE_EMAIL,
+      userEmail
+    );
+
+    sessionStorage.setItem(
+      'userEmail',
+      userEmail
+    );
 
     isAuthenticated = true;
     
@@ -724,7 +874,10 @@ function logoutUser() {
   userEmail = '';
   isAuthenticated = false;
   
-  // Clear sessionStorage
+  // Clear both persistent and session storage.
+  localStorage.removeItem(STORAGE_CREDENTIAL);
+  localStorage.removeItem(STORAGE_EMAIL);
+
   sessionStorage.removeItem('googleCredential');
   sessionStorage.removeItem('userEmail');
   
@@ -1034,7 +1187,7 @@ document
 
       isSubmitting = false;
       button.disabled = false;
-      button.textContent = '+ Add Entry';
+      button.textContent = 'Save and New Entry';
 
     }
   );
