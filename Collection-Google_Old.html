@@ -437,10 +437,37 @@ h2 {
   }
 }
 
+
+#chromeOpenBox {
+  display: none;
+  margin: 0 0 12px;
+  text-align: center;
+}
+#chromeOpenBox button {
+  width: 100%;
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: #C9A227;
+  color: #171512;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+#chromeOpenBox button:active { transform: scale(0.99); }
+@media (min-width: 601px) {
+  #chromeOpenBox { display: none !important; }
+}
+
 </style>
 </head>
 
 <body>
+
+
+<div id="chromeOpenBox" style="display:none;">
+  <button type="button" id="openChromeBtn">Open in Chrome</button>
+</div>
 
 <div class="container">
 
@@ -623,6 +650,43 @@ let userEmail = '';
 let isAuthenticated = false;
 
 // Check for existing session on page load
+
+// ========================================
+// OPEN IN CHROME — ANDROID IN-APP BROWSER
+// ========================================
+
+(function setupChromeOpen() {
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  const isWebView =
+    /\\bwv\\b/i.test(ua) ||
+    /; wv\\)/i.test(ua) ||
+    /Version\\/[\\d.]+.*Chrome\\/[\\d.]+ Mobile/i.test(ua) ||
+    /FBAN|FBAV|Instagram|WhatsApp|GSA\\//i.test(ua);
+
+  if (!isAndroid || !isWebView) return;
+
+  const box = document.getElementById('chromeOpenBox');
+  const button = document.getElementById('openChromeBtn');
+  if (!box || !button) return;
+
+  box.style.display = 'block';
+
+  button.addEventListener('click', function () {
+    const currentUrl = window.location.href;
+    const cleanUrl = currentUrl.replace(/^https?:\\/\\//i, '');
+    const intentUrl =
+      'intent://' + cleanUrl +
+      '#Intent;scheme=https;package=com.android.chrome;end';
+
+    window.location.href = intentUrl;
+
+    setTimeout(function () {
+      if (!document.hidden) window.location.href = currentUrl;
+    }, 1200);
+  });
+})();
+
 window.addEventListener('load', function() {
   checkExistingSession();
 
