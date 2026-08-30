@@ -2896,5 +2896,20 @@ function renderDedicatedTrend(){
 })();
 </script>
 
+
+<script>
+/* HARD REFRESH: refresh the PWA/page every 30 seconds so Google Sheets
+   data is fetched fresh instead of relying on a stale browser/PWA cache. */
+(function(){
+  const HARD_REFRESH_MS = 30000;
+  setInterval(function(){
+    // Equivalent intent to Ctrl+Shift+R for this page: reload the document
+    // from the network. Do not run in the middle of an unload/navigation.
+    try { window.location.reload(true); }
+    catch(e) { window.location.href = window.location.href; }
+  }, HARD_REFRESH_MS);
+})();
+</script>
+
 </body>
 </html>
