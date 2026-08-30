@@ -1,11 +1,11 @@
 {
   "name": "YOURS SALON — Daily Ops Dashboard",
   "short_name": "YOURS SALON",
-  "start_url": "./Dashboard_2808_13.html",
+  "start_url": "./Dashboard_2808_14.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#12100E",
   "theme_color": "#12100E",
   "description": "YOURS SALON Daily Operations Dashboard",
-  "id": "./Dashboard_2808_13.html"
+  "id": "./Dashboard_2808_14.html"
 }

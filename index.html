@@ -1110,10 +1110,10 @@ async function fetchGoogleSheetsData() {
     
     for (const sheetName of sheetNames) {
       try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}&_sync=${Date.now()}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}`;
         console.log(`🔍 Trying sheet: ${sheetName}`);
         
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) continue;
         
         const result = await res.json();
