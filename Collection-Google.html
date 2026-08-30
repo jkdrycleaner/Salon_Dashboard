@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>YOURS SALON — Add Entry</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%}
+body{background:#12100E;color:#F3EEE3;font-family:Arial,sans-serif;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:18px}
+.container{background:#1B1815;border:1px solid #332C22;border-radius:12px;padding:24px;max-width:480px;width:100%}
+.logo{font-size:24px;font-weight:700;color:#C9A227;margin-bottom:18px;border-bottom:1px solid #332C22;padding-bottom:12px}
+.logo span{color:#E4C55C}
+h2{font-size:20px;margin-bottom:3px}
+.sub{color:#9C9284;font-size:12px;margin-bottom:12px}
+.login-box{position:relative;background:transparent;border:0;padding:0;margin:0 0 10px;min-height:44px}
+#g_id_signin{width:100%;min-height:44px}
+#g_id_signin.hidden{display:none!important}
+#userEmail{display:none}
+#userEmail.authenticated{position:absolute;top:-2px;right:0;width:30px;height:30px;display:flex!important;align-items:center;justify-content:center;color:#C9A227;font-size:19px;cursor:help}
+#userEmail.authenticated::after{content:attr(data-email);position:fixed;top:10px;right:14px;max-width:230px;color:#9C9284;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#entryForm{display:none}
+#entryForm.visible{display:block}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:9px;color:#9C9284;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select{width:100%;height:38px;background:#242019;border:1px solid #332C22;border-radius:8px;padding:7px 11px;color:#F3EEE3;font-size:14px;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:#C9A227}
+.form-group input::placeholder{color:#5A5042}
+.btn{width:100%;height:40px;background:#C9A227;color:#1B1508;border:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:3px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.dashboard-btn{margin-top:7px;background:#332C22;color:#F3EEE3}
+#status{margin-top:7px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}
+#status.success{display:block;background:rgba(62,130,114,.2);border:1px solid #3E8272;color:#8FD4C4}
+#status.error{display:block;background:rgba(181,71,63,.2);border:1px solid #B5473F;color:#E88A82}
+#status.loading{display:block;background:rgba(201,162,39,.05);border:1px solid #332C22;color:#9C9284}
+@media(max-width:600px){
+html,body{height:100%;min-height:100%;overflow:hidden}
+body{padding:0;align-items:stretch;justify-content:stretch}
+.container{width:100%;max-width:none;height:100dvh;min-height:100dvh;border:0;border-radius:0;padding:14px 18px 12px;overflow:hidden}
+.logo{font-size:21px;margin-bottom:10px;padding-bottom:8px}
+h2{font-size:18px}.sub{font-size:10px;margin-bottom:9px}
+.login-box{min-height:42px;margin-bottom:7px}
+#g_id_signin{min-height:42px}
+.form-group{margin-bottom:7px}
+.form-group label{font-size:8px;margin-bottom:3px}
+.form-group input,.form-group select{height:35px;min-height:35px;padding:6px 10px;font-size:13px}
+.btn{height:38px;min-height:38px;font-size:13px}
+}
+@media(max-width:600px) and (max-height:700px){
+.container{padding-top:9px;padding-bottom:7px}
+.logo{margin-bottom:7px;padding-bottom:6px}
+.sub{margin-bottom:6px}.form-group{margin-bottom:5px}
+.form-group input,.form-group select{height:31px;min-height:31px;font-size:12px}
+.btn{height:34px;min-height:34px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="logo">YOURS <span>SALON</span></div>
+<h2>📝 Add New Entry</h2>
+<div class="sub">Sign in to add transaction details</div>
+
+<div class="login-box">
+<button type="button" class="btn" id="googleSignInBtn" style="margin-top:0;background:#F3EEE3;color:#1B1815;border:1px solid #CFC7B8">Continue with Google</button>
+<div id="g_id_signin" style="display:none"></div>
+<div id="userEmail"></div>
+</div>
+
+<form id="entryForm">
+<div class="form-group">
+<label>Entry No</label>
+<input type="text" id="entryNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Enter Entry No" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+</div>
+<div class="form-group">
+<label>Name</label>
+<select id="staff" required>
+<option value="">Select Staff Member</option>
+<option value="Amir Khan">Amir Khan</option>
+<option value="Ashu Kumar">Ashu Kumar</option>
+<option value="Jaan Mohd">Jaan Mohd</option>
+<option value="Suhail Khan">Suhail Khan</option>
+</select>
+</div>
+<div class="form-group">
+<label>Service Type</label>
+<input type="text" id="serviceType" placeholder="e.g., Haircut, Coloring, Facial, etc." required>
+</div>
+<div class="form-group">
+<label>Amount (₹)</label>
+<input type="number" id="amount" placeholder="0" min="1" step="1" required>
+</div>
+<div class="form-group">
+<label>Cost Cutting (₹)</label>
+<input type="number" id="cost" placeholder="0" min="0" step="1">
+</div>
+<div class="form-group">
+<label>Payment Mode</label>
+<select id="payment"><option value="Cash">Cash</option><option value="Online">Online</option></select>
+</div>
+<button type="submit" class="btn" id="submitBtn">Save and New Entry</button>
+<button type="button" class="btn dashboard-btn" id="dashboardBtn">Dashboard</button>
+</form>
+<div id="status"></div>
+</div>
+
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
+const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
+const STORAGE_CREDENTIAL='salon_google_credential';
+const STORAGE_EMAIL='salon_user_email';
+let googleCredential=null,userEmail='',isAuthenticated=false,isSubmitting=false;
+
+function decodeJwtPayload(token){
+try{const p=token.split('.');if(p.length!==3)return null;return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')))}
+catch(e){return null}
+}
+function isCredentialValid(token){
+const p=decodeJwtPayload(token);if(!p)return false;
+return !p.exp || (Date.now()/1000)<(p.exp-60);
+}
+function safeStorageGet(key){
+try{return localStorage.getItem(key)}catch(e){return null}
+}
+function safeStorageSet(key,value){
+try{localStorage.setItem(key,value);return true}catch(e){return false}
+}
+function safeStorageRemove(key){
+try{localStorage.removeItem(key)}catch(e){}
+}
+function checkExistingSession(){
+const c=safeStorageGet(STORAGE_CREDENTIAL),e=safeStorageGet(STORAGE_EMAIL);
+if(c&&e){
+googleCredential=c;userEmail=e;isAuthenticated=true;updateUIAfterLogin();
+}else{
+safeStorageRemove(STORAGE_CREDENTIAL);safeStorageRemove(STORAGE_EMAIL);
+}
+}
+function handleGoogleLogin(response){
+try{
+if(!response||!response.credential){
+showStatus('Google sign-in could not be completed. Please try again.','error');return;
+}
+const p=decodeJwtPayload(response.credential);
+if(!p||!p.email){
+showStatus('Google account email could not be detected. Please try again.','error');return;
+}
+googleCredential=response.credential;userEmail=p.email;isAuthenticated=true;
+safeStorageSet(STORAGE_CREDENTIAL,googleCredential);
+safeStorageSet(STORAGE_EMAIL,userEmail);
+updateUIAfterLogin();hideStatus();
+}catch(err){
+showStatus('Sign-in could not be completed. Please try again.','error');
+}
+}
+function clearGoogleSession(){
+googleCredential=null;userEmail='';isAuthenticated=false;
+safeStorageRemove(STORAGE_CREDENTIAL);safeStorageRemove(STORAGE_EMAIL);
+document.getElementById('userEmail').className='';
+document.getElementById('userEmail').style.display='none';
+document.getElementById('googleSignInBtn').style.display='block';
+document.getElementById('entryForm').classList.remove('visible');
+document.getElementById('entryForm').style.display='none';
+}
+function updateUIAfterLogin(){
+const e=document.getElementById('userEmail');
+e.textContent='✉';e.title=userEmail;e.dataset.email=userEmail;e.className='authenticated';e.style.display='flex';
+document.getElementById('googleSignInBtn').style.display='none';
+document.getElementById('entryForm').classList.add('visible');
+document.getElementById('entryForm').style.display='block';
+}
+let googleTokenClient=null;
+function initGoogleSignIn(){
+try{
+if(!window.google||!google.accounts||!google.accounts.oauth2){
+setTimeout(initGoogleSignIn,500);return;
+}
+googleTokenClient=google.accounts.oauth2.initTokenClient({
+client_id:'326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com',
+scope:'openid email profile',
+callback:async function(tokenResponse){
+if(!tokenResponse||!tokenResponse.access_token){
+showStatus('Google sign-in could not be completed. Please try again.','error');return;
+}
+try{
+showStatus('Verifying Google account...','loading');
+const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{
+headers:{Authorization:'Bearer '+tokenResponse.access_token}
+});
+if(!r.ok)throw new Error('Could not verify Google account.');
+const p=await r.json();
+if(!p.email)throw new Error('Google account email could not be detected.');
+userEmail=p.email;
+googleCredential=tokenResponse.access_token;
+isAuthenticated=true;
+safeStorageSet(STORAGE_CREDENTIAL,googleCredential);
+safeStorageSet(STORAGE_EMAIL,userEmail);
+updateUIAfterLogin();
+hideStatus();
+}catch(err){
+showStatus(err.message||'Google account verification failed.','error');
+}
+}
+});
+document.getElementById('googleSignInBtn').addEventListener('click',function(){
+if(!googleTokenClient){
+showStatus('Google Sign-In is still loading. Please try again in a moment.','error');return;
+}
+showStatus('Opening Google Sign-In...','loading');
+try{
+googleTokenClient.requestAccessToken({prompt:''});
+}catch(err){
+showStatus('Google Sign-In could not open. Please allow pop-ups for this site and try again.','error');
+}
+});
+}catch(e){
+showStatus('Google Sign-In could not load. Please reload this page.','error');
+}
+}
+window.addEventListener('error',function(e){
+if(e&&e.message&&/google|oauth|accounts/i.test(e.message)){
+showStatus('Google Sign-In had a problem. Please try again.','error');
+}
+});
+
+function showStatus(m,t){const s=document.getElementById('status');s.textContent=m;s.className=t;s.style.display='block'}
+function hideStatus(){const s=document.getElementById('status');s.textContent='';s.className='';s.style.display='none'}
+
+async function sendToSheet(d){
+const f=new URLSearchParams();
+f.append('staff',d.staff);f.append('paymentMode',d.paymentMode);f.append('amount',d.amount);
+f.append('costCutting',d.costCutting);f.append('serviceType',d.serviceType);f.append('entryNo',d.entryNo);
+f.append('credential',googleCredential);f.append('email',userEmail);
+await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()});
+return true;
+}
+
+document.getElementById('entryForm').addEventListener('submit',async function(ev){
+ev.preventDefault();if(isSubmitting)return;hideStatus();
+if(!googleCredential||!isAuthenticated){showStatus('Please sign in with Google first.','error');return}
+const entryNo=document.getElementById('entryNo').value.replace(/[^0-9]/g,'');
+const staff=document.getElementById('staff').value;
+const serviceType=document.getElementById('serviceType').value.trim();
+const amount=parseFloat(document.getElementById('amount').value)||0;
+const costCutting=parseFloat(document.getElementById('cost').value)||0;
+const paymentMode=document.getElementById('payment').value;
+if(!entryNo){showStatus('Please enter Entry No.','error');return}
+if(!staff){showStatus('Please select a staff member.','error');return}
+if(!serviceType){showStatus('Please enter the service type.','error');return}
+if(amount<=0){showStatus('Please enter a valid amount.','error');return}
+isSubmitting=true;const b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Saving...';showStatus('Saving...','loading');
+try{
+await sendToSheet({entryNo,staff,serviceType,amount,costCutting,paymentMode});
+document.getElementById('entryForm').reset();document.getElementById('cost').value='';
+showStatus('Saved successfully. Ready for new entry.','success');setTimeout(hideStatus,2500);
+}catch(err){showStatus('Failed to save: '+err.message,'error')}
+isSubmitting=false;b.disabled=false;b.textContent='Save and New Entry';
+});
+document.getElementById('dashboardBtn').addEventListener('click',()=>{window.location.href=DASHBOARD_URL});
+window.addEventListener('load',function(){
+checkExistingSession();
+initGoogleSignIn();
+});
+</script>
+</body>
+</html>
