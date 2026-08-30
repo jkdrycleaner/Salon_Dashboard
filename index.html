@@ -970,7 +970,7 @@ const CONFIG = {
   API_KEY: 'AIzaSyAtJX7FtwdHzQCFP4LPVKgt7FrOEUdG-bQ',
   STORAGE_KEY: 'salon-entries',
   STAFF_STORAGE_KEY: 'salon-staff-list',
-  SYNC_INTERVAL: 60000,
+  SYNC_INTERVAL: 30000,
   MIN_SYNC_INTERVAL: 30000,
   MAX_AMOUNT: 1000000
 };
@@ -1250,38 +1250,58 @@ async function syncWithGoogleSheets(silent = false, force = false) {
   if (state.isSyncing) return;
   const now = Date.now();
   if (now - state.lastSync < CONFIG.MIN_SYNC_INTERVAL && silent && !force) return;
-  
+
   state.isSyncing = true;
   const dot = $('syncDot'), text = $('syncText');
   if (!silent) { dot.className = 'dot'; text.textContent = 'Syncing...'; }
-  
+
   try {
+    // Existing Google Sheets READ function remains unchanged.
+    // Refresh TODAY only; preserve older cached records for other reports.
     const data = await fetchGoogleSheetsData();
+
     if (data && data.length > 0) {
-      state.entries = data;
+      const today = todayStr();
+      const todayData = data.filter(e => e && e.date === today);
+      const olderData = (state.entries || []).filter(e => e.date !== today);
+
+      state.entries = [...olderData, ...todayData];
       await saveEntries();
-      state.staffList = [...new Set([...loadStaffList(), ...extractStaffNames(data)])].sort((a,b) => a.localeCompare(b));
+
+      state.staffList = [...new Set([
+        ...loadStaffList(),
+        ...extractStaffNames(todayData)
+      ])].filter(Boolean).sort((a,b) => a.localeCompare(b));
+
       saveStaffList();
       updateSubtitle();
-      const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+      const time = new Date().toLocaleTimeString('en-IN', {
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
+      });
       $('lastSyncTime').textContent = `⏱ ${time}`;
       dot.className = 'dot';
-      text.textContent = `✓ ${data.length}`;
-      if (!silent) showToast(`✅ Synced ${data.length} records`, 'success');
+      text.textContent = `✓ ${todayData.length}`;
+
+      if (!silent) showToast(`✅ Synced today: ${todayData.length} records`, 'success');
+
       setTimeout(() => {
         try { renderAllAnalytics(); } catch (e) { console.error('Analytics after sync:', e); }
+        try { debouncedRender(); } catch (e) { console.error('Dashboard render after sync:', e); }
       }, 0);
     } else {
       dot.className = 'dot error';
       text.textContent = 'No data';
       if (!silent) showToast('ℹ️ No data found. Please check Google Sheet.', 'info');
     }
+
     state.lastSync = Date.now();
   } catch (e) {
     dot.className = 'dot error';
     text.textContent = 'Failed';
     if (!silent) showToast('⚠️ Sync failed: ' + e.message, 'error');
   }
+
   state.isSyncing = false;
   debouncedRender();
 }
