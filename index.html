@@ -1110,7 +1110,7 @@ async function fetchGoogleSheetsData() {
     
     for (const sheetName of sheetNames) {
       try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}&_sync=${Date.now()}`;
         console.log(`🔍 Trying sheet: ${sheetName}`);
         
         const res = await fetch(url);
@@ -2371,7 +2371,7 @@ let autoSyncInterval;
 function startAutoSync() {
   if (autoSyncInterval) clearInterval(autoSyncInterval);
   autoSyncInterval = setInterval(() => {
-    if (state.activeReport === 'today') syncWithGoogleSheets(true);
+    if (state.activeReport === 'today') syncWithGoogleSheets(true, true);
   }, CONFIG.SYNC_INTERVAL);
 }
 
@@ -2897,19 +2897,7 @@ function renderDedicatedTrend(){
 </script>
 
 
-<script>
-/* HARD REFRESH: refresh the PWA/page every 30 seconds so Google Sheets
-   data is fetched fresh instead of relying on a stale browser/PWA cache. */
-(function(){
-  const HARD_REFRESH_MS = 30000;
-  setInterval(function(){
-    // Equivalent intent to Ctrl+Shift+R for this page: reload the document
-    // from the network. Do not run in the middle of an unload/navigation.
-    try { window.location.reload(true); }
-    catch(e) { window.location.href = window.location.href; }
-  }, HARD_REFRESH_MS);
-})();
-</script>
+
 
 </body>
 </html>
