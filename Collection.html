@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>YOURS SALON — Add Entry</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>YOURS SALON — Collection</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;min-height:100%}
@@ -30,6 +29,7 @@ h2{font-size:20px;margin-bottom:3px}
 .btn{width:100%;height:40px;background:#C9A227;color:#1B1508;border:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:3px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .dashboard-btn{margin-top:7px;background:#332C22;color:#F3EEE3}
+.google-btn{margin-top:0;background:#F3EEE3;color:#1B1815;border:1px solid #CFC7B8}
 #status{margin-top:7px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}
 #status.success{display:block;background:rgba(62,130,114,.2);border:1px solid #3E8272;color:#8FD4C4}
 #status.error{display:block;background:rgba(181,71,63,.2);border:1px solid #B5473F;color:#E88A82}
@@ -63,14 +63,7 @@ h2{font-size:18px}.sub{font-size:10px;margin-bottom:9px}
 <div class="sub">Sign in to add transaction details</div>
 
 <div class="login-box">
-<div id="g_id_onload"
-data-client_id="326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com"
-data-callback="handleGoogleLogin"
-data-auto_prompt="false"
-data-auto_select="false"
-data-ux_mode="popup"
-data-itp_support="true"></div>
-<div id="g_id_signin" class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signin_with" data-shape="rectangular"></div>
+<button type="button" class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
 <div id="userEmail"></div>
 </div>
 
@@ -99,7 +92,7 @@ data-itp_support="true"></div>
 </div>
 <div class="form-group">
 <label>Cost Cutting (₹)</label>
-<input type="number" id="cost" placeholder="0" min="0" step="1" value="0">
+<input type="number" id="cost" placeholder="0" min="0" step="1">
 </div>
 <div class="form-group">
 <label>Payment Mode</label>
@@ -114,74 +107,211 @@ data-itp_support="true"></div>
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
+const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
 const STORAGE_CREDENTIAL='salon_google_credential';
 const STORAGE_EMAIL='salon_user_email';
 let googleCredential=null,userEmail='',isAuthenticated=false,isSubmitting=false;
 
+function safeStorageGet(key){try{return localStorage.getItem(key)}catch(e){return null}}
+function safeStorageSet(key,value){try{localStorage.setItem(key,value);return true}catch(e){return false}}
+function safeStorageRemove(key){try{localStorage.removeItem(key)}catch(e){}}
+
 function decodeJwtPayload(token){
-try{const p=token.split('.');if(p.length!==3)return null;return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')))}
-catch(e){return null}
+try{
+const p=token.split('.');
+if(p.length!==3)return null;
+return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));
+}catch(e){return null}
 }
-function isCredentialValid(token){
-const p=decodeJwtPayload(token);if(!p)return false;
-return !p.exp || (Date.now()/1000)<(p.exp-60);
+
+function showStatus(m,t){
+const s=document.getElementById('status');
+s.textContent=m;s.className=t;s.style.display='block';
 }
-function checkExistingSession(){
-const c=localStorage.getItem(STORAGE_CREDENTIAL),e=localStorage.getItem(STORAGE_EMAIL);
-if(c&&e&&isCredentialValid(c)){googleCredential=c;userEmail=e;isAuthenticated=true;updateUIAfterLogin()}
-else{localStorage.removeItem(STORAGE_CREDENTIAL);localStorage.removeItem(STORAGE_EMAIL)}
+function hideStatus(){
+const s=document.getElementById('status');
+s.textContent='';s.className='';s.style.display='none';
 }
-function handleGoogleLogin(response){
-if(!response||!response.credential){showStatus('Google sign-in could not be completed.','error');return}
-const p=decodeJwtPayload(response.credential);
-if(!p||!p.email){showStatus('Google account email could not be detected.','error');return}
-googleCredential=response.credential;userEmail=p.email;isAuthenticated=true;
-localStorage.setItem(STORAGE_CREDENTIAL,googleCredential);
-localStorage.setItem(STORAGE_EMAIL,userEmail);
-updateUIAfterLogin();hideStatus();
-}
+
 function updateUIAfterLogin(){
 const e=document.getElementById('userEmail');
-e.textContent='✉';e.title=userEmail;e.dataset.email=userEmail;e.className='authenticated';e.style.display='flex';
-document.getElementById('g_id_signin').classList.add('hidden');
+e.textContent='✉';
+e.title=userEmail;
+e.dataset.email=userEmail;
+e.className='authenticated';
+e.style.display='flex';
+document.getElementById('googleSignInBtn').style.display='none';
 document.getElementById('entryForm').classList.add('visible');
 document.getElementById('entryForm').style.display='block';
 }
-function showStatus(m,t){const s=document.getElementById('status');s.textContent=m;s.className=t;s.style.display='block'}
-function hideStatus(){const s=document.getElementById('status');s.textContent='';s.className='';s.style.display='none'}
+
+function checkExistingSession(){
+const c=safeStorageGet(STORAGE_CREDENTIAL),e=safeStorageGet(STORAGE_EMAIL);
+if(c&&e){
+googleCredential=c;userEmail=e;isAuthenticated=true;updateUIAfterLogin();
+}
+}
+
+function getRedirectUri(){
+return 'https://jkdrycleaner.github.io/Salon_Dashboard/Collection';
+}
+
+function randomString(length=32){
+const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+let out='';
+const bytes=new Uint8Array(length);
+crypto.getRandomValues(bytes);
+for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length];
+return out;
+}
+
+async function startGoogleLogin(){
+try{
+const state=randomString(32);
+safeStorageSet('salon_oauth_state',state);
+
+const redirectUri=getRedirectUri();
+const params=new URLSearchParams({
+client_id:GOOGLE_CLIENT_ID,
+redirect_uri:redirectUri,
+response_type:'token',
+scope:'openid email profile',
+state:state,
+include_granted_scopes:'true',
+prompt:'select_account'
+});
+
+showStatus('Opening Google Sign-In...','loading');
+window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params.toString());
+}catch(err){
+showStatus('Google Sign-In could not be started. Please try again.','error');
+}
+}
+
+async function handleOAuthReturn(){
+const hash=window.location.hash ? window.location.hash.substring(1) : '';
+if(!hash)return;
+
+const p=new URLSearchParams(hash);
+const error=p.get('error');
+const accessToken=p.get('access_token');
+const returnedState=p.get('state');
+const savedState=safeStorageGet('salon_oauth_state');
+
+history.replaceState(null,document.title,window.location.pathname+window.location.search);
+
+if(error){
+safeStorageRemove('salon_oauth_state');
+showStatus('Google Sign-In was cancelled or denied.','error');
+return;
+}
+if(!accessToken){
+showStatus('Google Sign-In did not return an account. Please try again.','error');
+return;
+}
+if(savedState && returnedState && savedState!==returnedState){
+showStatus('Google verification failed. Please try again.','error');
+return;
+}
+
+try{
+showStatus('Verifying Google account...','loading');
+const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{
+method:'GET',
+headers:{Authorization:'Bearer '+accessToken}
+});
+if(!r.ok)throw new Error('Google account verification failed.');
+const info=await r.json();
+if(!info.email)throw new Error('Google account email could not be detected.');
+
+googleCredential=accessToken;
+userEmail=info.email;
+isAuthenticated=true;
+safeStorageSet(STORAGE_CREDENTIAL,googleCredential);
+safeStorageSet(STORAGE_EMAIL,userEmail);
+safeStorageRemove('salon_oauth_state');
+updateUIAfterLogin();
+hideStatus();
+}catch(err){
+googleCredential=null;
+userEmail='';
+isAuthenticated=false;
+safeStorageRemove(STORAGE_CREDENTIAL);
+safeStorageRemove(STORAGE_EMAIL);
+showStatus(err.message||'Google account verification failed.','error');
+}
+}
 
 async function sendToSheet(d){
 const f=new URLSearchParams();
-f.append('staff',d.staff);f.append('paymentMode',d.paymentMode);f.append('amount',d.amount);
-f.append('costCutting',d.costCutting);f.append('serviceType',d.serviceType);f.append('entryNo',d.entryNo);
-f.append('credential',googleCredential);f.append('email',userEmail);
-await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()});
+f.append('staff',d.staff);
+f.append('paymentMode',d.paymentMode);
+f.append('amount',d.amount);
+f.append('costCutting',d.costCutting);
+f.append('serviceType',d.serviceType);
+f.append('entryNo',d.entryNo);
+f.append('credential',googleCredential);
+f.append('email',userEmail);
+await fetch(SCRIPT_URL,{
+method:'POST',
+mode:'no-cors',
+headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+body:f.toString()
+});
 return true;
 }
 
+document.getElementById('googleSignInBtn').addEventListener('click',startGoogleLogin);
+
 document.getElementById('entryForm').addEventListener('submit',async function(ev){
-ev.preventDefault();if(isSubmitting)return;hideStatus();
-if(!googleCredential||!isAuthenticated){showStatus('Please sign in with Google first.','error');return}
+ev.preventDefault();
+if(isSubmitting)return;
+hideStatus();
+if(!googleCredential||!isAuthenticated){
+showStatus('Please sign in with Google first.','error');
+return;
+}
+
 const entryNo=document.getElementById('entryNo').value.replace(/[^0-9]/g,'');
 const staff=document.getElementById('staff').value;
 const serviceType=document.getElementById('serviceType').value.trim();
 const amount=parseFloat(document.getElementById('amount').value)||0;
 const costCutting=parseFloat(document.getElementById('cost').value)||0;
 const paymentMode=document.getElementById('payment').value;
+
 if(!entryNo){showStatus('Please enter Entry No.','error');return}
 if(!staff){showStatus('Please select a staff member.','error');return}
 if(!serviceType){showStatus('Please enter the service type.','error');return}
 if(amount<=0){showStatus('Please enter a valid amount.','error');return}
-isSubmitting=true;const b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Saving...';showStatus('Saving...','loading');
+
+isSubmitting=true;
+const b=document.getElementById('submitBtn');
+b.disabled=true;
+b.textContent='Saving...';
+showStatus('Saving...','loading');
+
 try{
 await sendToSheet({entryNo,staff,serviceType,amount,costCutting,paymentMode});
-document.getElementById('entryForm').reset();document.getElementById('cost').value='0';
-showStatus('Saved successfully. Ready for new entry.','success');setTimeout(hideStatus,2500);
-}catch(err){showStatus('Failed to save: '+err.message,'error')}
-isSubmitting=false;b.disabled=false;b.textContent='Save and New Entry';
+document.getElementById('entryForm').reset();
+document.getElementById('cost').value='';
+showStatus('Saved successfully. Ready for new entry.','success');
+setTimeout(hideStatus,2500);
+}catch(err){
+showStatus('Failed to save: '+err.message,'error');
+}
+isSubmitting=false;
+b.disabled=false;
+b.textContent='Save and New Entry';
 });
-document.getElementById('dashboardBtn').addEventListener('click',()=>{window.location.href=DASHBOARD_URL});
-window.addEventListener('load',checkExistingSession);
+
+document.getElementById('dashboardBtn').addEventListener('click',()=>{
+window.location.href=DASHBOARD_URL;
+});
+
+window.addEventListener('load',async function(){
+await handleOAuthReturn();
+checkExistingSession();
+});
 </script>
 </body>
 </html>
