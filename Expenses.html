@@ -131,7 +131,7 @@ const c=safeStorageGet(STORAGE_CREDENTIAL),e=safeStorageGet(STORAGE_EMAIL);
 if(c&&e&&EMAIL_NAME_MAP[e.toLowerCase().trim()]){
 googleCredential=c;userEmail=e.toLowerCase().trim();userName=EMAIL_NAME_MAP[userEmail];isAuthenticated=true;updateUIAfterLogin();
 }}
-function getRedirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/Expenses'}
+function getRedirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/Expenses.html'}
 function randomString(length=32){
 const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';let out='';const bytes=new Uint8Array(length);crypto.getRandomValues(bytes);
 for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length];return out;
