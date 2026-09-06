@@ -54,7 +54,9 @@ html,body{height:100%;min-height:100%;overflow:hidden}body{padding:0;align-items
 
 <form id="expenseForm">
 <div class="form-group"><label>Email Address</label><input type="email" id="email" disabled></div>
-<div class="form-group"><label>Name</label><input type="text" id="name" disabled></div>
+<div class="form-group" id="nameAutoGroup"><label>Name</label><input type="text" id="name" disabled></div>
+<div class="form-group" id="nameSelectGroup" style="display:none"><label>Name</label>
+<select id="nameSelect"></select></div>
 <div class="form-group"><label>Expense Type</label>
 <select id="expenseType" required>
 <option value="">Select Expense Type</option>
@@ -79,9 +81,22 @@ const STORAGE_EMAIL='salon_user_email';
 const EMAIL_NAME_MAP={
 'ashukumar12211551@gmail.com':'Ashu Kumar',
 'aamir839398058@gmail.com':'Amir Khan',
-'s45351520@gmail.com':'Suhail Khan',
-'janubro007@gmail.com':'Jaan Mohd'
+'s45351520@gmail.com':'Suhail Khan'
 };
+
+const ADMIN_EMAILS=[
+'jk2811524@gmail.com',
+'write2javedkassar@gmail.com',
+'yourssalooon@gmail.com',
+'janubro007@gmail.com'
+];
+
+const ALL_NAMES=[
+'Ashu Kumar',
+'Amir Khan',
+'Suhail Khan',
+'Jaan Mohd'
+];
 
 let googleCredential=null,userEmail='',userName='',isAuthenticated=false,isSubmitting=false;
 
@@ -93,7 +108,19 @@ function hideStatus(){const s=document.getElementById('status');s.textContent=''
 
 function updateUIAfterLogin(){
 document.getElementById('email').value=userEmail;
+const isAdmin=ADMIN_EMAILS.includes(userEmail);
+
+if(isAdmin){
+document.getElementById('nameAutoGroup').style.display='none';
+document.getElementById('nameSelectGroup').style.display='block';
+const sel=document.getElementById('nameSelect');
+sel.innerHTML='<option value="">Select Name</option>'+ALL_NAMES.map(n=>'<option value="'+n+'">'+n+'</option>').join('');
+}else{
+document.getElementById('nameAutoGroup').style.display='block';
+document.getElementById('nameSelectGroup').style.display='none';
 document.getElementById('name').value=userName;
+}
+
 const e=document.getElementById('userEmail');e.textContent='✉';e.title=userEmail;e.dataset.email=userEmail;e.className='authenticated';
 document.getElementById('googleSignInBtn').style.display='none';
 document.getElementById('expenseForm').style.display='block';
@@ -154,13 +181,17 @@ document.getElementById('expenseForm').addEventListener('submit',async function(
 ev.preventDefault();if(isSubmitting)return;hideStatus();
 if(!googleCredential||!isAuthenticated||!userName){showStatus('Please sign in with an authorized Google account first.','error');return}
 const expenseType=document.getElementById('expenseType').value,paymentMode=document.getElementById('paymentMode').value;
+const selectedName=document.getElementById('nameSelect').value;
+const finalName=ADMIN_EMAILS.includes(userEmail)?selectedName:userName;
 const amount=parseFloat(document.getElementById('amount').value)||0,remark=document.getElementById('remark').value.trim();
 if(!expenseType){showStatus('Please select Expense Type.','error');return}
+if(ADMIN_EMAILS.includes(userEmail)&&!finalName){showStatus('Please select Name.','error');return}
 if(amount<=0){showStatus('Please enter a valid amount.','error');return}
 isSubmitting=true;const b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Saving...';showStatus('Saving expense...','loading');
 try{
-await sendExpenseToSheet({email:userEmail,name:userName,expenseType,paymentMode,amount,remark});
+await sendExpenseToSheet({email:userEmail,name:finalName,expenseType,paymentMode,amount,remark});
 document.getElementById('expenseType').value='';document.getElementById('paymentMode').value='Cash';document.getElementById('amount').value='';document.getElementById('remark').value='';
+if(ADMIN_EMAILS.includes(userEmail))document.getElementById('nameSelect').value='';
 showStatus('Expense saved successfully. Ready for new expense.','success');setTimeout(hideStatus,2500);
 }catch(e){showStatus('Failed to save: '+e.message,'error')}
 isSubmitting=false;b.disabled=false;b.textContent='Save and New Expense';
