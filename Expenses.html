@@ -60,7 +60,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}body{padding:0;align-items
 <div class="form-group"><label>Expense Type</label>
 <select id="expenseType" required>
 <option value="">Select Expense Type</option>
-<option>Salary</option><option>Advance</option><option>Daily Expense</option><option>Counter Cash</option><option>Shop Expense</option><option>Home Expense</option>
+<option>Salary</option><option>Advance</option><option>Daily Expense</option><option>Counter Cash</option><option>Shop Expense</option><option>Home Expense</option><option>Home</option><option>Rent</option><option>EMI</option><option>Car</option>
 </select></div>
 <div class="form-group"><label>Payment Mode</label><select id="paymentMode" required><option>Cash</option><option>Online</option></select></div>
 <div class="form-group"><label>Amount (₹)</label><input type="number" id="amount" placeholder="0" min="1" step="1" inputmode="numeric" required></div>
@@ -95,7 +95,9 @@ const ALL_NAMES=[
 'Ashu Kumar',
 'Amir Khan',
 'Suhail Khan',
-'Jaan Mohd'
+'Jaan Mohd',
+'Shop',
+'Home'
 ];
 
 let googleCredential=null,userEmail='',userName='',isAuthenticated=false,isSubmitting=false;
@@ -108,9 +110,9 @@ function hideStatus(){const s=document.getElementById('status');s.textContent=''
 
 function updateUIAfterLogin(){
 document.getElementById('email').value=userEmail;
-const isAdmin=ADMIN_EMAILS.includes(userEmail);
+const isMapped=!!EMAIL_NAME_MAP[userEmail];
 
-if(isAdmin){
+if(!isMapped){
 document.getElementById('nameAutoGroup').style.display='none';
 document.getElementById('nameSelectGroup').style.display='block';
 const sel=document.getElementById('nameSelect');
