@@ -181,19 +181,19 @@ document.getElementById('googleSignInBtn').addEventListener('click',startGoogleL
 
 document.getElementById('expenseForm').addEventListener('submit',async function(ev){
 ev.preventDefault();if(isSubmitting)return;hideStatus();
-if(!googleCredential||!isAuthenticated||!userName){showStatus('Please sign in with an authorized Google account first.','error');return}
+if(!googleCredential||!isAuthenticated){showStatus('Please sign in with Google first.','error');return}
 const expenseType=document.getElementById('expenseType').value,paymentMode=document.getElementById('paymentMode').value;
 const selectedName=document.getElementById('nameSelect').value;
-const finalName=ADMIN_EMAILS.includes(userEmail)?selectedName:userName;
+const finalName=EMAIL_NAME_MAP[userEmail] || selectedName;
 const amount=parseFloat(document.getElementById('amount').value)||0,remark=document.getElementById('remark').value.trim();
 if(!expenseType){showStatus('Please select Expense Type.','error');return}
-if(ADMIN_EMAILS.includes(userEmail)&&!finalName){showStatus('Please select Name.','error');return}
+if(!finalName){showStatus('Please select Name.','error');return}
 if(amount<=0){showStatus('Please enter a valid amount.','error');return}
 isSubmitting=true;const b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Saving...';showStatus('Saving expense...','loading');
 try{
 await sendExpenseToSheet({email:userEmail,name:finalName,expenseType,paymentMode,amount,remark});
 document.getElementById('expenseType').value='';document.getElementById('paymentMode').value='Cash';document.getElementById('amount').value='';document.getElementById('remark').value='';
-if(ADMIN_EMAILS.includes(userEmail))document.getElementById('nameSelect').value='';
+document.getElementById('nameSelect').value='';
 showStatus('Expense saved successfully. Ready for new expense.','success');setTimeout(hideStatus,2500);
 }catch(e){showStatus('Failed to save: '+e.message,'error')}
 isSubmitting=false;b.disabled=false;b.textContent='Save and New Expense';
