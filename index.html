@@ -684,57 +684,8 @@ html, body{
 }
 
 </style>
-
-<link rel="manifest" href="./dashboard-manifest.json">
-<meta name="theme-color" content="#12100E">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YOURS SALON">
-<style>
-/* PWA install prompt */
-#pwaInstallOverlay{
-  position:fixed;inset:0;z-index:999999;display:none;align-items:flex-end;justify-content:center;
-  background:rgba(0,0,0,.62);backdrop-filter:blur(3px);padding:16px;
-}
-#pwaInstallOverlay.show{display:flex}
-.pwa-card{
-  width:min(440px,100%);background:#1B1815;border:1px solid #4A3D25;border-radius:16px;
-  padding:20px;box-shadow:0 18px 60px rgba(0,0,0,.65);color:#F3EEE3;
-}
-.pwa-title{font-size:18px;font-weight:800;margin-bottom:6px}
-.pwa-text{font-size:12px;line-height:1.5;color:#B8AE9F;margin-bottom:14px}
-.pwa-steps{font-size:12px;line-height:1.65;color:#E5DED2;margin:0 0 16px 20px}
-.pwa-actions{display:flex;gap:8px}
-.pwa-actions button{
-  flex:1;height:42px;border:0;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;
-}
-#pwaInstallBtn{background:#C9A227;color:#1B1508}
-#pwaLaterBtn{background:#332C22;color:#F3EEE3}
-</style>
-
-<style>
-#pwaQuickInstall{position:fixed;right:14px;bottom:14px;z-index:99990;border:1px solid #6b5720;
-background:#C9A227;color:#17120a;border-radius:999px;padding:11px 16px;font-weight:800;font-size:12px;
-box-shadow:0 6px 22px rgba(0,0,0,.45);cursor:pointer}
-@media (display-mode:standalone){#pwaQuickInstall{display:none}}
-</style>
 </head>
 <body>
-<button id="pwaQuickInstall" type="button" aria-label="Add YOURS SALON to Home Screen">📲 Add to Home</button>
-
-<div id="pwaInstallOverlay" aria-hidden="true">
-  <div class="pwa-card" role="dialog" aria-modal="true" aria-labelledby="pwaInstallTitle">
-    <div class="pwa-title" id="pwaInstallTitle">📲 Add YOURS SALON to Home Screen</div>
-    <div class="pwa-text" id="pwaInstallText">Install the dashboard for quick access like an app.</div>
-    <ol class="pwa-steps" id="pwaInstallSteps"></ol>
-    <div class="pwa-actions">
-      <button type="button" id="pwaInstallBtn">Install App</button>
-      <button type="button" id="pwaLaterBtn">Later</button>
-    </div>
-  </div>
-</div>
-
 <div class="wrap">
   <header>
     <div class="header-main">
@@ -970,7 +921,7 @@ const CONFIG = {
   API_KEY: 'AIzaSyAtJX7FtwdHzQCFP4LPVKgt7FrOEUdG-bQ',
   STORAGE_KEY: 'salon-entries',
   STAFF_STORAGE_KEY: 'salon-staff-list',
-  SYNC_INTERVAL: 30000,
+  SYNC_INTERVAL: 60000,
   MIN_SYNC_INTERVAL: 30000,
   MAX_AMOUNT: 1000000
 };
@@ -1103,39 +1054,106 @@ function getTimeFromTimestamp(ts) {
 // ============================================================
 async function fetchGoogleSheetsData() {
   try {
-    console.log('📊 Fetching data from Google Sheets...');
-    
-    const sheetNames = ['Form responses 1', 'Sheet1', 'Responses'];
-    let data = null;
-    
-    for (const sheetName of sheetNames) {
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${CONFIG.API_KEY}`;
-        console.log(`🔍 Trying sheet: ${sheetName}`);
-        
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) continue;
-        
-        const result = await res.json();
-        if (result.values && result.values.length > 1) {
-          console.log(`✅ Found data in sheet: "${sheetName}" with ${result.values.length} rows`);
-          data = result;
-          break;
+    console.log('📊 Fetching fresh data from Google Sheets (READ ONLY)...');
+
+    // Keep the original sheet/parser/calculation flow.
+    // Only the transport is changed to JSONP so mobile browsers do not hit
+    // CORS "Failed to fetch". Nothing is written to the Sheet.
+    const sheetName = 'Form responses 1';
+    const cacheBust = Date.now();
+
+    const g = await new Promise((resolve, reject) => {
+      const callbackName =
+        '__salonSheetCallback_' + Date.now() + '_' +
+        Math.random().toString(36).slice(2);
+
+      const script = document.createElement('script');
+      let finished = false;
+
+      const cleanup = () => {
+        try { delete window[callbackName]; } catch (_) {}
+        if (script.parentNode) script.parentNode.removeChild(script);
+        clearTimeout(timer);
+      };
+
+      const fail = (message) => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        reject(new Error(message));
+      };
+
+      const timer = setTimeout(() => {
+        fail('Google Sheet read timed out. Please check Sheet sharing.');
+      }, 15000);
+
+      window[callbackName] = (response) => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+
+        if (!response) {
+          reject(new Error('Google Sheet returned an empty response.'));
+          return;
         }
-      } catch (e) {
-        console.log(`⚠️ Error with sheet "${sheetName}":`, e.message);
-      }
-    }
-    
-    if (!data) {
-      throw new Error('No data found. Please check sheet name.');
+
+        if (response.status === 'error') {
+          const msg =
+            response.errors?.[0]?.detailed_message ||
+            response.errors?.[0]?.message ||
+            'Google Sheet query failed.';
+          reject(new Error(msg));
+          return;
+        }
+
+        resolve(response);
+      };
+
+      script.onerror = () => {
+        fail('Google Sheet could not be reached. Check that the Sheet is shared for viewing.');
+      };
+
+      const params = new URLSearchParams({
+        tqx: `responseHandler:${callbackName}`,
+        sheet: sheetName,
+        range: 'A:Z',
+        tq: 'select *',
+        _sync: String(cacheBust)
+      });
+
+      script.src =
+        `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?` +
+        params.toString();
+
+      script.async = true;
+      document.head.appendChild(script);
+    });
+
+    const cols = g.table?.cols || [];
+    const rows = g.table?.rows || [];
+
+    // IMPORTANT: use formatted cell values first.
+    // The existing dashboard expects Timestamp like:
+    // 06/09/2026 14:43:15
+    const headers = cols.map(c => String(c.label || c.id || '').trim());
+
+    const values = [
+      headers,
+      ...rows.map(r =>
+        (r.c || []).map(c => c == null ? '' : (c.f ?? c.v ?? ''))
+      )
+    ];
+
+    if (values.length <= 1) {
+      throw new Error('Google Sheet returned no data rows.');
     }
 
-    const headers = data.values[0];
-    console.log('📋 Headers:', headers);
-    
+    const headersClean = values[0];
+    console.log(`✅ Found data in sheet: "${sheetName}" with ${values.length} rows`);
+    console.log('📋 Headers:', headersClean);
+
     const idx = {
-      timestamp: headers.findIndex(h => h && (
+      timestamp: headersClean.findIndex(h => h && (
         h.toLowerCase().includes('timestamp') ||
         h.toLowerCase().includes('time stamp') ||
         h.toLowerCase() === 'time' ||
@@ -1143,83 +1161,122 @@ async function fetchGoogleSheetsData() {
         h.toLowerCase().includes('date & time') ||
         h.toLowerCase().includes('date/time')
       )),
-      date: headers.findIndex(h => h && (
+      date: headersClean.findIndex(h => h && (
         h.toLowerCase() === 'date' ||
         h.toLowerCase().includes('entry date')
-      )), 
-      name: headers.findIndex(h => h && (h.toLowerCase().includes('your name') || h.toLowerCase().includes('name') || h.toLowerCase().includes('employee'))),
-      amount: headers.findIndex(h => h && (h.toLowerCase().includes('amount') || h.toLowerCase().includes('collection'))),
-      paymentMode: headers.findIndex(h => h && (h.toLowerCase().includes('payment') || h.toLowerCase().includes('mode'))),
-      costCutting: headers.findIndex(h => h && (h.toLowerCase().includes('cost') || h.toLowerCase().includes('cutting'))),
-      entryNo: headers.findIndex(h => h && (
+      )),
+      name: headersClean.findIndex(h => h && (
+        h.toLowerCase().includes('your name') ||
+        h.toLowerCase().includes('name') ||
+        h.toLowerCase().includes('employee')
+      )),
+      amount: headersClean.findIndex(h => h && (
+        h.toLowerCase().includes('amount') ||
+        h.toLowerCase().includes('collection')
+      )),
+      paymentMode: headersClean.findIndex(h => h && (
+        h.toLowerCase().includes('payment') ||
+        h.toLowerCase().includes('mode')
+      )),
+      costCutting: headersClean.findIndex(h => h && (
+        h.toLowerCase().includes('cost') ||
+        h.toLowerCase().includes('cutting')
+      )),
+      entryNo: headersClean.findIndex(h => h && (
         h.toLowerCase().trim() === 'entry no' ||
         h.toLowerCase().trim() === 'entry number' ||
         h.toLowerCase().includes('entry no')
       ))
     };
-    
+
     console.log('🔍 Column indices:', idx);
-    
+
     if (idx.name === -1) {
-      throw new Error('Name column not found. Headers: ' + headers.join(', '));
-    }
-    
-    if (idx.amount === -1) {
-      throw new Error('Amount column not found. Headers: ' + headers.join(', '));
+      throw new Error('Name column not found. Headers: ' + headersClean.join(', '));
     }
 
-    const result = data.values.slice(1)
-      .filter(row => row.length > idx.name && row[idx.name] && row[idx.name].trim())
+    if (idx.amount === -1) {
+      throw new Error('Amount column not found. Headers: ' + headersClean.join(', '));
+    }
+
+    const result = values.slice(1)
+      .filter(row =>
+        row.length > idx.name &&
+        row[idx.name] &&
+        String(row[idx.name]).trim()
+      )
       .map((row, i) => {
-        const name = sanitize(row[idx.name].trim());
+        const name = sanitize(String(row[idx.name]).trim());
         const amount = validateAmount(row[idx.amount] || 0);
-        const paymentMode = idx.paymentMode !== -1 && row[idx.paymentMode] ? sanitize(row[idx.paymentMode].trim()) : '';
-        const saving = idx.costCutting !== -1 ? validateAmount(row[idx.costCutting] || 0) : 0;
-        
+        const paymentMode =
+          idx.paymentMode !== -1 && row[idx.paymentMode]
+            ? sanitize(String(row[idx.paymentMode]).trim())
+            : '';
+        const saving =
+          idx.costCutting !== -1
+            ? validateAmount(row[idx.costCutting] || 0)
+            : 0;
+
         let date = todayStr();
-        let rawTimestamp = idx.timestamp !== -1 && row[idx.timestamp]
-          ? String(row[idx.timestamp]).trim()
-          : '';
+        const rawTimestamp =
+          idx.timestamp !== -1 && row[idx.timestamp]
+            ? String(row[idx.timestamp]).trim()
+            : '';
 
         // Support sheets with separate Date and Time columns.
         if (idx.date !== -1 && row[idx.date]) {
           const ds = String(row[idx.date]).trim();
           let dm = ds.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-          if (dm) date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
-          else {
+          if (dm) {
+            date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
+          } else {
             dm = ds.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-            if (dm) date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
-          }
-        }
-
-        if (idx.timestamp !== -1 && row[idx.timestamp]) {
-          const ts = String(row[idx.timestamp]).trim();
-          if (!date || date === todayStr()) {
-            let dm = ts.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-            if (dm) date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
-            else {
-              dm = ts.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-              if (dm) date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
+            if (dm) {
+              date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
             }
           }
         }
 
-        return { 
-          id: Date.now() + i + Math.random(), 
-          entryNo: idx.entryNo !== -1 && row[idx.entryNo] ? String(row[idx.entryNo]).trim() : '',
-          date, 
-          rawTimestamp, 
-          employee: name, 
-          amount, 
-          paymentMode, 
-          saving 
+        // Timestamp format from the Google Sheet:
+        // 06/09/2026 14:43:15
+        if (idx.timestamp !== -1 && row[idx.timestamp]) {
+          const ts = String(row[idx.timestamp]).trim();
+
+          let dm = ts.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (dm) {
+            date = `${dm[3]}-${String(dm[2]).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`;
+          } else {
+            dm = ts.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (dm) {
+              date = `${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;
+            }
+          }
+        }
+
+        return {
+          id: Date.now() + i + Math.random(),
+          entryNo:
+            idx.entryNo !== -1 && row[idx.entryNo]
+              ? String(row[idx.entryNo]).trim()
+              : '',
+          date,
+          rawTimestamp,
+          employee: name,
+          amount,
+          paymentMode,
+          saving
         };
       })
       .filter(e => e.employee && e.employee.length > 0);
 
     console.log(`✅ Parsed ${result.length} valid entries`);
+
+    if (!result.length) {
+      throw new Error('Google Sheet returned rows, but no valid entries were parsed.');
+    }
+
     return result;
-    
+
   } catch (e) {
     console.error('❌ Fetch error:', e);
     showToast('⚠️ ' + e.message, 'error');
@@ -1250,58 +1307,38 @@ async function syncWithGoogleSheets(silent = false, force = false) {
   if (state.isSyncing) return;
   const now = Date.now();
   if (now - state.lastSync < CONFIG.MIN_SYNC_INTERVAL && silent && !force) return;
-
+  
   state.isSyncing = true;
   const dot = $('syncDot'), text = $('syncText');
   if (!silent) { dot.className = 'dot'; text.textContent = 'Syncing...'; }
-
+  
   try {
-    // Existing Google Sheets READ function remains unchanged.
-    // Refresh TODAY only; preserve older cached records for other reports.
     const data = await fetchGoogleSheetsData();
-
     if (data && data.length > 0) {
-      const today = todayStr();
-      const todayData = data.filter(e => e && e.date === today);
-      const olderData = (state.entries || []).filter(e => e.date !== today);
-
-      state.entries = [...olderData, ...todayData];
+      state.entries = data;
       await saveEntries();
-
-      state.staffList = [...new Set([
-        ...loadStaffList(),
-        ...extractStaffNames(todayData)
-      ])].filter(Boolean).sort((a,b) => a.localeCompare(b));
-
+      state.staffList = [...new Set([...loadStaffList(), ...extractStaffNames(data)])].sort((a,b) => a.localeCompare(b));
       saveStaffList();
       updateSubtitle();
-
-      const time = new Date().toLocaleTimeString('en-IN', {
-        hour:'2-digit', minute:'2-digit', second:'2-digit'
-      });
+      const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
       $('lastSyncTime').textContent = `⏱ ${time}`;
       dot.className = 'dot';
-      text.textContent = `✓ ${todayData.length}`;
-
-      if (!silent) showToast(`✅ Synced today: ${todayData.length} records`, 'success');
-
+      text.textContent = `✓ ${data.length}`;
+      if (!silent) showToast(`✅ Synced ${data.length} records`, 'success');
       setTimeout(() => {
         try { renderAllAnalytics(); } catch (e) { console.error('Analytics after sync:', e); }
-        try { debouncedRender(); } catch (e) { console.error('Dashboard render after sync:', e); }
       }, 0);
     } else {
       dot.className = 'dot error';
       text.textContent = 'No data';
       if (!silent) showToast('ℹ️ No data found. Please check Google Sheet.', 'info');
     }
-
     state.lastSync = Date.now();
   } catch (e) {
     dot.className = 'dot error';
     text.textContent = 'Failed';
     if (!silent) showToast('⚠️ Sync failed: ' + e.message, 'error');
   }
-
   state.isSyncing = false;
   debouncedRender();
 }
@@ -2371,7 +2408,7 @@ let autoSyncInterval;
 function startAutoSync() {
   if (autoSyncInterval) clearInterval(autoSyncInterval);
   autoSyncInterval = setInterval(() => {
-    if (state.activeReport === 'today') syncWithGoogleSheets(true, true);
+    if (state.activeReport === 'today') syncWithGoogleSheets(true);
   }, CONFIG.SYNC_INTERVAL);
 }
 
@@ -2661,243 +2698,5 @@ function renderDedicatedTrend(){
 }
 
 </script>
-
-<script>
-/* PWA INSTALL / HOME SCREEN
-   - Never auto-show repeatedly.
-   - Never show when launched from the Home Screen/PWA.
-   - Remembers "Later" for 30 days.
-   - Android: uses native beforeinstallprompt when available.
-   - iPhone/iPad: shows Add to Home Screen instructions only once.
-*/
-(function(){
-  let deferredPwaPrompt = null;
-  const INSTALL_KEY = 'yoursSalonPwaInstallDismissed';
-  const DAYS = 30;
-
-  function standalone(){
-    return window.matchMedia('(display-mode: standalone)').matches ||
-           window.navigator.standalone === true;
-  }
-  function ios(){
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-  function android(){
-    return /Android/i.test(navigator.userAgent || '');
-  }
-  function dismissed(){
-    try{
-      const t=Number(localStorage.getItem(INSTALL_KEY)||0);
-      return t && (Date.now()-t) < DAYS*86400000;
-    }catch(e){ return false; }
-  }
-  function markDismissed(){
-    try{ localStorage.setItem(INSTALL_KEY,String(Date.now())); }catch(e){}
-  }
-  function overlay(show){
-    const o=document.getElementById('pwaInstallOverlay');
-    if(!o)return;
-    o.classList.toggle('show',show);
-    o.setAttribute('aria-hidden',show?'false':'true');
-  }
-  function showInstall(){
-    if(standalone() || dismissed()) return;
-    const steps=document.getElementById('pwaInstallSteps');
-    const btn=document.getElementById('pwaInstallBtn');
-    const text=document.getElementById('pwaInstallText');
-    if(!steps || !btn || !text)return;
-
-    if(ios()){
-      text.textContent='iPhone/iPad par Home Screen me add karne ke liye Safari ka Share option use karein.';
-      steps.innerHTML =
-        '<li>Page ko <b>Safari</b> me open karein.</li>'+
-        '<li><b>Share</b> button tap karein.</li>'+
-        '<li><b>Add to Home Screen</b> select karein.</li>'+
-        '<li><b>Add</b> tap karein.</li>';
-      btn.textContent='Got It';
-    }else if(android()){
-      text.textContent=deferredPwaPrompt
-        ? 'YOURS SALON ko Home Screen par app ki tarah install karein.'
-        : 'Chrome ke menu se Install App/Add to Home Screen choose karein.';
-      steps.innerHTML =
-        '<li><b>Install App</b> tap karein.</li>'+
-        '<li>Chrome me <b>Install</b> confirm karein.</li>'+
-        '<li>App Home Screen par add ho jayega.</li>';
-      btn.textContent=deferredPwaPrompt?'Install App':'Got It';
-    }else{
-      text.textContent='Browser ke install option se Home Screen par add karein.';
-      steps.innerHTML =
-        '<li>Browser menu open karein.</li>'+
-        '<li><b>Install app</b> ya <b>Add to Home Screen</b> select karein.</li>';
-      btn.textContent='Got It';
-    }
-    overlay(true);
-  }
-
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    deferredPwaPrompt=e;
-    // Do NOT auto-popup here. Native prompt appears only after user clicks.
-    const btn=document.getElementById('pwaInstallBtn');
-    if(btn && !standalone() && !dismissed()) btn.textContent='Install App';
-  });
-
-  window.addEventListener('appinstalled',function(){
-    deferredPwaPrompt=null;
-    markDismissed();
-    overlay(false);
-  });
-
-  document.addEventListener('DOMContentLoaded',function(){
-    const btn=document.getElementById('pwaInstallBtn');
-    const later=document.getElementById('pwaLaterBtn');
-
-    if(btn) btn.addEventListener('click',async function(){
-      if(standalone()){ overlay(false); return; }
-
-      if(deferredPwaPrompt){
-        const e=deferredPwaPrompt;
-        deferredPwaPrompt=null;
-        try{
-          await e.prompt();
-          const choice=await e.userChoice;
-          if(choice && choice.outcome==='accepted') markDismissed();
-        }catch(_){}
-        overlay(false);
-        return;
-      }
-
-      // iOS/other browsers: this is informational, not a fake native popup.
-      markDismissed();
-      overlay(false);
-    });
-
-    if(later) later.addEventListener('click',function(){
-      markDismissed();
-      overlay(false);
-    });
-
-    // Automatic popup: only once, and never in standalone mode.
-    // Small delay lets beforeinstallprompt arrive first on Android.
-    setTimeout(function(){
-      if(!standalone() && !dismissed()) showInstall();
-    },1500);
-  });
-
-  if('serviceWorker' in navigator && location.protocol==='https:'){
-    window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./dashboard-sw.js',{scope:'./'})
-        .catch(function(err){ console.warn('PWA service worker:',err); });
-    });
-  }
-})();
-</script>
-
-<script>
-(function(){
- let deferred=null;
- const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-   (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
- const standalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
- const btn=document.getElementById('pwaQuickInstall');
- window.addEventListener('beforeinstallprompt',e=>{
-   e.preventDefault(); deferred=e;
-   if(btn) btn.style.display='block';
- });
- if(btn) btn.addEventListener('click',async()=>{
-   if(standalone()){btn.style.display='none';return}
-   if(deferred){
-     const e=deferred; deferred=null;
-     try{await e.prompt(); await e.userChoice}catch(_){}
-     btn.style.display='none'; return;
-   }
-   if(isIOS){
-     alert('iPhone/iPad: Safari me Share (□↑) dabayein → Add to Home Screen → Add.');
-   }else{
-     alert('Chrome: browser menu (⋮) kholkar “Install app” / “Add to Home screen” select karein. Site HTTPS par honi chahiye.');
-   }
- });
- window.addEventListener('appinstalled',()=>{if(btn)btn.style.display='none'});
- if(standalone() && btn) btn.style.display='none';
- if('serviceWorker' in navigator && location.protocol==='https:'){
-   navigator.serviceWorker.register('./dashboard-sw.js',{scope:'./'}).catch(console.warn);
- }
-})();
-</script>
-
-<script>
-/* Google session restoration for PWA / iPhone Home Screen.
-   Important: iOS/PWA may not expose the same browser storage context every time.
-   We keep the verified email locally and re-check the current Google session
-   through GIS when available. Google still controls whether silent auto-select
-   is permitted.
-*/
-(function(){
-  const KEY='yoursSalonVerifiedGoogleEmail';
-  const NAME='yoursSalonVerifiedGoogleName';
-
-  function saveGoogleIdentity(payload){
-    try{
-      if(payload && payload.email) localStorage.setItem(KEY,payload.email);
-      if(payload && payload.name) localStorage.setItem(NAME,payload.name);
-    }catch(e){}
-  }
-
-  function getSavedEmail(){
-    try{return localStorage.getItem(KEY)||'';}catch(e){return '';}
-  }
-
-  // Expose a small helper so the existing login callback can call it if needed.
-  window.YoursSalonGoogleSession={
-    save:saveGoogleIdentity,
-    getEmail:getSavedEmail,
-    clear:function(){
-      try{
-        localStorage.removeItem(KEY);
-        localStorage.removeItem(NAME);
-      }catch(e){}
-    }
-  };
-
-  // If the page is running as an installed iOS PWA, ask GIS to restore the
-  // existing Google session. This is silent/automatic where the browser allows it.
-  function tryRestore(){
-    if(!(window.google && google.accounts && google.accounts.id)) return;
-    try{
-      google.accounts.id.prompt(function(notification){
-        // No UI is forced here. If Google has an eligible session, GIS can
-        // complete the existing credential flow automatically.
-        if(notification && notification.isNotDisplayed &&
-           notification.isNotDisplayed()){
-          // Expected on some iOS/PWA privacy configurations.
-        }
-      });
-    }catch(e){}
-  }
-
-  // Wait for GIS script to be available.
-  let tries=0;
-  const timer=setInterval(function(){
-    tries++;
-    if(window.google && google.accounts && google.accounts.id){
-      clearInterval(timer);
-      tryRestore();
-    }else if(tries>30){
-      clearInterval(timer);
-    }
-  },500);
-
-  // When the app becomes visible again (e.g. returning from Safari/Google),
-  // attempt a silent restoration once more.
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden) setTimeout(tryRestore,250);
-  });
-})();
-</script>
-
-
-
-
 </body>
 </html>
