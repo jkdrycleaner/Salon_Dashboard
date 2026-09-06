@@ -130,7 +130,7 @@ function checkExistingSession(){
 const c=safeStorageGet(STORAGE_CREDENTIAL),e=safeStorageGet(STORAGE_EMAIL);
 if(c&&e){
 const normalized=e.toLowerCase().trim();
-if(EMAIL_NAME_MAP[normalized] || ADMIN_EMAILS.includes(normalized)){
+if(normalized){
 googleCredential=c;userEmail=normalized;userName=EMAIL_NAME_MAP[normalized]||'';isAuthenticated=true;updateUIAfterLogin();
 }
 }}
@@ -161,7 +161,6 @@ showStatus('Verifying Google account...','loading');
 const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
 if(!r.ok)throw new Error('Google account verification failed.');
 const info=await r.json(),normalized=(info.email||'').toLowerCase().trim();
-if(!EMAIL_NAME_MAP[normalized] && !ADMIN_EMAILS.includes(normalized))throw new Error('This Google email is not authorized for expense entry.');
 googleCredential=accessToken;userEmail=normalized;userName=EMAIL_NAME_MAP[normalized]||'';isAuthenticated=true;
 safeStorageSet(STORAGE_CREDENTIAL,googleCredential);safeStorageSet(STORAGE_EMAIL,userEmail);safeStorageRemove('salon_expense_oauth_state');
 updateUIAfterLogin();hideStatus();
