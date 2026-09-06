@@ -64,6 +64,10 @@ html,body{height:100%;min-height:100%;overflow:hidden}body{padding:0;align-items
 </select></div>
 <div class="form-group"><label>Payment Mode</label><select id="paymentMode" required><option>Cash</option><option>Online</option></select></div>
 <div class="form-group"><label>Amount (₹)</label><input type="number" id="amount" placeholder="0" min="1" step="1" inputmode="numeric" required></div>
+<div class="form-group" id="salaryMonthGroup" style="display:none">
+<label>Salary Month</label>
+<select id="salaryMonth"></select>
+</div>
 <div class="form-group"><label>Remark</label><textarea id="remark" placeholder="Enter remark"></textarea></div>
 <button type="submit" class="btn" id="submitBtn">Save and New Expense</button>
 <button type="button" class="btn dashboard-btn" id="dashboardBtn">Dashboard</button>
@@ -171,15 +175,38 @@ googleCredential=null;userEmail='';userName='';isAuthenticated=false;safeStorage
 showStatus(e.message||'Google account verification failed.','error');
 }}
 
+function populateSalaryMonths(){
+const select=document.getElementById('salaryMonth');
+const now=new Date();
+const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let options='<option value="">Select Salary Month</option>';
+for(let offset=2;offset>=0;offset--){
+const d=new Date(now.getFullYear(),now.getMonth()-offset,1);
+const label=monthNames[d.getMonth()];
+options+='<option value="'+label+'">'+label+'</option>';
+}
+select.innerHTML=options;
+}
+
+function toggleSalaryMonth(){
+const isSalary=document.getElementById('expenseType').value==='Salary';
+const group=document.getElementById('salaryMonthGroup');
+const select=document.getElementById('salaryMonth');
+group.style.display=isSalary?'block':'none';
+select.required=isSalary;
+if(isSalary){populateSalaryMonths();}else{select.value='';}
+}
+
 async function sendExpenseToSheet(d){
 const f=new URLSearchParams();
 f.append('action','expense');f.append('email',d.email);f.append('name',d.name);f.append('expenseType',d.expenseType);
-f.append('paymentMode',d.paymentMode);f.append('amount',d.amount);f.append('remark',d.remark);f.append('credential',googleCredential);
+f.append('paymentMode',d.paymentMode);f.append('amount',d.amount);f.append('salaryMonth',d.salaryMonth||'');f.append('remark',d.remark);f.append('credential',googleCredential);
 await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()});
 return true;
 }
 
 document.getElementById('googleSignInBtn').addEventListener('click',startGoogleLogin);
+document.getElementById('expenseType').addEventListener('change',toggleSalaryMonth);
 
 document.getElementById('expenseForm').addEventListener('submit',async function(ev){
 ev.preventDefault();if(isSubmitting)return;hideStatus();
@@ -187,15 +214,18 @@ if(!googleCredential||!isAuthenticated){showStatus('Please sign in with Google f
 const expenseType=document.getElementById('expenseType').value,paymentMode=document.getElementById('paymentMode').value;
 const selectedName=document.getElementById('nameSelect').value;
 const finalName=EMAIL_NAME_MAP[userEmail] || selectedName;
+const salaryMonth=document.getElementById('salaryMonth').value;
 const amount=parseFloat(document.getElementById('amount').value)||0,remark=document.getElementById('remark').value.trim();
 if(!expenseType){showStatus('Please select Expense Type.','error');return}
+if(expenseType==='Salary'&&!salaryMonth){showStatus('Please select Salary Month.','error');return}
 if(!finalName){showStatus('Please select Name.','error');return}
 if(amount<=0){showStatus('Please enter a valid amount.','error');return}
 isSubmitting=true;const b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Saving...';showStatus('Saving expense...','loading');
 try{
-await sendExpenseToSheet({email:userEmail,name:finalName,expenseType,paymentMode,amount,remark});
-document.getElementById('expenseType').value='';document.getElementById('paymentMode').value='Cash';document.getElementById('amount').value='';document.getElementById('remark').value='';
+await sendExpenseToSheet({email:userEmail,name:finalName,expenseType,paymentMode,amount,salaryMonth,remark});
+document.getElementById('expenseType').value='';document.getElementById('paymentMode').value='Cash';document.getElementById('amount').value='';document.getElementById('salaryMonth').value='';document.getElementById('remark').value='';
 document.getElementById('nameSelect').value='';
+toggleSalaryMonth();
 showStatus('Expense saved successfully. Ready for new expense.','success');setTimeout(hideStatus,2500);
 }catch(e){showStatus('Failed to save: '+e.message,'error')}
 isSubmitting=false;b.disabled=false;b.textContent='Save and New Expense';
