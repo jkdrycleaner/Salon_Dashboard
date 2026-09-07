@@ -82,6 +82,7 @@ h2{font-size:18px}.sub{font-size:10px;margin-bottom:8px}
   <div class="login-box">
     <button type="button" class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
     <div id="userEmail"></div>
+    <button type="button" class="btn dashboard-btn" id="counterCashBtn" style="display:none;margin-top:4px">💵 Cash at Counter</button>
   </div>
 
   <form id="expenseForm">
@@ -105,58 +106,37 @@ h2{font-size:18px}.sub{font-size:10px;margin-bottom:8px}
         <div class="card-grid" id="nameCards"></div>
       </div>
 
-      <div class="salary-box disabled" id="salaryMonthBox">
-        <div class="field-label">Salary Month <span class="required-star" id="salaryRequiredStar" style="display:none">*</span></div>
-        <div class="month-grid" id="salaryMonthCards"></div>
-      </div>
-
-      <div class="nav-row single">
-        <button type="button" class="btn" id="next1">Next →</button>
-      </div>
+      <div class="page-note" style="margin-top:9px">Name card par click karte hi next step open hoga.</div>
     </section>
 
     <section class="page" id="page2">
       <div class="page-title">2. Select Expense Type</div>
-      <div class="page-note">Salary aur Shop Expense quick header cards hain.</div>
-
-      <div class="type-hero">
-        <button type="button" class="option-card" data-type="Salary">💰 Salary<small>Staff salary</small></button>
-        <button type="button" class="option-card" data-type="Shop Expense">🏪 Shop Expense<small>Shop related</small></button>
-      </div>
-
-      <div class="field-label">Other Expense Types</div>
+      <div class="page-note">Access sheet ke SR ke according sirf allowed active types dikhenge.</div>
       <div class="type-list" id="typeList"></div>
-      <button type="button" class="show-more" id="showTypesBtn">Hide other types ↑</button>
-
-      <div class="nav-row">
+      <div class="salary-box disabled" id="salaryMonthBox" style="display:none">
+        <div class="field-label">Salary Month <span class="required-star" id="salaryRequiredStar">*</span></div>
+        <div class="month-grid" id="salaryMonthCards"></div>
+      </div>
+      <div class="nav-row single">
         <button type="button" class="btn back-btn" id="back2">← Back</button>
-        <button type="button" class="btn" id="next2">Next →</button>
       </div>
     </section>
 
     <section class="page" id="page3">
       <div class="page-title">3. Payment & Details</div>
-
-      <div class="field-block" style="margin-top:0">
-        <div class="field-label">Payment Mode <span class="required-star">*</span></div>
-        <div class="card-grid" id="paymentCards"></div>
-      </div>
-
-      <div class="field-block">
-        <div class="field-label">Amount (₹) <span class="required-star">*</span></div>
-        <input class="form-input" type="number" id="amount" placeholder="0" min="1" step="1" inputmode="numeric" required>
-      </div>
-
-      <div class="field-block">
-        <div class="field-label">Remark</div>
-        <textarea class="form-textarea" id="remark" placeholder="Enter remark"></textarea>
-      </div>
-
-      <div class="nav-row">
-        <button type="button" class="btn back-btn" id="back3">← Back</button>
-        <button type="submit" class="btn" id="submitBtn">Save Expense</button>
-      </div>
+      <div class="field-block" style="margin-top:0"><div class="field-label">Payment Mode <span class="required-star">*</span></div><div class="card-grid" id="paymentCards"></div></div>
+      <div class="field-block"><div class="field-label">Amount (₹) <span class="required-star">*</span></div><input class="form-input" type="number" id="amount" placeholder="0" min="1" step="1" inputmode="numeric" required></div>
+      <div class="field-block"><div class="field-label">Remark</div><textarea class="form-textarea" id="remark" placeholder="Enter remark"></textarea></div>
+      <div class="nav-row"><button type="button" class="btn back-btn" id="back3">← Back</button><button type="submit" class="btn" id="submitBtn">Save Expense</button></div>
       <button type="button" class="btn dashboard-btn" id="dashboardBtn">Dashboard</button>
+    </section>
+    <section class="page" id="counterPage">
+      <div class="page-title">💵 Cash at Counter</div>
+      <div class="page-note">Sirf Access sheet mein Cash at Counter = Yes wale users ke liye.</div>
+      <div class="email-card">Signed in as <strong id="counterEmailDisplay"></strong></div>
+      <div class="field-block" style="margin-top:0"><div class="field-label">Name</div><div class="option-card selected auto-card" id="counterNameCard"></div></div>
+      <div class="field-block"><div class="field-label">Amount (₹) <span class="required-star">*</span></div><input class="form-input" type="number" id="counterAmount" placeholder="0" min="1" step="1" inputmode="numeric"></div>
+      <div class="nav-row"><button type="button" class="btn back-btn" id="counterBack">← Back</button><button type="button" class="btn" id="counterSave">Save</button></div>
     </section>
   </form>
 
@@ -184,9 +164,9 @@ const EXPENSE_TYPES=[
 ];
 
 const PAYMENT_MODES=['Cash','Online'];
-
+let ACCESS_CONFIG={access:'',status:'',expenseSRs:[],cashAtCounter:false,names:[]};
 let googleCredential=null,userEmail='',userName='',isAuthenticated=false,isSubmitting=false;
-let currentPage=1,selectedName='',selectedExpenseType='',selectedPaymentMode='Cash',selectedSalaryMonth='';
+let currentPage=1,selectedName='',selectedExpenseType='',selectedPaymentMode='Cash',selectedSalaryMonth='',isCounterMode=false;
 
 function safeStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function safeStorageSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
@@ -207,17 +187,10 @@ function esc(s){
 }
 
 function renderNameCards(){
-  const wrap=document.getElementById('nameCards');
-  if(!wrap)return;
-  wrap.innerHTML=ALL_NAMES.map(n =>
-    '<button type="button" class="option-card '+(selectedName===n?'selected':'')+'" data-name="'+esc(n)+'">'+esc(n)+'</button>'
-  ).join('');
-  wrap.querySelectorAll('[data-name]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      selectedName=b.dataset.name;
-      renderNameCards();
-    });
-  });
+  const wrap=document.getElementById('nameCards'); if(!wrap)return;
+  const names=[...new Set((ACCESS_CONFIG.names&&ACCESS_CONFIG.names.length?ACCESS_CONFIG.names:ALL_NAMES))];
+  wrap.innerHTML=names.map(n=>'<button type="button" class="option-card '+(selectedName===n?'selected':'')+'" data-name="'+esc(n)+'">'+esc(n)+'</button>').join('');
+  wrap.querySelectorAll('[data-name]').forEach(b=>b.addEventListener('click',()=>{selectedName=b.dataset.name;renderNameCards();goPage(2);}));
 }
 
 function getSalaryMonths(){
@@ -241,48 +214,31 @@ function renderSalaryMonths(){
     b.addEventListener('click',()=>{
       selectedSalaryMonth=b.dataset.month;
       renderSalaryMonths();
+      setTimeout(()=>goPage(3),120);
     });
   });
 }
 
 function updateSalaryUI(){
-  const box=document.getElementById('salaryMonthBox');
-  const star=document.getElementById('salaryRequiredStar');
-  const active=selectedExpenseType==='Salary';
-  box.classList.toggle('disabled',!active);
-  star.style.display=active?'inline':'none';
-  renderSalaryMonths();
+  const box=document.getElementById('salaryMonthBox'); if(!box)return;
+  const active=selectedExpenseType==='Salary'; box.style.display=active?'block':'none'; box.classList.toggle('disabled',!active);
+  const star=document.getElementById('salaryRequiredStar'); if(star)star.style.display=active?'inline':'none'; renderSalaryMonths();
 }
 
 function renderExpenseTypes(){
-  const list=document.getElementById('typeList');
-  if(!list)return;
-  const types=[...new Set(EXPENSE_TYPES)].filter(t=>t!=='Salary'&&t!=='Shop Expense');
-  list.innerHTML=types.map(t =>
-    '<button type="button" class="option-card" data-type="'+esc(t)+'">'+esc(t)+'</button>'
-  ).join('');
-  document.querySelectorAll('[data-type]').forEach(b=>{
-    b.addEventListener('click',()=>selectExpenseType(b.dataset.type));
-  });
+  const list=document.getElementById('typeList'); if(!list)return;
+  const srSet=new Set((ACCESS_CONFIG.expenseSRs||[]).map(Number));
+  const rows=window.EXPENSE_TYPE_ROWS||[];
+  const allowed=[]; rows.forEach(x=>{if(x.status==='Active'&&srSet.has(Number(x.sr))&&!allowed.some(y=>y.name===x.name))allowed.push(x);});
+  list.innerHTML=allowed.map(x=>'<button type="button" class="option-card" data-type="'+esc(x.name)+'">'+esc(x.name)+'</button>').join('');
+  list.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',()=>selectExpenseType(b.dataset.type)));
 }
 
 function selectExpenseType(type){
-  if(!EXPENSE_TYPES.includes(type))return;
-  selectedExpenseType=type;
-
-  document.querySelectorAll('[data-type]').forEach(b=>{
-    b.classList.toggle('selected',b.dataset.type===type);
-  });
-
-  if(type==='Salary'||type==='Shop Expense'){
-    document.getElementById('typeList').classList.add('hidden');
-    document.getElementById('showTypesBtn').textContent='Show other types ↓';
-  }else{
-    document.getElementById('typeList').classList.remove('hidden');
-    document.getElementById('showTypesBtn').textContent='Hide other types ↑';
-  }
-
-  updateSalaryUI();
+  if(!type)return; selectedExpenseType=type;
+  document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('selected',b.dataset.type===type));
+  if(type==='Salary'){selectedSalaryMonth='';updateSalaryUI();}
+  else{selectedSalaryMonth='';updateSalaryUI();setTimeout(()=>goPage(3),120);}
 }
 
 function renderPayment(){
@@ -302,62 +258,41 @@ function renderPayment(){
 function goPage(n){
   currentPage=n;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const page=document.getElementById('page'+n);
+  const page=n===4?document.getElementById('counterPage'):document.getElementById('page'+n);
   if(page)page.classList.add('active');
 
   for(let i=1;i<=3;i++){
     const dot=document.getElementById('stepDot'+i);
-    if(dot)dot.className='step '+(i===n?'active':i<n?'done':'');
+    if(dot)dot.className='step '+(n===4?(i<=3?'done':''):(i===n?'active':i<n?'done':''));
   }
   hideStatus();
   window.scrollTo(0,0);
 }
 
-function updateUIAfterLogin(){
-  // FIX: Card-stepper layout has no #email input.
-  // The old code tried to set document.getElementById('email').value and caused:
-  // "Cannot set properties of null (setting 'value')".
-  const emailDisplay=document.getElementById('emailDisplay');
-  if(emailDisplay)emailDisplay.textContent=userEmail;
-
-  const isMapped=Object.prototype.hasOwnProperty.call(EMAIL_NAME_MAP,userEmail);
-
-  if(isMapped){
-    userName=EMAIL_NAME_MAP[userEmail];
-    selectedName=userName;
-    const autoGroup=document.getElementById('nameAutoGroup');
-    const selectGroup=document.getElementById('nameSelectGroup');
-    const autoCard=document.getElementById('autoNameCard');
-    if(autoGroup)autoGroup.style.display='block';
-    if(selectGroup)selectGroup.style.display='none';
-    if(autoCard)autoCard.textContent=userName;
-  }else{
-    selectedName='';
-    const autoGroup=document.getElementById('nameAutoGroup');
-    const selectGroup=document.getElementById('nameSelectGroup');
-    if(autoGroup)autoGroup.style.display='none';
-    if(selectGroup)selectGroup.style.display='block';
-    renderNameCards();
-  }
-
-  const e=document.getElementById('userEmail');
-  if(e){
-    e.textContent='✉';
-    e.title=userEmail;
-    e.dataset.email=userEmail;
-    e.className='authenticated';
-  }
-
-  const loginBtn=document.getElementById('googleSignInBtn');
-  if(loginBtn)loginBtn.style.display='none';
-
-  const form=document.getElementById('expenseForm');
-  if(form)form.style.display='block';
-
-  goPage(1);
+async function loadAccessConfig(){
+  try{
+    const r=await fetch(SCRIPT_URL+'?action=expenseConfig&email='+encodeURIComponent(userEmail),{cache:'no-store'});
+    const cfg=await r.json(); if(!cfg.success)throw new Error(cfg.message||'Access denied.');
+    ACCESS_CONFIG=cfg; window.EXPENSE_TYPE_ROWS=cfg.expenseTypes||[];
+    document.getElementById('counterCashBtn').style.display=cfg.cashAtCounter?'block':'none';
+    renderNameCards();renderExpenseTypes();updateSalaryUI();
+    return true;
+  }catch(e){showStatus(e.message||'Access settings could not be loaded.','error');return false;}
 }
 
-function checkExistingSession(){
+async function updateUIAfterLogin(){
+  const ed=document.getElementById('emailDisplay'); if(ed)ed.textContent=userEmail;
+  const ok=await loadAccessConfig(); if(!ok){isAuthenticated=false;return;}
+  if(ACCESS_CONFIG.status!=='Active'){isAuthenticated=false;showStatus('Your account is inactive. Please contact admin.','error');return;}
+  const mapped=!!ACCESS_CONFIG.autoName;
+  if(mapped){userName=ACCESS_CONFIG.autoName;selectedName=userName;document.getElementById('nameAutoGroup').style.display='block';document.getElementById('nameSelectGroup').style.display='none';document.getElementById('autoNameCard').textContent=userName;}
+  else{userName='';selectedName='';document.getElementById('nameAutoGroup').style.display='none';document.getElementById('nameSelectGroup').style.display='block';renderNameCards();}
+  const e=document.getElementById('userEmail');if(e){e.textContent='✉';e.title=userEmail;e.dataset.email=userEmail;e.className='authenticated';}
+  document.getElementById('googleSignInBtn').style.display='none';document.getElementById('expenseForm').style.display='block';
+  document.getElementById('counterEmailDisplay').textContent=userEmail;document.getElementById('counterNameCard').textContent=ACCESS_CONFIG.autoName||selectedName||'Name';goPage(1);
+}
+
+async function checkExistingSession(){
   const c=safeStorageGet(STORAGE_CREDENTIAL);
   const e=safeStorageGet(STORAGE_EMAIL);
   if(c&&e){
@@ -367,7 +302,7 @@ function checkExistingSession(){
       userEmail=normalized;
       userName=EMAIL_NAME_MAP[normalized]||'';
       isAuthenticated=true;
-      updateUIAfterLogin();
+      await updateUIAfterLogin();
     }
   }
 }
@@ -496,39 +431,20 @@ renderExpenseTypes();
 renderPayment();
 updateSalaryUI();
 
-document.getElementById('next1').addEventListener('click',()=>{
-  if(!selectedName){
-    showStatus('Please select Name.','error');
-    return;
-  }
-  goPage(2);
-});
-
 document.getElementById('back2').addEventListener('click',()=>goPage(1));
-
-document.getElementById('next2').addEventListener('click',()=>{
-  if(!selectedExpenseType){
-    showStatus('Please select Expense Type.','error');
-    return;
-  }
-  if(selectedExpenseType==='Salary'&&!selectedSalaryMonth){
-    goPage(1);
-    showStatus('Salary select hai, pehle Salary Month choose karein.','error');
-    return;
-  }
-  goPage(3);
-});
 
 document.getElementById('back3').addEventListener('click',()=>goPage(2));
 document.getElementById('googleSignInBtn').addEventListener('click',startGoogleLogin);
 
-document.getElementById('showTypesBtn').addEventListener('click',()=>{
-  const list=document.getElementById('typeList');
-  const hidden=list.classList.toggle('hidden');
-  document.getElementById('showTypesBtn').textContent=hidden?'Show other types ↓':'Hide other types ↑';
-});
-
 document.getElementById('dashboardBtn').addEventListener('click',()=>location.href=DASHBOARD_URL);
+
+async function sendCounterToSheet(amount){
+  const f=new URLSearchParams();f.append('action','counterCash');f.append('email',userEmail);f.append('name',ACCESS_CONFIG.autoName||selectedName);f.append('amount',amount);f.append('credential',googleCredential);
+  await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()}); return true;
+}
+document.getElementById('counterCashBtn').addEventListener('click',()=>{if(!ACCESS_CONFIG.cashAtCounter){showStatus('Cash at Counter access nahi hai.','error');return;}document.getElementById('counterNameCard').textContent=ACCESS_CONFIG.autoName||selectedName||'Name';goPage(4);});
+document.getElementById('counterBack').addEventListener('click',()=>goPage(1));
+document.getElementById('counterSave').addEventListener('click',async()=>{const amount=parseFloat(document.getElementById('counterAmount').value)||0;if(amount<=0){showStatus('Please enter a valid amount.','error');return;}const b=document.getElementById('counterSave');b.disabled=true;b.textContent='Saving...';try{await sendCounterToSheet(amount);document.getElementById('counterAmount').value='';showStatus('Cash at Counter saved successfully.','success');setTimeout(()=>{hideStatus();goPage(1);},1000);}catch(e){showStatus('Failed to save: '+e.message,'error');}b.disabled=false;b.textContent='Save';});
 
 document.getElementById('expenseForm').addEventListener('submit',async function(ev){
   ev.preventDefault();
@@ -540,7 +456,7 @@ document.getElementById('expenseForm').addEventListener('submit',async function(
     return;
   }
 
-  const finalName=EMAIL_NAME_MAP[userEmail]||selectedName;
+  const finalName=ACCESS_CONFIG.autoName||selectedName;
   const amount=parseFloat(document.getElementById('amount').value)||0;
   const remark=document.getElementById('remark').value.trim();
 
@@ -589,9 +505,7 @@ document.getElementById('expenseForm').addEventListener('submit',async function(
 
     document.querySelectorAll('[data-type]').forEach(x=>x.classList.remove('selected'));
     document.getElementById('typeList').classList.remove('hidden');
-    document.getElementById('showTypesBtn').textContent='Hide other types ↑';
-
-    renderPayment();
+        renderPayment();
     updateSalaryUI();
     goPage(1);
 
@@ -608,7 +522,7 @@ document.getElementById('expenseForm').addEventListener('submit',async function(
 
 window.addEventListener('load',async()=>{
   await handleOAuthReturn();
-  checkExistingSession();
+  await checkExistingSession();
 });
 </script>
 </body>
