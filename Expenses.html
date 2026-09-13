@@ -2,63 +2,61 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#12100e;color:#f3eee3;font:13px Arial;min-height:100vh}.app{max-width:520px;margin:auto;min-height:100vh;background:#1b1815;padding:18px}.topbar{position:relative;display:flex;justify-content:space-between;align-items:flex-start}.logo{font-size:24px;font-weight:800;color:#c9a227;margin-bottom:15px}.logout-wrap{position:relative}.logout-icon{width:32px;height:32px;border:1px solid #332c22;border-radius:9px;background:#242019;color:#f3eee3;font-size:20px;line-height:1;cursor:pointer}.logout-pop{display:none;position:absolute;right:0;top:38px;width:100px;height:36px;border:1px solid #4a3d24;border-radius:8px;background:#2b2517;color:#e4c55c;font-weight:800;z-index:20}.logout-pop.show{display:block}.page{display:none}.page.on{display:block}.title{font-size:17px;font-weight:800;margin-bottom:5px}.hint,label{color:#9c9284;font-size:10px}label{display:block;margin:12px 0 5px;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.main-grid{grid-template-columns:1fr;gap:10px}.main-grid .card{aspect-ratio:1/1;min-height:0;width:100%;height:auto;display:flex;align-items:center;justify-content:center;text-align:center}.grid3{grid-template-columns:repeat(3,1fr)}.card{min-height:50px;background:#242019;border:1px solid #332c22;border-radius:10px;color:#f3eee3;font-weight:700;cursor:pointer;padding:9px}.card.sel{border-color:#c9a227;color:#e4c55c;background:#2b2517}.btn{width:100%;height:40px;border:0;border-radius:9px;margin-top:10px;font-weight:800;cursor:pointer}.primary{background:#c9a227;color:#1b1508}.back{background:#332c22;color:#f3eee3}.input,.ta{width:100%;background:#242019;border:1px solid #332c22;border-radius:9px;color:#f3eee3;padding:10px}.input{height:41px}.ta{height:70px;resize:none}.step{display:flex;gap:5px;margin-bottom:14px}.dot{height:5px;flex:1;background:#332c22;border-radius:8px}.dot.on,.dot.done{background:#c9a227}.modal{display:none;position:fixed;inset:0;background:#000b;align-items:flex-end;padding:0}.modal.on{display:flex}.box{width:100%;max-width:520px;margin:auto;background:#1b1815;border:1px solid #4a3d24;border-radius:14px 14px 0 0;padding:16px}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #30291f}.row span:first-child{color:#9c9284}.status{margin-top:8px;padding:8px;border-radius:7px;display:none}.status.on{display:block}.error{background:#341d1b;color:#e88a82}.ok{background:#17302a;color:#8fd4c4}
 
-/* Expenses v10: compact single-screen responsive layout */
-html,body{width:100%;height:100%;overflow:hidden}
-body{min-height:100dvh}
-.app{height:100dvh;min-height:100dvh;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column}
-.app>.page{flex:1;min-height:0;overflow:hidden}
+/* Expenses v12: full-screen responsive container with dynamic content sizing */
+html,body{width:100%;min-height:100%;margin:0}
+body{min-height:100dvh;overflow:hidden}
+.app{width:100%;max-width:520px;min-height:100dvh;height:auto;margin:auto;background:#1b1815;padding:14px 16px;display:flex;flex-direction:column}
+.app>.page{flex:0 0 auto;min-height:0;overflow:visible}
 .topbar{flex:0 0 auto}
-.logo{font-size:22px;margin-bottom:9px}
-#loggedEmployee{margin:-5px 0 8px!important}
+.logo{font-size:22px;margin-bottom:7px}
+#loggedEmployee{margin:-3px 0 8px!important}
 .hint{line-height:1.25}
-.title{font-size:16px;margin-bottom:4px}
+.title{font-size:16px;margin-bottom:5px}
 .step{margin-bottom:9px}
-.card{min-height:43px;padding:7px 6px;font-size:11px}
+.card{min-height:42px;padding:8px 7px;font-size:11px}
 .grid{gap:6px}
 .grid3{grid-template-columns:repeat(3,1fr);gap:6px}
 .main-grid{grid-template-columns:1fr;gap:8px}
-.main-grid .card{aspect-ratio:auto;height:68px;min-height:68px;font-size:13px}
-.btn{height:38px;margin-top:7px}
+.main-grid .card{width:100%;height:54px;min-height:54px;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px}
+.btn{height:37px;margin-top:7px}
 .input{height:38px;padding:8px}
 .ta{height:58px;padding:8px}
 label{margin:7px 0 4px;font-size:9px}
-section.page{overflow:hidden}
+section.page{overflow:visible}
 section.page .title{margin-bottom:5px}
 #en,#sn{gap:6px}
-#en .card,#sn .card{min-height:42px}
+#en .card,#sn .card{min-height:40px}
 #ed,#sd,#epm,#spm,#sm{gap:6px}
 #et{gap:5px}
 #et .card{min-height:38px;padding:6px 4px}
-#expense,#salary{overflow:hidden}
-#counter{overflow:hidden}
-#status{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1000;width:min(90vw,440px);margin:0;text-align:center;box-shadow:0 6px 24px #0008}
+#expense,#salary,#counter{overflow:visible}
+#status{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:1000;width:min(92vw,440px);margin:0;text-align:center;box-shadow:0 6px 24px #0008}
 .modal{z-index:2000}
-.box{max-height:90dvh;overflow:hidden;padding:13px}
+.box{max-height:90dvh;overflow:auto;padding:13px}
 .row{padding:6px 0;font-size:11px}
 @media(max-width:600px){
-  .app{max-width:none;padding:12px 12px}
-  .main-grid .card{height:64px;min-height:64px}
-  .grid3{gap:5px}
-  .card{min-height:40px}
-  .btn{height:37px}
+  .app{max-width:none;width:100%;padding:11px 12px}
+  .main-grid{gap:7px}
+  .main-grid .card{height:52px;min-height:52px}
+  .card{min-height:39px}
+  .btn{height:36px}
 }
 @media(max-height:650px){
-  .app{padding-top:8px;padding-bottom:8px}
-  .logo{font-size:20px;margin-bottom:5px}
-  #loggedEmployee{margin:-2px 0 5px!important}
+  .app{padding-top:7px;padding-bottom:7px}
+  .logo{font-size:20px;margin-bottom:4px}
+  #loggedEmployee{margin:-2px 0 4px!important}
   .main-grid{gap:5px}
-  .main-grid .card{height:54px;min-height:54px}
-  .step{margin-bottom:6px}
-  .card{min-height:36px;padding:5px}
-  .btn{height:34px;margin-top:5px}
-  label{margin:5px 0 3px}
-  .input{height:35px}
-  .ta{height:48px}
-}
-</style></head><body><div class="app">
+  .main-grid .card{height:48px;min-height:48px}
+  .step{margin-bottom:5px}
+  .card{min-height:34px;padding:5px}
+  .btn{height:33px;margin-top:4px}
+  label{margin:4px 0 2px}
+  .input{height:34px}
+  .ta{height:45px}
+}</style></head><body><div class="app">
 <div class="topbar"><div class="logo">YOURS SALON</div>
 <div class="logout-wrap"><button class="logout-icon" type="button" onclick="toggleLogout()" aria-label="Logout">⋮</button>
-<button id="logoutBtn" class="logout-pop" type="button" onclick="logout()">Logout</button></div></div><div class="hint" style="font-size:9px;margin:-10px 0 12px;color:#9c9284">Expenses Version 11</div><div id="loggedEmployee" class="hint" style="font-size:12px;margin:-10px 0 15px;color:#e4c55c;font-weight:700"></div>
+<button id="logoutBtn" class="logout-pop" type="button" onclick="logout()">Logout</button></div></div><div class="hint" style="font-size:9px;margin:-10px 0 12px;color:#9c9284">Expenses Version 12</div><div id="loggedEmployee" class="hint" style="font-size:12px;margin:-10px 0 15px;color:#e4c55c;font-weight:700"></div>
 <div id="login" class="page on"><div class="title">Google Verification</div><div class="hint">Google account verify hone ke baad Employee List se rights check honge.</div><button class="btn primary" onclick="login()">Continue with Google</button></div>
 <div id="home" class="page"><div class="title">Select Entry</div><div id="buttons" class="grid main-grid"></div></div>
 
@@ -86,7 +84,7 @@ let email='',access={},employees=[],types=[],review=null,ed={name:'',date:dates(
 const $=id=>document.getElementById(id),uniq=a=>[...new Set(a.filter(Boolean))];
 function stat(m,c){$('status').textContent=m;$('status').className='status on '+c} function clear(){ $('status').className='status' }
 function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function show(id){document.querySelectorAll('.app > .page').forEach(x=>x.classList.remove('on'));$(id).classList.add('on');clear()}
+function show(id){document.querySelectorAll('.app > .page').forEach(x=>x.classList.remove('on'));$(id).classList.add('on');clear();window.scrollTo(0,0)}
 function login(){let state=Math.random().toString(36).slice(2);sessionStorage.setItem('oauth_state',state);let p=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,response_type:'token',scope:'openid email profile',state,prompt:'select_account'});location.href='https://accounts.google.com/o/oauth2/v2/auth?'+p}
 function jsonp(url){return new Promise((res,rej)=>{let cb='cb'+Date.now(),s=document.createElement('script');window[cb]=x=>{s.remove();delete window[cb];res(x)};s.onerror=()=>rej(Error('Employee List load failed.'));s.src=url+'&callback='+cb;document.body.appendChild(s)})}
 async function auth(){let p=new URLSearchParams(location.hash.slice(1)),t=p.get('access_token');if(!t)return;history.replaceState(null,'',location.pathname);let r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:'Bearer '+t}});let u=await r.json();email=(u.email||'').toLowerCase().trim();let x=await jsonp(SCRIPT_URL+'?action=access&email='+encodeURIComponent(email));if(!x.ok)throw Error(x.message);access=x.user;employees=x.employeeNames||[];types=x.expenseTypes||[];$('loggedEmployee').textContent='Employee: '+access.employeeName;renderHome();show('home')}
