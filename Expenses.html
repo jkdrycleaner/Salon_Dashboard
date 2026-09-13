@@ -1,529 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>YOURS SALON — Add Expense</title>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>YOURS SALON</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;min-height:100%}
-body{background:#12100E;color:#F3EEE3;font-family:Arial,sans-serif;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:18px}
-.container{background:#1B1815;border:1px solid #332C22;border-radius:12px;padding:24px;max-width:480px;width:100%}
-.logo{font-size:24px;font-weight:700;color:#C9A227;margin-bottom:10px;border-bottom:1px solid #332C22;padding-bottom:10px}
-.logo span{color:#E4C55C}
-h2{font-size:20px;margin-bottom:3px}
-.sub{color:#9C9284;font-size:12px;margin-bottom:10px}
-.login-box{position:relative;min-height:42px;margin-bottom:9px}
-.google-btn{margin-top:0!important;background:#F3EEE3!important;color:#1B1815!important;border:1px solid #CFC7B8!important}
-.btn{width:100%;height:40px;background:#C9A227;color:#1B1508;border:0;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:3px}
-.btn:disabled{opacity:.55;cursor:not-allowed}
-.dashboard-btn{margin-top:7px;background:#332C22;color:#F3EEE3}
-#userEmail{display:none}
-#userEmail.authenticated{position:absolute;top:0;right:0;width:30px;height:30px;display:flex!important;align-items:center;justify-content:center;color:#C9A227;font-size:19px;cursor:help}
-#userEmail.authenticated::after{content:attr(data-email);position:fixed;top:10px;right:14px;max-width:230px;color:#9C9284;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-#expenseForm{display:none}
-.stepper{display:flex;align-items:center;gap:7px;margin:4px 0 12px}
-.step{height:6px;flex:1;border-radius:10px;background:#332C22}
-.step.active,.step.done{background:#C9A227}
-.page{display:none}
-.page.active{display:block}
-.page-title{font-size:14px;font-weight:700;margin-bottom:8px}
-.page-note{font-size:10px;color:#9C9284;margin-bottom:8px}
-.email-card{background:#242019;border:1px solid #332C22;border-radius:8px;padding:8px 10px;font-size:10px;color:#9C9284;margin-bottom:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.email-card strong{color:#C9A227;font-weight:600}
-.field-label{font-size:9px;color:#9C9284;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px}
-.required-star{color:#C9A227}
-.card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.option-card{width:100%;min-height:44px;background:#242019;border:1px solid #332C22;border-radius:9px;color:#F3EEE3;padding:9px 10px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:.15s}
-.option-card:hover{border-color:#8E7525}
-.option-card.selected{border-color:#C9A227;background:rgba(201,162,39,.12);color:#E4C55C;box-shadow:inset 0 0 0 1px rgba(201,162,39,.18)}
-.option-card small{display:block;color:#9C9284;font-size:9px;font-weight:400;margin-top:3px}
-.auto-card{cursor:default}
-.salary-box{display:block;margin-top:9px}
-.salary-box.disabled .month-grid{opacity:.45;pointer-events:none}
-.month-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.month-card{min-height:42px;font-size:11px}
-.type-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px}
-.type-hero .option-card{min-height:52px}
-.type-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:hidden;max-height:500px;transition:max-height .2s,opacity .2s}
-.type-list.hidden{max-height:0;opacity:0;pointer-events:none}
-.show-more{border:0;background:none;color:#9C9284;font-size:10px;cursor:pointer;width:100%;padding:7px 0}
-.form-input,.form-textarea{width:100%;background:#242019;border:1px solid #332C22;border-radius:8px;color:#F3EEE3;outline:none;padding:9px 10px;font-size:14px}
-.form-input{height:40px}
-.form-textarea{height:70px;resize:none}
-.form-input:focus,.form-textarea:focus{border-color:#C9A227}
-.form-input::placeholder,.form-textarea::placeholder{color:#5A5042}
-.field-block{margin-top:9px}
-.nav-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
-.nav-row.single{grid-template-columns:1fr}
-.back-btn{background:#332C22;color:#F3EEE3}
-#status{margin-top:7px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}
-#status.success{display:block;background:rgba(62,130,114,.2);border:1px solid #3E8272;color:#8FD4C4}
-#status.error{display:block;background:rgba(181,71,63,.2);border:1px solid #B5473F;color:#E88A82}
-#status.loading{display:block;background:rgba(201,162,39,.05);border:1px solid #332C22;color:#9C9284}
-@media(max-width:600px){
-html,body{height:100%;min-height:100%;overflow:hidden}
-body{padding:0;align-items:stretch;justify-content:stretch}
-.container{width:100%;max-width:none;height:100dvh;min-height:100dvh;border:0;border-radius:0;padding:14px 18px 12px;overflow:auto}
-.logo{font-size:21px;margin-bottom:7px;padding-bottom:7px}
-h2{font-size:18px}.sub{font-size:10px;margin-bottom:8px}
-.stepper{margin-bottom:10px}.option-card{min-height:45px;padding:9px 8px;font-size:12px}
-.type-hero .option-card{min-height:50px}.form-input{height:40px;font-size:13px}
-.form-textarea{height:65px;font-size:13px}.btn{height:39px;font-size:12px}
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="logo">YOURS <span>SALON</span></div>
-  <h2>💰 Add Expense</h2>
-  <div class="sub">Choose details step by step</div>
+*{box-sizing:border-box}body{margin:0;background:#12100e;color:#f3eee3;font:13px Arial;min-height:100vh}.app{max-width:520px;margin:auto;min-height:100vh;background:#1b1815;padding:18px}.logo{font-size:24px;font-weight:800;color:#c9a227;margin-bottom:15px}.page{display:none}.page.on{display:block}.title{font-size:17px;font-weight:800;margin-bottom:5px}.hint,label{color:#9c9284;font-size:10px}label{display:block;margin:12px 0 5px;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.grid3{grid-template-columns:repeat(3,1fr)}.card{min-height:50px;background:#242019;border:1px solid #332c22;border-radius:10px;color:#f3eee3;font-weight:700;cursor:pointer;padding:9px}.card.sel{border-color:#c9a227;color:#e4c55c;background:#2b2517}.btn{width:100%;height:40px;border:0;border-radius:9px;margin-top:10px;font-weight:800;cursor:pointer}.primary{background:#c9a227;color:#1b1508}.back{background:#332c22;color:#f3eee3}.input,.ta{width:100%;background:#242019;border:1px solid #332c22;border-radius:9px;color:#f3eee3;padding:10px}.input{height:41px}.ta{height:70px;resize:none}.step{display:flex;gap:5px;margin-bottom:14px}.dot{height:5px;flex:1;background:#332c22;border-radius:8px}.dot.on,.dot.done{background:#c9a227}.modal{display:none;position:fixed;inset:0;background:#000b;align-items:flex-end;padding:0}.modal.on{display:flex}.box{width:100%;max-width:520px;margin:auto;background:#1b1815;border:1px solid #4a3d24;border-radius:14px 14px 0 0;padding:16px}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #30291f}.row span:first-child{color:#9c9284}.status{margin-top:8px;padding:8px;border-radius:7px;display:none}.status.on{display:block}.error{background:#341d1b;color:#e88a82}.ok{background:#17302a;color:#8fd4c4}
+</style></head><body><div class="app">
+<div class="logo">YOURS SALON</div>
+<div id="login" class="page on"><div class="title">Google Verification</div><div class="hint">Google account verify hone ke baad Employee List se rights check honge.</div><button class="btn primary" onclick="login()">Continue with Google</button></div>
+<div id="home" class="page"><div class="title">Select Entry</div><div id="buttons" class="grid grid3"></div><button class="btn back" onclick="location.reload()">Logout</button></div>
 
-  <div class="login-box">
-    <button type="button" class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
-    <div id="userEmail"></div>
-    <button type="button" class="btn dashboard-btn" id="counterCashBtn" style="display:none;margin-top:4px">💵 Cash at Counter</button>
-  </div>
+<div id="expense" class="page"><div class="step"><i class="dot on" id="e1"></i><i class="dot" id="e2"></i><i class="dot" id="e3"></i></div>
+<section id="ep1" class="page on"><div class="title">Daily Expense — Employee</div><div id="en" class="grid"></div><button class="btn back" onclick="home()">← Back</button></section>
+<section id="ep2" class="page"><div class="title">Daily Expense — Details</div><label>Expense Date</label><div id="ed" class="grid"></div><label>Expense Type</label><div id="et" class="grid grid3"></div><button class="btn back" onclick="estep(1)">← Back</button></section>
+<section id="ep3" class="page"><div class="title">Payment & Details</div><label>Payment Mode</label><div id="epm" class="grid"></div><label>Amount</label><input id="ea" class="input" type="number" min="0.01" step="0.01"><label>Remark</label><textarea id="er" class="ta"></textarea><button class="btn back" onclick="estep(2)">← Back</button><button class="btn primary" onclick="reviewExpense()">Review & Submit</button></section></div>
 
-  <form id="expenseForm">
-    <div class="stepper">
-      <span class="step active" id="stepDot1"></span>
-      <span class="step" id="stepDot2"></span>
-      <span class="step" id="stepDot3"></span>
-    </div>
+<div id="salary" class="page"><div class="step"><i class="dot on" id="s1"></i><i class="dot" id="s2"></i><i class="dot" id="s3"></i></div>
+<section id="sp1" class="page on"><div class="title">Salary — Employee</div><div id="sn" class="grid"></div><button class="btn back" onclick="home()">← Back</button></section>
+<section id="sp2" class="page"><div class="title">Salary Date</div><label>Pay Date</label><div id="sd" class="grid"></div><label>Salary Month</label><div id="sm" class="grid"></div><button class="btn back" onclick="sstep(1)">← Back</button></section>
+<section id="sp3" class="page"><div class="title">Payment & Details</div><label>Payment Mode</label><div id="spm" class="grid"></div><label>Amount</label><input id="sa" class="input" type="number" min="0.01" step="0.01"><label>Attachment (Optional)</label><input id="sf" class="input" type="file" accept="image/*,.pdf"><label>Remark</label><textarea id="sr" class="ta"></textarea><button class="btn back" onclick="sstep(2)">← Back</button><button class="btn primary" onclick="reviewSalary()">Review & Submit</button></section></div>
 
-    <section class="page active" id="page1">
-      <div class="page-title">1. Select Name</div>
-      <div class="email-card">Signed in as <strong id="emailDisplay"></strong></div>
+<div id="counter" class="page"><div class="title">Counter Cash</div><div class="hint">Employee Name automatically verified from Employee List.</div><div id="cn" class="card sel"></div><label>Amount</label><input id="ca" class="input" type="number" min="0.01" step="0.01"><label>Remark</label><textarea id="cr" class="ta"></textarea><button class="btn back" onclick="home()">← Back</button><button class="btn primary" onclick="reviewCounter()">Review & Submit</button></div>
+<div id="status" class="status"></div></div>
 
-      <div id="nameAutoGroup" style="display:none">
-        <div class="field-label">Name</div>
-        <button type="button" class="option-card selected auto-card" id="autoNameCard"></button>
-      </div>
-
-      <div id="nameSelectGroup">
-        <div class="field-label">Name <span class="required-star">*</span></div>
-        <div class="card-grid" id="nameCards"></div>
-      </div>
-
-      <div class="page-note" style="margin-top:9px">Name card par click karte hi next step open hoga.</div>
-    </section>
-
-    <section class="page" id="page2">
-      <div class="page-title">2. Select Expense Type</div>
-      <div class="page-note">Access sheet ke SR ke according sirf allowed active types dikhenge.</div>
-      <div class="type-list" id="typeList"></div>
-      <div class="salary-box disabled" id="salaryMonthBox" style="display:none">
-        <div class="field-label">Salary Month <span class="required-star" id="salaryRequiredStar">*</span></div>
-        <div class="month-grid" id="salaryMonthCards"></div>
-      </div>
-      <div class="nav-row single">
-        <button type="button" class="btn back-btn" id="back2">← Back</button>
-      </div>
-    </section>
-
-    <section class="page" id="page3">
-      <div class="page-title">3. Payment & Details</div>
-      <div class="field-block" style="margin-top:0"><div class="field-label">Payment Mode <span class="required-star">*</span></div><div class="card-grid" id="paymentCards"></div></div>
-      <div class="field-block"><div class="field-label">Amount (₹) <span class="required-star">*</span></div><input class="form-input" type="number" id="amount" placeholder="0" min="1" step="1" inputmode="numeric" required></div>
-      <div class="field-block"><div class="field-label">Remark</div><textarea class="form-textarea" id="remark" placeholder="Enter remark"></textarea></div>
-      <div class="nav-row"><button type="button" class="btn back-btn" id="back3">← Back</button><button type="submit" class="btn" id="submitBtn">Save Expense</button></div>
-      <button type="button" class="btn dashboard-btn" id="dashboardBtn">Dashboard</button>
-    </section>
-    <section class="page" id="counterPage">
-      <div class="page-title">💵 Cash at Counter</div>
-      <div class="page-note">Sirf Access sheet mein Cash at Counter = Yes wale users ke liye.</div>
-      <div class="email-card">Signed in as <strong id="counterEmailDisplay"></strong></div>
-      <div class="field-block" style="margin-top:0"><div class="field-label">Name</div><div class="option-card selected auto-card" id="counterNameCard"></div></div>
-      <div class="field-block"><div class="field-label">Amount (₹) <span class="required-star">*</span></div><input class="form-input" type="number" id="counterAmount" placeholder="0" min="1" step="1" inputmode="numeric"></div>
-      <div class="nav-row"><button type="button" class="btn back-btn" id="counterBack">← Back</button><button type="button" class="btn" id="counterSave">Save</button></div>
-    </section>
-  </form>
-
-  <div id="status"></div>
-</div>
+<div id="modal" class="modal"><div class="box"><div class="title">Confirm Entry</div><div id="summary"></div><button class="btn back" onclick="closeReview()">Edit</button><button class="btn primary" onclick="finalSubmit()">Final Submit</button></div></div>
 
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
-const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
-const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
-const STORAGE_CREDENTIAL='salon_google_credential';
-const STORAGE_EMAIL='salon_user_email';
+const CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+const REDIRECT_URI='https://jkdrycleaner.github.io/Salon_Dashboard/Expenses.html';
+let email='',access={},employees=[],types=[],review=null,ed={name:'',date:'',type:'',pay:'Cash'},sd={name:'',date:'',month:'',pay:'Cash'};
 
-const EMAIL_NAME_MAP={
-  'ashukumar12211551@gmail.com':'Ashu Kumar',
-  'aamir839398058@gmail.com':'Amir Khan',
-  's45351520@gmail.com':'Suhail Khan'
-};
-
-const ALL_NAMES=['Ashu Kumar','Amir Khan','Suhail Khan','Jaan Mohd','Shop','Home'];
-
-const EXPENSE_TYPES=[
-  'Salary','Advance','Daily Expense','Counter Cash','Shop Expense',
-  'Home Expense','Home','Rent','EMI','Car'
-];
-
-const PAYMENT_MODES=['Cash','Online'];
-let ACCESS_CONFIG={access:'',status:'',expenseSRs:[],cashAtCounter:false,names:[]};
-let googleCredential=null,userEmail='',userName='',isAuthenticated=false,isSubmitting=false;
-let currentPage=1,selectedName='',selectedExpenseType='',selectedPaymentMode='Cash',selectedSalaryMonth='',isCounterMode=false;
-
-function safeStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function safeStorageSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
-function safeStorageRemove(k){try{localStorage.removeItem(k)}catch(e){}}
-
-function showStatus(m,t){
-  const s=document.getElementById('status');
-  if(!s)return;
-  s.textContent=m;s.className=t;s.style.display='block';
-}
-function hideStatus(){
-  const s=document.getElementById('status');
-  if(!s)return;
-  s.textContent='';s.className='';s.style.display='none';
-}
-function esc(s){
-  return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-}
-
-function renderNameCards(){
-  const wrap=document.getElementById('nameCards'); if(!wrap)return;
-  const names=[...new Set((ACCESS_CONFIG.names&&ACCESS_CONFIG.names.length?ACCESS_CONFIG.names:ALL_NAMES))];
-  wrap.innerHTML=names.map(n=>'<button type="button" class="option-card '+(selectedName===n?'selected':'')+'" data-name="'+esc(n)+'">'+esc(n)+'</button>').join('');
-  wrap.querySelectorAll('[data-name]').forEach(b=>b.addEventListener('click',()=>{selectedName=b.dataset.name;renderNameCards();goPage(2);}));
-}
-
-function getSalaryMonths(){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const now=new Date();
-  const result=[];
-  for(let offset=2;offset>=0;offset--){
-    const d=new Date(now.getFullYear(),now.getMonth()-offset,1);
-    result.push(months[d.getMonth()]+' '+d.getFullYear());
-  }
-  return [...new Set(result)];
-}
-
-function renderSalaryMonths(){
-  const wrap=document.getElementById('salaryMonthCards');
-  if(!wrap)return;
-  wrap.innerHTML=getSalaryMonths().map(v =>
-    '<button type="button" class="option-card month-card '+(selectedSalaryMonth===v?'selected':'')+'" data-month="'+esc(v)+'">'+esc(v)+'</button>'
-  ).join('');
-  wrap.querySelectorAll('[data-month]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      selectedSalaryMonth=b.dataset.month;
-      renderSalaryMonths();
-      setTimeout(()=>goPage(3),120);
-    });
-  });
-}
-
-function updateSalaryUI(){
-  const box=document.getElementById('salaryMonthBox'); if(!box)return;
-  const active=selectedExpenseType==='Salary'; box.style.display=active?'block':'none'; box.classList.toggle('disabled',!active);
-  const star=document.getElementById('salaryRequiredStar'); if(star)star.style.display=active?'inline':'none'; renderSalaryMonths();
-}
-
-function renderExpenseTypes(){
-  const list=document.getElementById('typeList'); if(!list)return;
-  const srSet=new Set((ACCESS_CONFIG.expenseSRs||[]).map(Number));
-  const rows=window.EXPENSE_TYPE_ROWS||[];
-  const allowed=[]; rows.forEach(x=>{if(x.status==='Active'&&srSet.has(Number(x.sr))&&!allowed.some(y=>y.name===x.name))allowed.push(x);});
-  list.innerHTML=allowed.map(x=>'<button type="button" class="option-card" data-type="'+esc(x.name)+'">'+esc(x.name)+'</button>').join('');
-  list.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',()=>selectExpenseType(b.dataset.type)));
-}
-
-function selectExpenseType(type){
-  if(!type)return; selectedExpenseType=type;
-  document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('selected',b.dataset.type===type));
-  if(type==='Salary'){selectedSalaryMonth='';updateSalaryUI();}
-  else{selectedSalaryMonth='';updateSalaryUI();setTimeout(()=>goPage(3),120);}
-}
-
-function renderPayment(){
-  const wrap=document.getElementById('paymentCards');
-  if(!wrap)return;
-  wrap.innerHTML=[...new Set(PAYMENT_MODES)].map(v =>
-    '<button type="button" class="option-card '+(selectedPaymentMode===v?'selected':'')+'" data-payment="'+esc(v)+'">'+(v==='Cash'?'💵 ':'📱 ')+esc(v)+'</button>'
-  ).join('');
-  wrap.querySelectorAll('[data-payment]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      selectedPaymentMode=b.dataset.payment;
-      renderPayment();
-    });
-  });
-}
-
-function goPage(n){
-  currentPage=n;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const page=n===4?document.getElementById('counterPage'):document.getElementById('page'+n);
-  if(page)page.classList.add('active');
-
-  for(let i=1;i<=3;i++){
-    const dot=document.getElementById('stepDot'+i);
-    if(dot)dot.className='step '+(n===4?(i<=3?'done':''):(i===n?'active':i<n?'done':''));
-  }
-  hideStatus();
-  window.scrollTo(0,0);
-}
-
-async function loadAccessConfig(){
-  try{
-    const r=await fetch(SCRIPT_URL+'?action=expenseConfig&email='+encodeURIComponent(userEmail),{cache:'no-store'});
-    const cfg=await r.json(); if(!cfg.success)throw new Error(cfg.message||'Access denied.');
-    ACCESS_CONFIG=cfg; window.EXPENSE_TYPE_ROWS=cfg.expenseTypes||[];
-    document.getElementById('counterCashBtn').style.display=cfg.cashAtCounter?'block':'none';
-    renderNameCards();renderExpenseTypes();updateSalaryUI();
-    return true;
-  }catch(e){showStatus(e.message||'Access settings could not be loaded.','error');return false;}
-}
-
-async function updateUIAfterLogin(){
-  const ed=document.getElementById('emailDisplay'); if(ed)ed.textContent=userEmail;
-  const ok=await loadAccessConfig(); if(!ok){isAuthenticated=false;return;}
-  if(ACCESS_CONFIG.status!=='Active'){isAuthenticated=false;showStatus('Your account is inactive. Please contact admin.','error');return;}
-  const mapped=!!ACCESS_CONFIG.autoName;
-  if(mapped){userName=ACCESS_CONFIG.autoName;selectedName=userName;document.getElementById('nameAutoGroup').style.display='block';document.getElementById('nameSelectGroup').style.display='none';document.getElementById('autoNameCard').textContent=userName;}
-  else{userName='';selectedName='';document.getElementById('nameAutoGroup').style.display='none';document.getElementById('nameSelectGroup').style.display='block';renderNameCards();}
-  const e=document.getElementById('userEmail');if(e){e.textContent='✉';e.title=userEmail;e.dataset.email=userEmail;e.className='authenticated';}
-  document.getElementById('googleSignInBtn').style.display='none';document.getElementById('expenseForm').style.display='block';
-  document.getElementById('counterEmailDisplay').textContent=userEmail;document.getElementById('counterNameCard').textContent=ACCESS_CONFIG.autoName||selectedName||'Name';goPage(1);
-}
-
-async function checkExistingSession(){
-  const c=safeStorageGet(STORAGE_CREDENTIAL);
-  const e=safeStorageGet(STORAGE_EMAIL);
-  if(c&&e){
-    const normalized=e.toLowerCase().trim();
-    if(normalized){
-      googleCredential=c;
-      userEmail=normalized;
-      userName=EMAIL_NAME_MAP[normalized]||'';
-      isAuthenticated=true;
-      await updateUIAfterLogin();
-    }
-  }
-}
-
-function getRedirectUri(){
-  return 'https://jkdrycleaner.github.io/Salon_Dashboard/Expenses.html';
-}
-
-function randomString(length=32){
-  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let out='';
-  const bytes=new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length];
-  return out;
-}
-
-async function startGoogleLogin(){
-  try{
-    const state=randomString();
-    safeStorageSet('salon_expense_oauth_state',state);
-
-    const params=new URLSearchParams({
-      client_id:GOOGLE_CLIENT_ID,
-      redirect_uri:getRedirectUri(),
-      response_type:'token',
-      scope:'openid email profile',
-      state:state,
-      include_granted_scopes:'true',
-      prompt:'select_account'
-    });
-
-    showStatus('Opening Google Sign-In...','loading');
-    window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params.toString());
-  }catch(e){
-    showStatus('Google Sign-In could not be started. Please try again.','error');
-  }
-}
-
-async function handleOAuthReturn(){
-  const hash=location.hash?location.hash.substring(1):'';
-  if(!hash)return;
-
-  const p=new URLSearchParams(hash);
-  const error=p.get('error');
-  const accessToken=p.get('access_token');
-  const returnedState=p.get('state');
-  const savedState=safeStorageGet('salon_expense_oauth_state');
-
-  history.replaceState(null,document.title,location.pathname+location.search);
-
-  if(error){
-    safeStorageRemove('salon_expense_oauth_state');
-    showStatus('Google Sign-In was cancelled or denied.','error');
-    return;
-  }
-  if(!accessToken){
-    showStatus('Google Sign-In did not return an account. Please try again.','error');
-    return;
-  }
-  if(savedState&&returnedState&&savedState!==returnedState){
-    showStatus('Google verification failed. Please try again.','error');
-    return;
-  }
-
-  try{
-    showStatus('Verifying Google account...','loading');
-
-    const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{
-      headers:{Authorization:'Bearer '+accessToken}
-    });
-
-    if(!r.ok)throw new Error('Google account verification failed.');
-
-    const info=await r.json();
-    const normalized=(info.email||'').toLowerCase().trim();
-
-    if(!normalized)throw new Error('Google email could not be read.');
-
-    googleCredential=accessToken;
-    userEmail=normalized;
-    userName=EMAIL_NAME_MAP[normalized]||'';
-    isAuthenticated=true;
-
-    safeStorageSet(STORAGE_CREDENTIAL,googleCredential);
-    safeStorageSet(STORAGE_EMAIL,userEmail);
-    safeStorageRemove('salon_expense_oauth_state');
-
-    updateUIAfterLogin();
-    hideStatus();
-  }catch(e){
-    googleCredential=null;
-    userEmail='';
-    userName='';
-    isAuthenticated=false;
-    safeStorageRemove(STORAGE_CREDENTIAL);
-    safeStorageRemove(STORAGE_EMAIL);
-    showStatus(e.message||'Google account verification failed.','error');
-  }
-}
-
-async function sendExpenseToSheet(d){
-  const f=new URLSearchParams();
-  f.append('action','expense');
-  f.append('email',d.email);
-  f.append('name',d.name);
-  f.append('expenseType',d.expenseType);
-  f.append('paymentMode',d.paymentMode);
-  f.append('amount',d.amount);
-  f.append('salaryMonth',d.salaryMonth||'');
-  f.append('remark',d.remark);
-  f.append('credential',googleCredential);
-
-  await fetch(SCRIPT_URL,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body:f.toString()
-  });
-  return true;
-}
-
-renderNameCards();
-renderSalaryMonths();
-renderExpenseTypes();
-renderPayment();
-updateSalaryUI();
-
-document.getElementById('back2').addEventListener('click',()=>goPage(1));
-
-document.getElementById('back3').addEventListener('click',()=>goPage(2));
-document.getElementById('googleSignInBtn').addEventListener('click',startGoogleLogin);
-
-document.getElementById('dashboardBtn').addEventListener('click',()=>location.href=DASHBOARD_URL);
-
-async function sendCounterToSheet(amount){
-  const f=new URLSearchParams();f.append('action','counterCash');f.append('email',userEmail);f.append('name',ACCESS_CONFIG.autoName||selectedName);f.append('amount',amount);f.append('credential',googleCredential);
-  await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()}); return true;
-}
-document.getElementById('counterCashBtn').addEventListener('click',()=>{if(!ACCESS_CONFIG.cashAtCounter){showStatus('Cash at Counter access nahi hai.','error');return;}document.getElementById('counterNameCard').textContent=ACCESS_CONFIG.autoName||selectedName||'Name';goPage(4);});
-document.getElementById('counterBack').addEventListener('click',()=>goPage(1));
-document.getElementById('counterSave').addEventListener('click',async()=>{const amount=parseFloat(document.getElementById('counterAmount').value)||0;if(amount<=0){showStatus('Please enter a valid amount.','error');return;}const b=document.getElementById('counterSave');b.disabled=true;b.textContent='Saving...';try{await sendCounterToSheet(amount);document.getElementById('counterAmount').value='';showStatus('Cash at Counter saved successfully.','success');setTimeout(()=>{hideStatus();goPage(1);},1000);}catch(e){showStatus('Failed to save: '+e.message,'error');}b.disabled=false;b.textContent='Save';});
-
-document.getElementById('expenseForm').addEventListener('submit',async function(ev){
-  ev.preventDefault();
-  if(isSubmitting)return;
-  hideStatus();
-
-  if(!googleCredential||!isAuthenticated){
-    showStatus('Please sign in with Google first.','error');
-    return;
-  }
-
-  const finalName=ACCESS_CONFIG.autoName||selectedName;
-  const amount=parseFloat(document.getElementById('amount').value)||0;
-  const remark=document.getElementById('remark').value.trim();
-
-  if(!finalName){
-    goPage(1);
-    showStatus('Please select Name.','error');
-    return;
-  }
-  if(!selectedExpenseType){
-    goPage(2);
-    showStatus('Please select Expense Type.','error');
-    return;
-  }
-  if(selectedExpenseType==='Salary'&&!selectedSalaryMonth){
-    goPage(1);
-    showStatus('Please select Salary Month.','error');
-    return;
-  }
-  if(amount<=0){
-    showStatus('Please enter a valid amount.','error');
-    return;
-  }
-
-  isSubmitting=true;
-  const b=document.getElementById('submitBtn');
-  b.disabled=true;
-  b.textContent='Saving...';
-  showStatus('Saving expense...','loading');
-
-  try{
-    await sendExpenseToSheet({
-      email:userEmail,
-      name:finalName,
-      expenseType:selectedExpenseType,
-      paymentMode:selectedPaymentMode,
-      amount:amount,
-      salaryMonth:selectedSalaryMonth,
-      remark:remark
-    });
-
-    document.getElementById('amount').value='';
-    document.getElementById('remark').value='';
-    selectedExpenseType='';
-    selectedSalaryMonth='';
-    selectedPaymentMode='Cash';
-
-    document.querySelectorAll('[data-type]').forEach(x=>x.classList.remove('selected'));
-    document.getElementById('typeList').classList.remove('hidden');
-        renderPayment();
-    updateSalaryUI();
-    goPage(1);
-
-    showStatus('Expense saved successfully. Ready for new expense.','success');
-    setTimeout(hideStatus,2500);
-  }catch(e){
-    showStatus('Failed to save: '+e.message,'error');
-  }
-
-  isSubmitting=false;
-  b.disabled=false;
-  b.textContent='Save Expense';
-});
-
-window.addEventListener('load',async()=>{
-  await handleOAuthReturn();
-  await checkExistingSession();
-});
-</script>
-</body>
-</html>
+const $=id=>document.getElementById(id),uniq=a=>[...new Set(a.filter(Boolean))];
+function stat(m,c){$('status').textContent=m;$('status').className='status on '+c} function clear(){ $('status').className='status' }
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));$(id).classList.add('on');clear()}
+function login(){let state=Math.random().toString(36).slice(2);sessionStorage.setItem('oauth_state',state);let p=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,response_type:'token',scope:'openid email profile',state,prompt:'select_account'});location.href='https://accounts.google.com/o/oauth2/v2/auth?'+p}
+function jsonp(url){return new Promise((res,rej)=>{let cb='cb'+Date.now(),s=document.createElement('script');window[cb]=x=>{s.remove();delete window[cb];res(x)};s.onerror=()=>rej(Error('Employee List load failed.'));s.src=url+'&callback='+cb;document.body.appendChild(s)})}
+async function auth(){let p=new URLSearchParams(location.hash.slice(1)),t=p.get('access_token');if(!t)return;history.replaceState(null,'',location.pathname);let r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:'Bearer '+t}});let u=await r.json();email=(u.email||'').toLowerCase().trim();let x=await jsonp(SCRIPT_URL+'?action=access&email='+encodeURIComponent(email));if(!x.ok)throw Error(x.message);access=x.user;employees=x.employeeNames||[];types=x.expenseTypes||[];renderHome();show('home')}
+function renderHome(){let b='';if(access.dailyExpense)b+='<button class="card" onclick="startExpense()">🧾 Daily Expense</button>';if(access.salary)b+='<button class="card" onclick="startSalary()">💰 Salary</button>';if(access.counterCash)b+='<button class="card" onclick="startCounter()">💵 Counter Cash</button>';$('buttons').innerHTML=b||'<div class="hint">No entry rights assigned.</div>'}
+function cards(id,a,sel,fn){$(id).innerHTML=uniq(a).map(x=>'<button class="card '+(x===sel?'sel':'')+'" data-x="'+esc(x)+'">'+esc(x)+'</button>').join('');$(id).querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>fn(b.dataset.x))}
+function dates(){let a=[];for(let i=0;i<2;i++){let d=new Date();d.setDate(d.getDate()-i);a.push(d.toISOString().slice(0,10))}return a}
+function months(){let a=[],d=new Date();for(let i=1;i>=0;i--){let x=new Date(d.getFullYear(),d.getMonth()-i,1);a.push(x.toLocaleString('en',{month:'long'})+' '+x.getFullYear())}return a}
+function pretty(x){let a=x.split('-');return a[2]+'/'+a[1]+'/'+a[0]}
+function startExpense(){ed={name:'',date:'',type:'',pay:'Cash'};cards('en',access.entryAccess==='All'?employees:[access.employeeName],'',x=>{ed.name=x;estep(2)});cards('ed',dates(),'',x=>{ed.date=x;renderET()});renderET();cards('epm',['Cash','Online'],'Cash',x=>{ed.pay=x});estep(1);show('expense')}
+function renderET(){cards('et',types,ed.type,x=>{ed.type=x;estep(3)})}
+function estep(n){['ep1','ep2','ep3'].forEach((x,i)=>$(x).classList.toggle('on',i===n-1));['e1','e2','e3'].forEach((x,i)=>$(x).className='dot '+(i===n-1?'on':i<n-1?'done':''));if(n===2){cards('ed',dates(),ed.date,x=>{ed.date=x;renderET()});renderET()}}
+function startSalary(){sd={name:'',date:'',month:'',pay:'Cash'};cards('sn',employees,'',x=>{sd.name=x;sstep(2)});cards('sd',dates(),' ',x=>{sd.date=x;renderSM()});renderSM();cards('spm',['Cash','Online'],'Cash',x=>{sd.pay=x});sstep(1);show('salary')}
+function renderSM(){cards('sm',months(),sd.month,x=>{sd.month=x;sstep(3)})}
+function sstep(n){['sp1','sp2','sp3'].forEach((x,i)=>$(x).classList.toggle('on',i===n-1));['s1','s2','s3'].forEach((x,i)=>$(x).className='dot '+(i===n-1?'on':i<n-1?'done':''));if(n===2){cards('sd',dates(),sd.date,x=>{sd.date=x;renderSM()});renderSM()}}
+function startCounter(){ $('cn').textContent=access.employeeName; $('ca').value='';$('cr').value='';show('counter')}
+function home(){show('home')}
+function reviewRows(o){$('summary').innerHTML=Object.entries(o).filter(([k,v])=>v!==''&&k!=='file').map(([k,v])=>'<div class="row"><span>'+esc(k)+'</span><span>'+esc(k.toLowerCase().includes('date')?pretty(v):v)+'</span></div>').join('')}
+function reviewExpense(){let a=+$('ea').value;if(!ed.name||!ed.date||!ed.type||!a||a<=0)return stat('Please complete all fields.','error');review={action:'expense',data:{email,name:ed.name,expenseDate:ed.date,expenseType:ed.type,paymentMode:ed.pay,amount:a,remark:$('er').value.trim()}};reviewRows(review.data);$('modal').classList.add('on')}
+function reviewSalary(){let a=+$('sa').value,f=$('sf').files[0];if(!sd.name||!sd.date||!sd.month||!a||a<=0)return stat('Please complete all fields.','error');review={action:'salary',data:{email,employeeName:sd.name,expenseType:'Salary',payDate:sd.date,salaryMonth:sd.month,paymentMode:sd.pay,amount:a,remark:$('sr').value.trim(),file:f}};let o={...review.data};delete o.file;if(f)o.Attachment=f.name;reviewRows(o);$('modal').classList.add('on')}
+function reviewCounter(){let a=+$('ca').value;if(!a||a<=0)return stat('Please enter Amount.','error');review={action:'counter',data:{email,employeeName:access.employeeName,amount:a,remark:$('cr').value.trim()}};reviewRows(review.data);$('modal').classList.add('on')}
+function closeReview(){$('modal').classList.remove('on')}
+async function fileInfo(f){if(!f)return null;if(f.size>5e6)throw Error('Attachment must be 5 MB or smaller.');return await new Promise((ok,no)=>{let r=new FileReader();r.onload=()=>ok({name:f.name,mime:f.type||'application/octet-stream',base64:String(r.result).split(',')[1]});r.onerror=no;r.readAsDataURL(f)})}
+async function finalSubmit(){closeReview();stat('Saving...','');try{let d={...review.data};if(review.action==='salary'&&d.file){let f=await fileInfo(d.file);d.attachment=f;delete d.file}else delete d.file;let p=new URLSearchParams({action:review.action,email:d.email});if(review.action==='expense')Object.assignParams?.();let map=review.action==='expense'?{name:d.name,expenseDate:d.expenseDate,expenseType:d.expenseType,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:review.action==='salary'?{employeeName:d.employeeName,expenseType:'Salary',payDate:d.payDate,salaryMonth:d.salaryMonth,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:{employeeName:d.employeeName,amount:d.amount,remark:d.remark};Object.entries(map).forEach(([k,v])=>p.append(k,v??''));if(d.attachment){p.append('attachmentName',d.attachment.name);p.append('attachmentMime',d.attachment.mime);p.append('attachmentBase64',d.attachment.base64)}await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:p.toString()});review=null;document.querySelectorAll('input[type=number],textarea').forEach(x=>x.value='');home();stat('Saved successfully.','ok')}catch(e){stat(e.message||'Save failed.','error')}}
+auth().catch(e=>stat(e.message||'Google verification failed.','error'));
+</script></body></html>
