@@ -56,7 +56,7 @@ section.page .title{margin-bottom:5px}
 }</style></head><body><div class="app">
 <div class="topbar"><div class="logo">YOURS SALON</div>
 <div class="logout-wrap"><button class="logout-icon" type="button" onclick="toggleLogout()" aria-label="Logout">⋮</button>
-<button id="logoutBtn" class="logout-pop" type="button" onclick="logout()">Logout</button></div></div><div class="hint" style="font-size:9px;margin:-10px 0 12px;color:#9c9284">Expenses Version 12</div><div id="loggedEmployee" class="hint" style="font-size:12px;margin:-10px 0 15px;color:#e4c55c;font-weight:700"></div>
+<button id="logoutBtn" class="logout-pop" type="button" onclick="logout()">Logout</button></div></div><div class="hint" style="font-size:9px;margin:-10px 0 12px;color:#9c9284">Expenses Version 13</div><div id="loggedEmployee" class="hint" style="font-size:12px;margin:-10px 0 15px;color:#e4c55c;font-weight:700"></div>
 <div id="login" class="page on"><div class="title">Google Verification</div><div class="hint">Google account verify hone ke baad Employee List se rights check honge.</div><button class="btn primary" onclick="login()">Continue with Google</button></div>
 <div id="home" class="page"><div class="title">Select Entry</div><div id="buttons" class="grid main-grid"></div></div>
 
@@ -117,13 +117,46 @@ function reviewCounter(){let a=+$('ca').value;if(!a||a<=0)return stat('Please en
 function closeReview(){$('modal').classList.remove('on')}
 async function fileInfo(f){if(!f)return null;if(f.size>5e6)throw Error('Attachment must be 5 MB or smaller.');return await new Promise((ok,no)=>{let r=new FileReader();r.onload=()=>ok({name:f.name,mime:f.type||'application/octet-stream',base64:String(r.result).split(',')[1]});r.onerror=no;r.readAsDataURL(f)})}
 function postForm(data){
-return fetch(SCRIPT_URL,{
-  method:'POST',
-  mode:'no-cors',
-  headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-  body:new URLSearchParams(data).toString(),
-  keepalive:true
-}).then(()=>true);
+  return new Promise((resolve,reject)=>{
+    const frame=document.createElement('iframe');
+    frame.name='expensesSubmitFrame_'+Date.now();
+    frame.style.display='none';
+    document.body.appendChild(frame);
+
+    const form=document.createElement('form');
+    form.method='POST';
+    form.action=SCRIPT_URL;
+    form.target=frame.name;
+    form.style.display='none';
+
+    Object.entries(data).forEach(([k,v])=>{
+      const input=document.createElement('input');
+      input.type='hidden';
+      input.name=k;
+      input.value=v==null?'':String(v);
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+
+    let finished=false;
+    const finish=()=>{
+      if(finished)return;
+      finished=true;
+      setTimeout(()=>{
+        form.remove();
+        frame.remove();
+      },300);
+      resolve(true);
+    };
+
+    frame.onload=finish;
+    form.submit();
+
+    // Apps Script may not fire iframe onload consistently on every mobile browser.
+    // Resolve after a short wait so the user remains on the same page.
+    setTimeout(finish,2500);
+  });
 }
 async function finalSubmit(){closeReview();stat('Saving...','loading');try{let d={...review.data};if(review.action==='salary'&&d.file){let f=await fileInfo(d.file);d.attachment=f;delete d.file}else delete d.file;let p={action:review.action,email:d.email};let map=review.action==='expense'?{name:d.name,expenseDate:d.expenseDate,expenseType:d.expenseType,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:review.action==='salary'?{employeeName:d.employeeName,expenseType:'Salary',payDate:d.payDate,salaryMonth:d.salaryMonth,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:{employeeName:d.employeeName,amount:d.amount,remark:d.remark};Object.assign(p,map);if(d.attachment){p.attachmentName=d.attachment.name;p.attachmentMime=d.attachment.mime;p.attachmentBase64=d.attachment.base64}await postForm(p);review=null;document.querySelectorAll('input[type=number],textarea').forEach(x=>x.value='');home();stat('Saved Successfully','ok');setTimeout(clear,3000);}catch(e){stat(e.message||'Save failed.','error')}}
 auth().catch(e=>stat(e.message||'Google verification failed.','error'));
