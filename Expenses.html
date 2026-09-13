@@ -53,7 +53,14 @@ function reviewSalary(){let a=+$('sa').value,f=$('sf').files[0];if(!sd.name||!sd
 function reviewCounter(){let a=+$('ca').value;if(!a||a<=0)return stat('Please enter Amount.','error');review={action:'counter',data:{email,employeeName:access.employeeName,amount:a,remark:$('cr').value.trim()}};reviewRows(review.data);$('modal').classList.add('on')}
 function closeReview(){$('modal').classList.remove('on')}
 async function fileInfo(f){if(!f)return null;if(f.size>5e6)throw Error('Attachment must be 5 MB or smaller.');return await new Promise((ok,no)=>{let r=new FileReader();r.onload=()=>ok({name:f.name,mime:f.type||'application/octet-stream',base64:String(r.result).split(',')[1]});r.onerror=no;r.readAsDataURL(f)})}
-function postForm(data){return new Promise((resolve)=>{let f=document.createElement('form');f.method='POST';f.action=SCRIPT_URL;f.target='_blank';f.style.display='none';Object.entries(data).forEach(([k,v])=>{let i=document.createElement('input');i.type='hidden';i.name=k;i.value=v==null?'':String(v);f.appendChild(i)});document.body.appendChild(f);f.submit();setTimeout(()=>{f.remove();resolve()},1500)})}
+function postForm(data){return new Promise((resolve)=>{
+let frame=document.createElement('iframe');frame.name='submitFrame_'+Date.now();frame.style.display='none';
+document.body.appendChild(frame);
+let f=document.createElement('form');f.method='POST';f.action=SCRIPT_URL;f.target=frame.name;f.style.display='none';
+Object.entries(data).forEach(([k,v])=>{let i=document.createElement('input');i.type='hidden';i.name=k;i.value=v==null?'':String(v);f.appendChild(i)});
+document.body.appendChild(f);f.submit();
+setTimeout(()=>{f.remove();frame.remove();resolve()},1800)
+})}
 async function finalSubmit(){closeReview();stat('Saving...','loading');try{let d={...review.data};if(review.action==='salary'&&d.file){let f=await fileInfo(d.file);d.attachment=f;delete d.file}else delete d.file;let p={action:review.action,email:d.email};let map=review.action==='expense'?{name:d.name,expenseDate:d.expenseDate,expenseType:d.expenseType,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:review.action==='salary'?{employeeName:d.employeeName,expenseType:'Salary',payDate:d.payDate,salaryMonth:d.salaryMonth,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark}:{employeeName:d.employeeName,amount:d.amount,remark:d.remark};Object.assign(p,map);if(d.attachment){p.attachmentName=d.attachment.name;p.attachmentMime=d.attachment.mime;p.attachmentBase64=d.attachment.base64}await postForm(p);review=null;document.querySelectorAll('input[type=number],textarea').forEach(x=>x.value='');home();}catch(e){stat(e.message||'Save failed.','error')}}
 auth().catch(e=>stat(e.message||'Google verification failed.','error'));
 </script></body></html>
