@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>YOURS SALON — My Expense Dashboard</title>
+<style>
+:root{
+  --bg:#11100f;--surface:#1f1d1a;--surface2:#171614;--line:rgba(150,140,120,.23);
+  --text:#eee9df;--muted:#9c9589;--faint:#6e685f;--gold:#d6ae4a;--gold2:#ead18a;
+  --green:#7fc5a2;--red:#d99070;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+body{padding:14px;overflow-x:hidden}
+header{position:sticky;top:0;z-index:20;background:rgba(17,16,15,.94);backdrop-filter:blur(14px);padding-bottom:10px}
+.brand{font-size:19px;font-weight:900;letter-spacing:.12em;color:var(--text)}
+.brand span{color:var(--gold)}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.user{margin-top:5px;font-size:11px;color:var(--gold2);font-weight:700}
+.version{font-size:8px;color:var(--faint);margin-top:3px}
+.menu{position:relative}
+.menu button{border:1px solid var(--line);background:var(--surface);color:var(--text);width:34px;height:34px;border-radius:9px;font-size:18px;cursor:pointer}
+.menu-list{display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:6px;min-width:105px}
+.menu-list button{width:100%;height:30px;border:0;background:none;color:var(--text);font-size:11px}
+.menu-list.show{display:block}
+
+.wrap{max-width:1100px;margin:0 auto}
+.toolbar{margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:8px}
+select,input{width:100%;height:38px;background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:0 10px;outline:none;font-size:12px}
+button{font-family:inherit}
+.sync{height:38px;padding:0 13px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:9px;font-weight:800;font-size:10px;cursor:pointer}
+.sync:hover{border-color:var(--gold)}
+
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.tab{height:36px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:9px;font-weight:800;font-size:10px;cursor:pointer}
+.tab.active{background:var(--gold);border-color:var(--gold);color:#17130a}
+
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+.card{background:linear-gradient(145deg,rgba(31,29,26,.98),rgba(20,19,18,.98));border:1px solid rgba(255,255,255,.075);border-radius:13px;padding:11px}
+.card small{display:block;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-size:7px;font-weight:800}
+.card strong{display:block;margin-top:5px;font-size:17px;color:var(--gold2)}
+.card em{display:block;margin-top:3px;color:var(--faint);font-size:8px;font-style:normal}
+
+.panel{background:linear-gradient(145deg,rgba(31,29,26,.97),rgba(20,19,18,.98));border:1px solid rgba(255,255,255,.075);border-radius:14px;padding:12px;margin-bottom:10px}
+.panel-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:9px}
+h1{font-family:Georgia,serif;font-size:20px;margin:0}
+.sub{font-size:8px;color:var(--muted);margin-top:3px}
+.period{font-size:9px;color:var(--gold2);font-weight:800;text-align:right}
+
+.table-wrap{width:100%;overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{border:1px solid var(--line);padding:8px 7px;font-size:9px}
+th{text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-size:7px;background:rgba(0,0,0,.15);text-align:left}
+td.num{text-align:right;white-space:nowrap}
+.date{color:var(--gold2);font-weight:700;white-space:nowrap}
+.total-row td{font-weight:900;color:var(--gold2);border-top:1px solid var(--gold)}
+.click-row{cursor:pointer}
+.click-row:hover{background:rgba(214,174,74,.07)}
+.arrow{display:inline-block;width:12px;color:var(--gold);transition:.15s}
+.arrow.open{transform:rotate(90deg)}
+.detail{display:none;background:var(--surface2)}
+.detail td{padding:0}
+.detail-inner{padding:8px 8px 9px 20px;border-left:2px solid var(--gold)}
+.detail table{min-width:0}
+.detail th,.detail td{font-size:8px;padding:6px}
+.empty{text-align:center;color:var(--faint);padding:22px!important}
+.status{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:50;background:var(--surface);border:1px solid var(--line);padding:9px 13px;border-radius:9px;font-size:10px;display:none;box-shadow:0 10px 30px #0008}
+.status.show{display:block}
+.login{max-width:430px;margin:60px auto;text-align:center}
+.login h1{font-size:28px}
+.login p{color:var(--muted);font-size:11px;line-height:1.5}
+.login-btn{height:42px;width:100%;border:0;border-radius:10px;background:var(--gold);color:#17130a;font-weight:900;cursor:pointer}
+.hidden{display:none!important}
+
+@media(min-width:700px){
+  body{padding:22px}
+  .summary{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:480px){
+  body{padding:9px}
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .card:last-child{grid-column:1/-1}
+  .toolbar{grid-template-columns:1fr}
+  .sync{width:100%}
+  .panel{padding:9px}
+  table{min-width:570px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="topline">
+    <div>
+      <div class="brand">YOURS <span>SALON</span></div>
+      <div class="user" id="employeeName">Checking login…</div>
+      <div class="version">Expense Dashboard v1</div>
+    </div>
+    <div class="menu">
+      <button id="menuBtn" aria-label="Menu">⋮</button>
+      <div class="menu-list" id="menuList">
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="loginView" class="login hidden">
+  <div class="brand">YOURS <span>SALON</span></div>
+  <h1>My Expenses</h1>
+  <p>Dashboard Google authentication session not found. Please open the Salon Dashboard once, sign in there, then open this Expense View.</p>
+  <button class="login-btn" id="goLogin">Open Salon Dashboard</button>
+</div>
+
+<main id="appView" class="hidden">
+  <div class="toolbar">
+    <select id="monthSelect"></select>
+    <button class="sync" id="syncBtn">↻ Sync</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="date">Date Wise</button>
+    <button class="tab" data-view="week">Week Wise</button>
+    <button class="tab" data-view="month">Month Wise</button>
+  </div>
+
+  <section class="summary">
+    <div class="card"><small>Total Expense</small><strong id="totalExpense">₹0</strong><em id="totalSub">0 entries</em></div>
+    <div class="card"><small>Selected Month</small><strong id="monthExpense">₹0</strong><em id="monthSub">0 entries</em></div>
+    <div class="card"><small>Selected Week</small><strong id="weekExpense">₹0</strong><em id="weekSub">—</em></div>
+    <div class="card"><small>Today</small><strong id="todayExpense">₹0</strong><em id="todaySub">0 entries</em></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h1 id="viewTitle">Date Wise Expense</h1><div class="sub" id="viewSub">Your expenses by date</div></div>
+      <div class="period" id="periodLabel"></div>
+    </div>
+    <div class="table-wrap" id="tableHost"></div>
+  </section>
+</main>
+</div>
+<div class="status" id="status"></div>
+
+<script>
+const CONFIG={
+  SHEET_ID:'14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo',
+  SCRIPT_URL:'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec',
+  STORAGE_EMAIL:'salon_user_email',
+  STORAGE_CREDENTIAL:'salon_google_credential',
+  DASHBOARD_URL:'https://jkdrycleaner.github.io/Salon_Dashboard/'
+};
+
+let state={all:[],mine:[],employeeName:'',email:'',month:'',view:'date',loading:false};
+
+const $=id=>document.getElementById(id);
+const inr=n=>'₹'+Math.round(Number(n)||0).toLocaleString('en-IN');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=v=>String(v??'').trim().replace(/\s+/g,' ').toLowerCase();
+
+function showStatus(msg){
+  const s=$('status');s.textContent=msg;s.classList.add('show');
+  clearTimeout(showStatus.t);showStatus.t=setTimeout(()=>s.classList.remove('show'),2600);
+}
+function todayStr(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function parseDate(v){
+  const s=String(v??'').trim();
+  let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  return '';
+}
+function dateLabel(d,full=true){
+  if(!d)return '-';
+  const x=new Date(d+'T00:00:00');
+  return x.toLocaleDateString('en-IN',full
+    ? {day:'2-digit',month:'short',year:'2-digit',weekday:'long'}
+    : {day:'2-digit',month:'short',year:'2-digit'});
+}
+function monthLabel(k){
+  const [y,m]=k.split('-').map(Number);
+  return new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+}
+function monthEntries(k){return state.mine.filter(e=>e.date.slice(0,7)===k)}
+function weekRange(day,last){
+  if(day<=7)return [1,7,'Week 1'];
+  if(day<=14)return [8,14,'Week 2'];
+  if(day<=21)return [15,21,'Week 3'];
+  return [22,last,'Week 4'];
+}
+
+function jsonpSheet(sheetName){
+  return new Promise((resolve,reject)=>{
+    const cb='__expenseCB_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    let done=false;
+    const cleanup=()=>{try{delete window[cb]}catch(e){};script.remove();clearTimeout(timer)};
+    const fail=e=>{if(done)return;done=true;cleanup();reject(e instanceof Error?e:new Error(String(e)))};
+    const timer=setTimeout(()=>fail(new Error('Google Sheet read timed out. Please check Sheet sharing.')),15000);
+    window[cb]=r=>{
+      if(done)return;done=true;cleanup();
+      if(!r||r.status==='error'){
+        const msg=r?.errors?.[0]?.detailed_message||r?.errors?.[0]?.message||'Google Sheet query failed.';
+        reject(new Error(msg));return;
+      }
+      resolve(r);
+    };
+    script.onerror=()=>fail(new Error('Google Sheet could not be reached. Check that the Sheet is shared for viewing.'));
+    const p=new URLSearchParams({
+      tqx:`responseHandler:${cb}`,sheet:sheetName,range:'A:Z',tq:'select *',_sync:String(Date.now())
+    });
+    script.src=`https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?${p}`;
+    document.head.appendChild(script);
+  });
+}
+
+async function fetchSheet(sheetName){
+  const g=await jsonpSheet(sheetName);
+  const cols=g.table?.cols||[],rows=g.table?.rows||[];
+  const headers=cols.map(c=>String(c.label||c.id||'').trim());
+  const vals=rows.map(r=>(r.c||[]).map(c=>c==null?'':(c.f??c.v??'')));
+  return {headers,rows:vals};
+}
+
+async function resolveEmployeeName(){
+  const email=String(
+    localStorage.getItem(CONFIG.STORAGE_EMAIL) ||
+    localStorage.getItem('userEmail') ||
+    localStorage.getItem('googleEmail') ||
+    localStorage.getItem('email') ||
+    ''
+  ).trim();
+  state.email=email;
+  if(!email) return '';
+  try{
+    const d=await fetchSheet('Employee List');
+    const h=d.headers.map(x=>x.toLowerCase());
+    const ei=h.findIndex(x=>x==='email address'||x.includes('email'));
+    const ni=h.findIndex(x=>x==='employee name'||x.includes('employee name'));
+    if(ei<0||ni<0)return '';
+    const row=d.rows.find(r=>norm(r[ei])===norm(email));
+    return row?String(row[ni]||'').trim():'';
+  }catch(e){
+    console.error(e);return '';
+  }
+}
+
+async function fetchExpenses(){
+  const d=await fetchSheet('Expenses');
+  const h=d.headers.map(x=>x.toLowerCase());
+  const ix={
+    timestamp:h.findIndex(x=>x.includes('timestamp')),
+    email:h.findIndex(x=>x.includes('email')),
+    name:h.findIndex(x=>x==='employee name'||x.includes('employee')),
+    date:h.findIndex(x=>x==='expense date'||x.includes('expense date')),
+    type:h.findIndex(x=>x==='expense type'||x.includes('expense type')),
+    mode:h.findIndex(x=>x.includes('payment mode')||x==='payment mode'),
+    amount:h.findIndex(x=>x==='amount'||x.includes('amount')),
+    remark:h.findIndex(x=>x==='remark'||x.includes('remark'))
+  };
+  if(ix.name<0||ix.date<0||ix.amount<0)throw new Error('Expenses sheet headers were not found.');
+
+  return d.rows.map((r,i)=>{
+    let date=parseDate(r[ix.date]);
+    if(!date && ix.timestamp>=0)date=parseDate(r[ix.timestamp]);
+    return {
+      id:i,date,
+      employee:String(r[ix.name]??'').trim(),
+      type:String(r[ix.type]??'').trim(),
+      mode:String(r[ix.mode]??'').trim(),
+      amount:Number(String(r[ix.amount]??'').replace(/,/g,''))||0,
+      remark:String(r[ix.remark]??'').trim(),
+      timestamp:String(r[ix.timestamp]??'').trim()
+    };
+  }).filter(e=>e.employee&&e.date);
+}
+
+function setMonthOptions(){
+  const keys=[...new Set(state.mine.map(e=>e.date.slice(0,7)))].sort().reverse();
+  const sel=$('monthSelect');
+  if(!keys.length){
+    sel.innerHTML=`<option value="">No expense data</option>`;state.month='';return;
+  }
+  if(!state.month||!keys.includes(state.month))state.month=keys[0];
+  sel.innerHTML=keys.map(k=>`<option value="${k}" ${k===state.month?'selected':''}>${monthLabel(k)}</option>`).join('');
+}
+
+function updateSummary(){
+  const mine=state.mine;
+  const total=mine.reduce((s,e)=>s+e.amount,0);
+  const month=monthEntries(state.month);
+  const mtotal=month.reduce((s,e)=>s+e.amount,0);
+  const t=todayStr(),today=mine.filter(e=>e.date===t);
+  const ttotal=today.reduce((s,e)=>s+e.amount,0);
+
+  const [y,m]=state.month?state.month.split('-').map(Number):[0,0];
+  const last=state.month?new Date(y,m,0).getDate():0;
+  const d=today[0]?.date||t;
+  let w=0,wlabel='—';
+  if(state.month){
+    const day=(new Date(t+'T00:00:00')).getFullYear()===y&&(new Date(t+'T00:00:00')).getMonth()+1===m
+      ? new Date(t+'T00:00:00').getDate() : 1;
+    const [a,b,l]=weekRange(day,last);
+    const we=month.filter(e=>{const dd=Number(e.date.slice(8,10));return dd>=a&&dd<=b});
+    w=we.reduce((s,e)=>s+e.amount,0);wlabel=`${l} · ${a}–${b}`;
+  }
+  $('totalExpense').textContent=inr(total);
+  $('totalSub').textContent=`${mine.length} entries`;
+  $('monthExpense').textContent=inr(mtotal);
+  $('monthSub').textContent=`${month.length} entries`;
+  $('weekExpense').textContent=inr(w);
+  $('weekSub').textContent=wlabel;
+  $('todayExpense').textContent=inr(ttotal);
+  $('todaySub').textContent=`${today.length} entries`;
+}
+
+function render(){
+  updateSummary();
+  const rows=monthEntries(state.month).sort((a,b)=>b.date.localeCompare(a.date)||b.timestamp.localeCompare(a.timestamp));
+  const host=$('tableHost');
+  $('periodLabel').textContent=state.month?monthLabel(state.month):'';
+  if(state.view==='date')renderDate(rows,host);
+  else if(state.view==='week')renderWeek(rows,host);
+  else renderMonth(host);
+}
+
+function renderDate(rows,host){
+  $('viewTitle').textContent='Date Wise Expense';
+  $('viewSub').textContent='Each date total — click a date to view individual entries';
+  const groups={};
+  rows.forEach(e=>(groups[e.date]??=[]).push(e));
+  const dates=Object.keys(groups).sort().reverse();
+  if(!dates.length){host.innerHTML='<div class="empty">No expenses found for this month.</div>';return}
+  let html=`<table><thead><tr><th>Date</th><th>Expense Type</th><th>Payment</th><th>Remark</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+  dates.forEach((d,i)=>{
+    const list=groups[d],tot=list.reduce((s,e)=>s+e.amount,0);
+    html+=`<tr class="click-row" data-detail="${esc(d)}"><td class="date"><span class="arrow">▶</span>${dateLabel(d,true)}</td><td colspan="3">${list.length} expense${list.length===1?'':'s'}</td><td class="num">${inr(tot)}</td></tr>`;
+    html+=`<tr class="detail" data-detail-row="${esc(d)}"><td colspan="5"><div class="detail-inner"><table><thead><tr><th>Expense Type</th><th>Payment</th><th>Remark</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+    list.forEach(e=>html+=`<tr><td>${esc(e.type||'-')}</td><td>${esc(e.mode||'-')}</td><td>${esc(e.remark||'-')}</td><td class="num">${inr(e.amount)}</td></tr>`);
+    html+=`</tbody><tfoot><tr class="total-row"><td colspan="3">Date Total</td><td class="num">${inr(tot)}</td></tr></tfoot></table></div></td></tr>`;
+  });
+  const total=rows.reduce((s,e)=>s+e.amount,0);
+  html+=`<tr class="total-row"><td colspan="4">Month Total</td><td class="num">${inr(total)}</td></tr></tbody></table>`;
+  host.innerHTML=html;
+  host.querySelectorAll('.click-row').forEach(r=>r.onclick=()=>{
+    const d=r.dataset.detail,detail=host.querySelector(`[data-detail-row="${CSS.escape(d)}"]`);
+    const a=r.querySelector('.arrow');
+    const open=detail.style.display==='table-row';
+    detail.style.display=open?'none':'table-row';a.classList.toggle('open',!open);
+  });
+}
+
+function renderWeek(rows,host){
+  $('viewTitle').textContent='Week Wise Expense';
+  $('viewSub').textContent='Same week grouping used in the salon dashboard: 1–7, 8–14, 15–21, 22–month end';
+  const [y,m]=state.month.split('-').map(Number),last=new Date(y,m,0).getDate();
+  const ranges=[[1,7,'Week 1'],[8,14,'Week 2'],[15,21,'Week 3'],[22,last,'Week 4']].filter(x=>x[0]<=last);
+  let html=`<table><thead><tr><th>Week</th><th>Date Range</th><th>Entries</th><th style="text-align:right">Total Expense</th></tr></thead><tbody>`;
+  let grand=0;
+  ranges.forEach(([a,b,label])=>{
+    const list=rows.filter(e=>{const d=+e.date.slice(8,10);return d>=a&&d<=b});
+    const total=list.reduce((s,e)=>s+e.amount,0);grand+=total;
+    const id=`${a}-${b}`;
+    html+=`<tr class="click-row" data-week="${id}"><td><span class="arrow">▶</span>${label}</td><td>${String(a).padStart(2,'0')}–${String(b).padStart(2,'0')} ${monthLabel(state.month).split(' ')[0]}</td><td>${list.length}</td><td class="num">${inr(total)}</td></tr>`;
+    html+=`<tr class="detail" data-week-row="${id}"><td colspan="4"><div class="detail-inner"><table><thead><tr><th>Date</th><th>Expense Type</th><th>Payment</th><th>Remark</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+    list.sort((x,z)=>z.date.localeCompare(x.date)).forEach(e=>html+=`<tr><td class="date">${dateLabel(e.date,false)}</td><td>${esc(e.type||'-')}</td><td>${esc(e.mode||'-')}</td><td>${esc(e.remark||'-')}</td><td class="num">${inr(e.amount)}</td></tr>`);
+    html+=`</tbody><tfoot><tr class="total-row"><td colspan="4">${label} Total</td><td class="num">${inr(total)}</td></tr></tfoot></table></div></td></tr>`;
+  });
+  html+=`<tr class="total-row"><td colspan="3">Month Total</td><td class="num">${inr(grand)}</td></tr></tbody></table>`;
+  host.innerHTML=html;
+  host.querySelectorAll('.click-row').forEach(r=>r.onclick=()=>{
+    const id=r.dataset.week,detail=host.querySelector(`[data-week-row="${CSS.escape(id)}"]`),a=r.querySelector('.arrow');
+    const open=detail.style.display==='table-row';detail.style.display=open?'none':'table-row';a.classList.toggle('open',!open);
+  });
+}
+
+function renderMonth(host){
+  $('viewTitle').textContent='Month Wise Expense';
+  $('viewSub').textContent='All months — click a month to view date-wise expense';
+  const groups={};
+  state.mine.forEach(e=>(groups[e.date.slice(0,7)]??=[]).push(e));
+  const keys=Object.keys(groups).sort().reverse();
+  if(!keys.length){host.innerHTML='<div class="empty">No expenses found.</div>';return}
+  let html=`<table><thead><tr><th>Month</th><th>Entries</th><th style="text-align:right">Total Expense</th></tr></thead><tbody>`;
+  let grand=0;
+  keys.forEach(k=>{
+    const list=groups[k],total=list.reduce((s,e)=>s+e.amount,0);grand+=total;
+    html+=`<tr class="click-row" data-month="${k}"><td><span class="arrow">▶</span>${monthLabel(k)}</td><td>${list.length}</td><td class="num">${inr(total)}</td></tr>`;
+    html+=`<tr class="detail" data-month-row="${k}"><td colspan="3"><div class="detail-inner"><table><thead><tr><th>Date</th><th>Expense Type</th><th>Payment</th><th>Remark</th><th style="text-align:right">Amount</th></tr></thead><tbody>`;
+    list.sort((a,b)=>b.date.localeCompare(a.date)).forEach(e=>html+=`<tr><td class="date">${dateLabel(e.date,false)}</td><td>${esc(e.type||'-')}</td><td>${esc(e.mode||'-')}</td><td>${esc(e.remark||'-')}</td><td class="num">${inr(e.amount)}</td></tr>`);
+    html+=`</tbody></table></div></td></tr>`;
+  });
+  html+=`<tr class="total-row"><td colspan="2">Grand Total</td><td class="num">${inr(grand)}</td></tr></tbody></table>`;
+  host.innerHTML=html;
+  host.querySelectorAll('.click-row').forEach(r=>r.onclick=()=>{
+    const k=r.dataset.month,detail=host.querySelector(`[data-month-row="${CSS.escape(k)}"]`),a=r.querySelector('.arrow');
+    const open=detail.style.display==='table-row';detail.style.display=open?'none':'table-row';a.classList.toggle('open',!open);
+  });
+}
+
+async function sync(){
+  if(state.loading)return;
+  state.loading=true;$('syncBtn').textContent='⏳ Sync';
+  try{
+    state.all=await fetchExpenses();
+    const target=norm(state.employeeName);
+    state.mine=state.all.filter(e=>norm(e.employee)===target);
+    setMonthOptions();render();
+    showStatus(`✓ Synced ${state.mine.length} expenses`);
+  }catch(e){
+    console.error(e);showStatus('⚠ '+e.message);
+    $('tableHost').innerHTML=`<div class="empty">${esc(e.message)}</div>`;
+  }finally{state.loading=false;$('syncBtn').textContent='↻ Sync'}
+}
+
+function logout(){
+  try{
+    localStorage.removeItem(CONFIG.STORAGE_EMAIL);
+    localStorage.removeItem(CONFIG.STORAGE_CREDENTIAL);
+    localStorage.removeItem('salon_oauth_state');
+  }catch(e){}
+  state.employeeName='';state.email='';
+  $('appView').classList.add('hidden');$('loginView').classList.remove('hidden');
+}
+
+$('menuBtn').onclick=e=>{$('menuList').classList.toggle('show');e.stopPropagation()};
+document.addEventListener('click',()=> $('menuList').classList.remove('show'));
+$('logoutBtn').onclick=logout;
+$('syncBtn').onclick=sync;
+$('monthSelect').onchange=e=>{state.month=e.target.value;render()};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');state.view=b.dataset.view;render();
+});
+$('goLogin').onclick=()=>location.href='https://jkdrycleaner.github.io/Salon_Dashboard/';
+
+(async function init(){
+  const email=String(
+    localStorage.getItem(CONFIG.STORAGE_EMAIL) ||
+    localStorage.getItem('userEmail') ||
+    localStorage.getItem('googleEmail') ||
+    localStorage.getItem('email') ||
+    ''
+  ).trim();
+  if(!email){
+    $('employeeName').textContent='Dashboard login required';
+    $('appView').classList.add('hidden');$('loginView').classList.remove('hidden');
+    return;
+  }
+  const name=await resolveEmployeeName();
+  if(!name){
+    $('employeeName').textContent='Employee not found';
+    $('appView').classList.add('hidden');$('loginView').classList.remove('hidden');
+    showStatus('Employee Name could not be matched in Employee List.');
+    return;
+  }
+  state.employeeName=name;
+  $('employeeName').textContent='👤 '+name;
+  $('appView').classList.remove('hidden');
+  $('loginView').classList.add('hidden');
+  await sync();
+  setInterval(()=>{if(!document.hidden)sync()},60000);
+})();
+</script>
+</body>
+</html>
