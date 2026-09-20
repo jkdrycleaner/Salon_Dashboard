@@ -5,87 +5,229 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>YOURS SALON — Master Settings</title>
 <style>
-:root{--bg:#f5f7f8;--card:#fff;--line:#dfe5e8;--text:#172126;--muted:#6b7a80;--teal:#159a8c;--teal2:#0f776d;--danger:#d9534f;--shadow:0 8px 28px rgba(20,40,45,.08)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}.top{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 20px;position:sticky;top:0;z-index:20}.menu{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:20px;cursor:pointer}.brand{font-size:19px;font-weight:800;letter-spacing:.5px}.brand span{color:var(--teal)}.spacer{flex:1}.user{font-size:12px;color:var(--muted)}.wrap{max-width:1400px;margin:22px auto;padding:0 18px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}.head h1{font-size:21px;margin:0}.head p{margin:3px 0 0;color:var(--muted);font-size:12px}.actions{margin-left:auto;display:flex;gap:8px}.btn{border:0;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:700}.primary{background:var(--teal);color:#fff}.secondary{background:#eef4f4;color:var(--teal2)}.danger{background:#fff0ef;color:var(--danger)}.table-wrap{overflow:auto}.master-table{width:100%;border-collapse:collapse;min-width:980px}.master-table th{background:#f7f9fa;color:#526168;font-size:11px;text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}.master-table td{padding:8px 10px;border-bottom:1px solid #edf0f1;vertical-align:middle}.master-table tr:hover td{background:#fbfdfd}.input{width:100%;min-width:80px;height:36px;border:1px solid #ccd7db;border-radius:8px;padding:0 9px;outline:none;background:#fff}.input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(21,154,140,.1)}.sr{width:58px}.center{text-align:center}.multi{min-width:180px}.checks{display:flex;flex-wrap:wrap;gap:7px;max-width:260px}.check{display:inline-flex;align-items:center;gap:4px;background:#f2f7f7;border:1px solid #d8e8e6;border-radius:7px;padding:4px 7px;font-size:11px}.check input{accent-color:var(--teal)}.select{height:36px;border:1px solid #ccd7db;border-radius:8px;background:#fff;padding:0 8px;width:100%}.row-actions{display:flex;gap:6px}.iconbtn{border:1px solid var(--line);background:#fff;border-radius:7px;width:34px;height:34px;cursor:pointer}.empty{padding:30px;text-align:center;color:var(--muted)}.drawer{position:fixed;left:0;top:0;bottom:0;width:280px;background:#fff;z-index:100;transform:translateX(-100%);transition:.22s;box-shadow:10px 0 30px rgba(0,0,0,.12);padding:18px}.drawer.open{transform:translateX(0)}.drawer h2{font-size:17px;margin:6px 0 18px}.navbtn{width:100%;text-align:left;border:0;background:#f5f7f8;border-radius:10px;padding:12px;margin:4px 0;cursor:pointer;font-weight:700}.navbtn.active{background:#e6f5f3;color:var(--teal2)}.shade{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:90;display:none}.shade.open{display:block}.toast{position:fixed;right:18px;bottom:18px;background:#172126;color:#fff;padding:12px 16px;border-radius:10px;z-index:200;box-shadow:var(--shadow);max-width:360px}.login{max-width:480px;margin:70px auto}.login .body{padding:20px}.login label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.login .input{margin-bottom:12px}.small{font-size:11px;color:var(--muted)}
-@media(max-width:700px){.top{padding:0 12px}.brand{font-size:16px}.user{display:none}.wrap{padding:0 10px;margin:12px auto}.head{padding:14px;align-items:flex-start}.head h1{font-size:18px}.actions{margin-left:0}.head{flex-wrap:wrap}.actions{width:100%}.actions .btn{flex:1}.drawer{width:85vw}}
+:root{
+  --teal:#18b7aa; --teal2:#0f9e94; --bg:#f5f7f9; --card:#fff; --text:#17212b;
+  --muted:#74808b; --line:#e5eaee; --danger:#e25555; --shadow:0 8px 28px rgba(20,35,45,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+.top{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:20}
+.menuBtn{width:42px;height:42px;border:0;background:#eefaf8;color:var(--teal2);border-radius:12px;font-size:22px;cursor:pointer}
+.brand{margin-left:14px;font-weight:800;letter-spacing:.08em;font-size:18px}
+.user{margin-left:auto;font-size:13px;color:var(--muted);max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrap{padding:26px;max-width:1450px;margin:auto}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px}
+.status{padding:9px 12px;border-radius:10px;background:#edf9f7;color:#148c83;font-size:12px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.cardHead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.cardHead strong{font-size:16px}.count{color:var(--muted);font-size:12px}
+.tableWrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:12px;vertical-align:middle}
+th{background:#fafbfc;color:#66727d;font-weight:800;position:sticky;top:0;z-index:1}
+td input,td select{width:100%;min-width:70px;border:1px solid #dfe5e9;border-radius:8px;padding:8px;background:#fff;outline:none}
+td input:focus,td select:focus{border-color:var(--teal)}
+.actions{display:flex;gap:6px;white-space:nowrap}
+.btn{border:0;border-radius:9px;padding:8px 11px;font-weight:700;cursor:pointer}
+.save{background:var(--teal);color:#fff}.del{background:#fff0f0;color:var(--danger)}.add{background:#eafaf8;color:#118e85}
+.drawer{position:fixed;inset:0;pointer-events:none;z-index:50}
+.drawer:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.25);opacity:0;transition:.2s}
+.panel{position:absolute;left:0;top:0;bottom:0;width:280px;background:#fff;box-shadow:14px 0 35px rgba(0,0,0,.12);transform:translateX(-105%);transition:.22s;padding:22px}
+.drawer.open{pointer-events:auto}.drawer.open:before{opacity:1}.drawer.open .panel{transform:none}
+.close{float:right;border:0;background:#f2f5f6;width:34px;height:34px;border-radius:9px;cursor:pointer}
+.panel h2{margin:8px 0 22px;font-size:19px}
+.navItem{width:100%;border:0;background:#fff;text-align:left;padding:13px 12px;border-radius:10px;cursor:pointer;margin:3px 0;font-weight:700;color:#34404a}
+.navItem.active,.navItem:hover{background:#eafaf8;color:#108e85}
+.login{max-width:440px;margin:70px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+.login h2{margin-top:0}.login input{width:100%;padding:12px;border:1px solid #dfe5e9;border-radius:10px;margin:12px 0}
+.toast{position:fixed;right:18px;bottom:18px;background:#18232b;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);z-index:100;font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:35px}
+@media(max-width:700px){
+ .top{padding:0 12px;height:60px}.brand{font-size:15px}.user{font-size:11px;max-width:38vw}
+ .wrap{padding:15px 10px}.hero{align-items:center}h1{font-size:22px}.status{font-size:10px}
+ .card{border-radius:14px}.cardHead{padding:14px}.panel{width:82vw;max-width:300px}
+}
 </style>
 </head>
 <body>
-<div class="top"><button class="menu" id="menuBtn">☰</button><div class="brand">YOURS <span>SALON</span></div><div class="spacer"></div><div class="user" id="userEmail"></div></div>
-<div class="shade" id="shade"></div>
-<aside class="drawer" id="drawer"><h2>Master Settings</h2><button class="navbtn active" data-master="employee">Employee List</button><button class="navbtn" data-master="expense_type">Expense Type</button><button class="navbtn" data-master="rate">Rate List</button></aside>
-<main class="wrap" id="app"></main>
-<div id="toast"></div>
+<div id="app"></div>
+<div id="drawer" class="drawer">
+  <div class="panel">
+    <button class="close" onclick="closeDrawer()">×</button>
+    <h2>Master Settings</h2>
+    <button class="navItem active" data-master="employee" onclick="openMaster('employee')">Employee List</button>
+    <button class="navItem" data-master="expense_type" onclick="openMaster('expense_type')">Expense Type</button>
+    <button class="navItem" data-master="rate" onclick="openMaster('rate')">Rate List</button>
+  </div>
+</div>
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
-const EMAIL_KEY='salon_user_email';
-let email=localStorage.getItem(EMAIL_KEY)||'';
-let current='employee', cache={};
-const $=id=>document.getElementById(id);
-function toast(m){$('toast').innerHTML='<div class="toast">'+esc(m)+'</div>';setTimeout(()=>{$('toast').innerHTML=''},2600)}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function openDrawer(){ $('drawer').classList.add('open');$('shade').classList.add('open') }
-function closeDrawer(){ $('drawer').classList.remove('open');$('shade').classList.remove('open') }
-$('menuBtn').onclick=openDrawer;$('shade').onclick=closeDrawer;
-function jsonp(url){return new Promise((resolve,reject)=>{const cb='masterCB_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{finish();reject(new Error('Request timed out.'))},15000);function finish(){if(done)return;done=true;clearTimeout(timer);delete window[cb];s.remove()}window[cb]=d=>{finish();resolve(d)};s.onerror=()=>{finish();reject(new Error('Google Sheet could not be reached.'))};s.src=url+'&t='+Date.now()+'&callback='+cb;document.head.appendChild(s)})}
-async function readMaster(master){
-  const u=SCRIPT_URL+'?action=master&masterAction=read&master='+encodeURIComponent(master)+'&email='+encodeURIComponent(email);
-  const r=await jsonp(u);if(!r.ok)throw new Error(r.message||'Read failed');return r;
-}
-function postMaster(masterAction,master,data,rowNumber){
+const SHEET_ID='14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo';
+const STORAGE_KEYS=['salon_user_email','userEmail','googleEmail','email'];
+let email=STORAGE_KEYS.map(k=>localStorage.getItem(k)).find(Boolean)||'';
+let activeMaster='employee', cache={};
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function toast(m){const x=document.createElement('div');x.className='toast';x.textContent=m;document.body.appendChild(x);setTimeout(()=>x.remove(),3000)}
+function openDrawer(){document.getElementById('drawer').classList.add('open')}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
+function norm(s){return String(s??'').trim().toLowerCase()}
+
+function jsonp(url,timeout=12000){
   return new Promise((resolve,reject)=>{
-    const frame=document.createElement('iframe');frame.name='masterSubmit_'+Date.now();frame.style.display='none';document.body.appendChild(frame);
-    const f=document.createElement('form');f.method='POST';f.action=SCRIPT_URL;f.target=frame.name;f.style.display='none';
-    const add=(n,v)=>{const i=document.createElement('input');i.name=n;i.value=v??'';f.appendChild(i)};
-    add('action','master');add('masterAction',masterAction);add('master',master);add('email',email);if(rowNumber)add('rowNumber',rowNumber);if(data)add('data',JSON.stringify(data));
-    document.body.appendChild(f);f.submit();
-    setTimeout(()=>{frame.remove();f.remove();resolve(true)},1200);
+    const cb='salonMasterCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script'); let done=false;
+    const cleanup=()=>{try{delete window[cb]}catch(e){};script.remove();clearTimeout(timer)}
+    const fail=e=>{if(done)return;done=true;cleanup();reject(e instanceof Error?e:new Error(String(e)))};
+    const timer=setTimeout(()=>fail(new Error('Request timed out.')),timeout);
+    window[cb]=data=>{if(done)return;done=true;cleanup();resolve(data)};
+    script.onerror=()=>fail(new Error('Apps Script could not be reached. Please redeploy Combined Master 4.'));
+    const u=new URL(url);u.searchParams.set('callback',cb);u.searchParams.set('_',Date.now());
+    script.src=u.toString();script.async=true;document.head.appendChild(script);
   });
 }
-function field(v,cls=''){return '<input class="input '+cls+'" value="'+esc(v)+'">'}
-function headersFor(master){
- if(master==='employee')return ['SR','Email address','Employee Name','Entry Access','Status','Expense Type','Counter Cash','Daily Expense','Salary','Master Access'];
- if(master==='expense_type')return ['SR','Expense Type','Status'];
- return ['Service Type','Amount'];
+
+function sheetJSONP(sheetName){
+  return new Promise((resolve,reject)=>{
+    const cb='gvizCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');let done=false;
+    const cleanup=()=>{try{delete window[cb]}catch(e){};script.remove();clearTimeout(timer)}
+    const fail=e=>{if(done)return;done=true;cleanup();reject(e instanceof Error?e:new Error(String(e)))};
+    const timer=setTimeout(()=>fail(new Error('Google Sheet read timed out.')),12000);
+    window[cb]=g=>{if(done)return;done=true;cleanup();if(!g||g.status==='error')return fail(new Error(g?.errors?.[0]?.detailed_message||g?.errors?.[0]?.message||'Google Sheet query failed.'));resolve(g)};
+    script.onerror=()=>fail(new Error('Google Sheet could not be reached. Check Sheet sharing.'));
+    const u=new URL('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq');
+    u.searchParams.set('tqx','responseHandler:'+cb);u.searchParams.set('sheet',sheetName);u.searchParams.set('range','A:Z');u.searchParams.set('tq','select *');u.searchParams.set('_',Date.now());
+    script.src=u.toString();script.async=true;document.head.appendChild(script);
+  });
 }
-function employeeCell(h,v,row){
- if(h==='SR')return '<input class="input sr" value="'+esc(v)+'" inputmode="numeric">';
- if(h==='Status'||h==='Entry Access'||h==='Counter Cash'||h==='Daily Expense'||h==='Salary'||h==='Master Access'){
-   const opts=h==='Entry Access'?['Self','All']:['Yes','No'];return '<select class="select">'+opts.map(x=>'<option '+(String(v).toLowerCase()===x.toLowerCase()?'selected':'')+'>'+x+'</option>').join('')+'</select>';
- }
- if(h==='Expense Type'){
-   const selected=String(v||'').trim().toLowerCase()==='all'?['ALL']:String(v||'').split(/[,;\s]+/).filter(Boolean);
-   const types=(cache.expense_type?.rows||[]).map(r=>String(r[0]||'').trim()).filter(Boolean);
-   return '<div class="checks"><label class="check"><input type="checkbox" value="ALL" '+(selected.includes('ALL')?'checked':'')+'>All</label>'+types.map(sr=>'<label class="check"><input type="checkbox" value="'+esc(sr)+'" '+(selected.includes(sr)?'checked':'')+'>'+esc(sr)+'</label>').join('')+'</div>';
- }
- return field(v);
+
+async function readSheet(sheetName){
+  const g=await sheetJSONP(sheetName);
+  const headers=(g.table?.cols||[]).map(c=>String(c.label||c.id||'').trim());
+  const rows=(g.table?.rows||[]).map(r=>(r.c||[]).map(c=>c==null?'':(c.f??c.v??'')));
+  return {headers,rows};
 }
-function render(){
- const h=headersFor(current), d=cache[current];
- $('app').innerHTML='<section class="card"><div class="head"><div><h1>'+({employee:'Employee List',expense_type:'Expense Type',rate:'Rate List'}[current])+'</h1><p>Edit existing rows directly or use the blank row at the bottom to add a new record.</p></div><div class="actions"><button class="btn secondary" id="refresh">↻ Refresh</button><button class="btn primary" id="addBlank">＋ Add Blank Row</button></div></div><div class="table-wrap"><table class="master-table"><thead><tr>'+h.map(x=>'<th>'+esc(x)+'</th>').join('')+'<th>Action</th></tr></thead><tbody id="body"></tbody></table></div></section>';
- const body=$('body');const rows=d?.rows||[];
- rows.forEach((r,i)=>addRow(body,h,r,i+2,false));
- addRow(body,h,h.map(()=>''),rows.length+2,true);
- $('refresh').onclick=load;$('addBlank').onclick=()=>addRow(body,h,h.map(()=>''),body.querySelectorAll('tr').length+2,true);
+
+async function checkMasterAccess(){
+  if(!email)return false;
+  const d=await readSheet('Employee List');
+  const h=d.headers.map(norm), ei=h.findIndex(x=>x==='email address'||x.includes('email')), mi=h.findIndex(x=>x==='master access'), si=h.findIndex(x=>x==='status');
+  const row=d.rows.find(r=>norm(r[ei])===norm(email));
+  if(!row)return false;
+  return norm(row[si])==='active' && ['yes','y','true','1'].includes(norm(row[mi]));
 }
-function addRow(body,h,r,rowNumber,isNew){
- const tr=document.createElement('tr');tr.dataset.row=rowNumber;tr.dataset.new=isNew?'1':'0';
- h.forEach((x,i)=>{const td=document.createElement('td');td.innerHTML=current==='employee'?employeeCell(x,r[i]||'',rowNumber):field(r[i]||'');tr.appendChild(td)});
- const td=document.createElement('td');td.innerHTML='<div class="row-actions"><button class="iconbtn save" title="Save">💾</button>'+(isNew?'':'<button class="iconbtn del" title="Delete">🗑</button>')+'</div>';tr.appendChild(td);body.appendChild(tr);
- tr.querySelector('.save').onclick=()=>saveRow(tr,h,isNew);
- if(!isNew)tr.querySelector('.del').onclick=()=>deleteRow(tr.dataset.row);
+
+function renderShell(){
+  document.getElementById('app').innerHTML=`
+  <header class="top">
+    <button class="menuBtn" onclick="openDrawer()">☰</button>
+    <div class="brand">YOURS SALON</div>
+    <div class="user">${esc(email)}</div>
+  </header>
+  <main class="wrap">
+    <div class="hero"><div><h1 id="title">Employee List</h1><div class="sub">Master data management</div></div><div id="status" class="status">Ready</div></div>
+    <section class="card"><div class="cardHead"><strong id="cardTitle">Employee List</strong><span id="count" class="count"></span><button class="btn add" style="margin-left:auto" onclick="addBlank()">＋ Add Row</button></div><div id="table"></div></section>
+  </main>`;
 }
-function getRowData(tr,h){const data={};h.forEach((x,i)=>{const td=tr.children[i];if(current==='employee'&&x==='Expense Type'){data[x]=[...td.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value).filter(v=>v!=='ALL').join(',');if(td.querySelector('input[value=ALL]')?.checked)data[x]='All';}else{const el=td.querySelector('input,select');data[x]=el?el.value.trim():''}});data.rowNumber=Number(tr.dataset.row);return data}
-async function saveRow(tr,h,isNew){try{
- const data=getRowData(tr,h);if(current==='employee'){if(!data['Employee Name'])return toast('Employee Name is required.');if(!data['Email address'])return toast('Email address is required.');if(!data['SR'])data['SR']=nextSR();}
- if(current==='expense_type'){if(!data['Expense Type'])return toast('Expense Type is required.');if(!data['SR'])data['SR']=nextSR();}
- await postMaster('save',current,data,isNew?0:data.rowNumber);toast('Saving...');await new Promise(r=>setTimeout(r,1300));await load();
-}catch(e){toast(e.message)}}
-function nextSR(){const rows=cache[current]?.rows||[];let m=0;rows.forEach(r=>{const n=Number(r[0]);if(Number.isFinite(n))m=Math.max(m,n)});return String(m+1)}
-async function deleteRow(row){if(!confirm('Delete this row?'))return;try{await postMaster('delete',current,null,row);toast('Deleting...');await new Promise(r=>setTimeout(r,1300));await load()}catch(e){toast(e.message)}}
-async function load(){if(!email){showLogin();return}$('userEmail').textContent=email;try{cache[current]=await readMaster(current);if(current==='employee'&&!cache.expense_type)cache.expense_type=await readMaster('expense_type');render()}catch(e){$('app').innerHTML='<section class="card"><div class="empty">'+esc(e.message)+'</div></section>'}}
-function showLogin(){$('app').innerHTML='<section class="card login"><div class="head"><div><h1>Master Settings</h1><p>Enter the email already registered in Employee List.</p></div></div><div class="body"><label>Email address</label><input class="input" id="loginEmail" type="email" placeholder="name@example.com"><button class="btn primary" style="width:100%;margin-top:10px" id="loginBtn">Continue</button><div class="small" style="margin-top:10px">No browser prompt will be used.</div></div></section>';$('loginBtn').onclick=()=>{const v=$('loginEmail').value.trim().toLowerCase();if(!v)return toast('Enter email address.');email=v;localStorage.setItem(EMAIL_KEY,email);load()}}
-document.querySelectorAll('.navbtn').forEach(b=>b.onclick=async()=>{current=b.dataset.master;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x===b));closeDrawer();await load()});
-load();
+
+function field(master,h,v){
+  const opts=['Status','Entry Access','Counter Cash','Daily Expense','Salary','Master Access'];
+  if(opts.includes(h)) return `<select data-field="${esc(h)}"><option value="">Select</option><option ${norm(v)==='yes'?'selected':''}>Yes</option><option ${norm(v)==='no'?'selected':''}>No</option><option ${norm(v)==='all'?'selected':''}>All</option><option ${norm(v)==='self'?'selected':''}>Self</option><option ${norm(v)==='active'?'selected':''}>Active</option><option ${norm(v)==='inactive'?'selected':''}>Inactive</option></select>`;
+  return `<input data-field="${esc(h)}" value="${esc(v)}">`;
+}
+
+function employeeExpenseCell(v){
+  const activeTypes=(cache.expense_type?.rows||[]).map(r=>({sr:String(r[0]??'').trim(),name:String(r[1]??'').trim(),status:norm(r[2])})).filter(x=>x.name&&x.status==='active');
+  const selected=norm(v)==='all'?new Set(['ALL']):new Set(String(v??'').split(/[,;\\s]+/).filter(Boolean));
+  return `<div style="min-width:230px"><label style="display:block;font-size:11px;color:#667;margin-bottom:5px"><input type="checkbox" data-all ${selected.has('ALL')?'checked':''} onchange="toggleAll(this)"> All</label>${activeTypes.map(x=>`<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 7px 2px 0;font-size:11px"><input type="checkbox" data-exp-sr="${esc(x.sr)}" ${selected.has(x.sr)?'checked':''}>${esc(x.sr)}. ${esc(x.name)}</label>`).join('')}</div>`;
+}
+function toggleAll(el){const row=el.closest('tr');row.querySelectorAll('[data-exp-sr]').forEach(x=>x.checked=el.checked)}
+
+function currentRowData(tr,master){
+  const data={};
+  tr.querySelectorAll('[data-field]').forEach(el=>data[el.dataset.field]=el.value);
+  if(master==='employee'){
+    const all=tr.querySelector('[data-all]')?.checked;
+    data['Expense Type']=all?'All':[...tr.querySelectorAll('[data-exp-sr]:checked')].map(x=>x.dataset.expSr).join(', ');
+  }
+  return data;
+}
+
+function renderTable(master,headers,rows){
+  cache[master]={headers,rows};
+  let hs=headers;
+  if(!hs.length) hs=master==='rate'?['Service Type','Amount']:master==='expense_type'?['SR','Expense Type','Status']:['SR','Email address','Employee Name','Entry Access','Status','Expense Type','Counter Cash','Daily Expense','Salary','Master Access'];
+  const body=rows.map(r=>`<tr data-row="${r.rowNumber}">${hs.map(h=>{
+    const v=r[h]??'';
+    if(master==='employee'&&h==='Expense Type') return `<td>${employeeExpenseCell(v)}</td>`;
+    return `<td>${field(master,h,v)}</td>`;
+  }).join('')}<td class="actions"><button class="btn save" onclick="saveExisting(this)">Save</button><button class="btn del" onclick="deleteRow(this)">Delete</button></td></tr>`).join('');
+  const head=hs.map(h=>`<th>${esc(h)}</th>`).join('')+'<th>Action</th>';
+  document.getElementById('table').innerHTML=`<div class="tableWrap"><table><thead><tr>${head}</tr></thead><tbody>${body||'<tr><td colspan="99" class="empty">No records found.</td></tr>'}</tbody></table></div>`;
+  document.getElementById('count').textContent=`${rows.length} records`;
+}
+
+async function openMaster(master){
+  activeMaster=master;closeDrawer();
+  document.querySelectorAll('.navItem').forEach(x=>x.classList.toggle('active',x.dataset.master===master));
+  const title=master==='employee'?'Employee List':master==='expense_type'?'Expense Type':'Rate List';
+  document.getElementById('title').textContent=title;document.getElementById('cardTitle').textContent=title;document.getElementById('status').textContent='Loading…';
+  try{
+    const d=await readSheet(title);
+    cache[master]={headers:d.headers,rows:d.rows};
+    if(master==='expense_type') cache.expense_type=d;
+    if(master==='employee'){
+      // Load Expense Type options separately for the multi-select.
+      cache.expense_type=await readSheet('Expense Type');
+    }
+    const rows=d.rows.map((r,i)=>{const o={rowNumber:i+2};d.headers.forEach((h,j)=>o[h]=r[j]??'');return o}).filter(o=>Object.keys(o).some(k=>k!=='rowNumber'&&String(o[k]).trim()!==''));
+    renderTable(master,d.headers,rows);document.getElementById('status').textContent='Connected';
+  }catch(e){document.getElementById('status').textContent='Error';document.getElementById('table').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+
+function addBlank(){
+  const tbody=document.querySelector('tbody');if(!tbody)return;
+  const hs=cache[activeMaster]?.headers?.length?cache[activeMaster].headers:(activeMaster==='rate'?['Service Type','Amount']:activeMaster==='expense_type'?['SR','Expense Type','Status']:['SR','Email address','Employee Name','Entry Access','Status','Expense Type','Counter Cash','Daily Expense','Salary','Master Access']);
+  const tr=document.createElement('tr');tr.dataset.row='0';
+  hs.forEach(h=>{const td=document.createElement('td');td.innerHTML=activeMaster==='employee'&&h==='Expense Type'?employeeExpenseCell(''):field(activeMaster,h,'');tr.appendChild(td)});
+  const td=document.createElement('td');td.className='actions';td.innerHTML='<button class="btn save" onclick="saveExisting(this)">Save</button>';tr.appendChild(td);tbody.appendChild(tr);tr.scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function masterWrite(action,tr){
+  const rowNumber=Number(tr.dataset.row||0), data=currentRowData(tr,activeMaster);
+  const url=new URL(SCRIPT_URL);url.searchParams.set('action','master');url.searchParams.set('masterAction',action);url.searchParams.set('master',activeMaster);url.searchParams.set('email',email);url.searchParams.set('rowNumber',rowNumber);if(action==='save')url.searchParams.set('data',JSON.stringify(data));
+  const res=await jsonp(url.toString(),15000);if(!res?.ok)throw new Error(res?.message||'Master operation failed.');return res;
+}
+async function saveExisting(btn){
+  const tr=btn.closest('tr');btn.disabled=true;
+  try{await masterWrite('save',tr);toast('Saved successfully');await openMaster(activeMaster)}
+  catch(e){toast(e.message)}finally{btn.disabled=false}
+}
+async function deleteRow(btn){
+  const tr=btn.closest('tr');if(!tr.dataset.row||tr.dataset.row==='0'){tr.remove();return}
+  if(!confirm('Delete this row?'))return;btn.disabled=true;
+  try{await masterWrite('delete',tr);toast('Deleted successfully');await openMaster(activeMaster)}
+  catch(e){toast(e.message)}finally{btn.disabled=false}
+}
+
+async function boot(){
+  if(!email){
+    document.getElementById('app').innerHTML=`<div class="login"><h2>Master Settings</h2><div class="sub">Enter the email used in Employee List.</div><input id="emailInput" placeholder="Email address"><button class="btn save" style="width:100%" onclick="setEmail()">Continue</button></div>`;return;
+  }
+  renderShell();
+  try{
+    const ok=await checkMasterAccess();
+    if(!ok) throw new Error('Master Settings access not allowed for this account.');
+    await openMaster('employee');
+  }catch(e){
+    document.getElementById('table').innerHTML=`<div class="empty">${esc(e.message)}<br><br><small>${esc(email)}</small></div>`;
+    document.getElementById('status').textContent='Access denied';
+  }
+}
+function setEmail(){const v=document.getElementById('emailInput').value.trim().toLowerCase();if(!v)return;localStorage.setItem('salon_user_email',v);email=v;boot()}
+boot();
 </script>
-</body></html>
+</body>
+</html>
