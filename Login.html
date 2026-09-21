@@ -132,6 +132,7 @@ function sheetJSONP(url,timeout=15000){
   const u=new URL('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq');
   u.searchParams.set('sheet',SETTINGS_SHEET);
   u.searchParams.set('range','A:B');
+  u.searchParams.set('headers','1');
   u.searchParams.set('tqx','responseHandler:'+cb);
   u.searchParams.set('tq','select A,B');
   u.searchParams.set('_',Date.now());
