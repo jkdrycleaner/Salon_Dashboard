@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#211A16">
+<title>Login</title>
+<style>
+:root{
+ --bg:#f7f5f2;--panel:#fff;--text:#171513;--muted:#6f6a64;--line:#ddd7cf;
+ --accent:#c9a227;--header:#211a16;--headerText:#fff;--card:#fff;
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden}
+body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}button{cursor:pointer}
+.page{width:100%;height:100dvh;padding:clamp(8px,1.5vw,20px);display:flex;align-items:center;justify-content:center}
+.shell{width:min(1450px,100%);height:min(900px,calc(100dvh - clamp(16px,3vw,40px)));display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:clamp(16px,2vw,28px);overflow:hidden;box-shadow:0 25px 70px rgba(33,26,22,.13)}
+.visual{position:relative;min-width:0;min-height:0;background:#18130f;color:#fff;overflow:hidden}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .55s ease;background-position:center;background-size:cover}
+.slide.active{opacity:1;visibility:visible}
+.slide::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,8,6,.68),rgba(10,8,6,.24) 72%,rgba(10,8,6,.04))}
+.slide-content{position:absolute;z-index:2;left:8%;right:8%;top:9%;max-width:600px}
+.slide-title{font-family:Georgia,serif;font-size:clamp(34px,4vw,68px);line-height:1.04;font-weight:500;margin:0 0 14px}
+.slide-desc{font-size:clamp(13px,1.25vw,18px);line-height:1.5;color:#f6f0e7}
+.slider-nav{position:absolute;z-index:4;left:8%;right:8%;bottom:4%;display:flex;align-items:center;justify-content:space-between}
+.arrow{width:42px;height:42px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.13);backdrop-filter:blur(8px);color:#fff;border-radius:50%;font-size:22px}
+.dots{display:flex;gap:8px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);border:0;padding:0}
+.dot.active{width:23px;border-radius:8px;background:#fff}
+.login-panel{min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:clamp(20px,4vw,58px)}
+.panel-inner{width:min(500px,100%);height:100%;position:relative;display:flex;flex-direction:column;justify-content:center}
+.theme-toggle{position:absolute;right:0;top:0;display:flex;padding:3px;border:1px solid var(--line);border-radius:30px;background:var(--card)}
+.theme-toggle button{width:36px;height:30px;border:0;border-radius:20px;background:transparent;color:var(--muted)}
+.theme-toggle button.active{background:var(--header);color:var(--headerText)}
+.brand{text-align:center;margin:clamp(12px,4vh,45px) 0 clamp(18px,3vh,30px)}
+.logo{width:clamp(54px,6vw,76px);height:clamp(54px,6vw,76px);margin:0 auto 10px;object-fit:contain;display:block}
+.brand h1{font:500 clamp(26px,3vw,42px)/1.05 Georgia,serif;letter-spacing:.04em;margin:0}
+.brand p{margin:8px 0 0;color:var(--muted);font-size:clamp(13px,1.3vw,16px)}
+.welcome{text-align:center;margin-bottom:clamp(16px,2.5vh,25px)}
+.welcome h2{font-size:clamp(21px,2vw,25px);margin:0 0 6px}
+.welcome p{margin:0;color:var(--muted);font-size:14px}
+.field{margin-bottom:13px}.field label{display:block;font-size:13px;font-weight:650;margin:0 0 7px}
+.input-wrap{position:relative}.input-wrap input{width:100%;height:52px;padding:0 16px;border:1px solid var(--line);border-radius:13px;background:var(--card);outline:0;color:var(--text)}
+.input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.eye{position:absolute;right:6px;top:6px;width:40px;height:40px;border:0;background:transparent;color:var(--muted);border-radius:10px}
+.login-btn{width:100%;height:52px;border:0;border-radius:13px;background:var(--header);color:var(--headerText);font-weight:700;font-size:15px}
+.or{display:flex;align-items:center;gap:12px;color:#9a938b;font-size:12px;margin:17px 0}
+.or::before,.or::after{content:"";height:1px;background:var(--line);flex:1}
+.method{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;font-weight:600;font-size:14px;position:relative}
+.method .icon{width:20px;text-align:center}.method .soon{position:absolute;right:10px;font-size:10px;color:var(--muted);background:var(--bg);padding:3px 7px;border-radius:20px}
+.help{text-align:center;color:var(--muted);font-size:12px;margin:16px 0 0}
+.status{min-height:18px;text-align:center;margin-top:8px;font-size:12px;color:#a44337}
+@media(max-width:900px){
+ .page{padding:0;align-items:stretch}.shell{width:100%;height:100dvh;border-radius:0;display:flex;flex-direction:column;box-shadow:none}
+ .visual{height:31dvh;min-height:170px;flex:0 0 31dvh}.slide-content{top:10%;left:7%;right:7%}
+ .slide-title{font-size:clamp(27px,7vw,38px)}.slide-desc{font-size:12px}.slider-nav{bottom:9%;left:7%;right:7%}
+ .arrow{width:34px;height:34px;font-size:19px}.login-panel{height:69dvh;flex:1;padding:14px 18px 12px;align-items:center;overflow:hidden}
+ .panel-inner{width:min(520px,100%);height:100%;justify-content:center}.brand{margin:22px 0 14px}
+ .logo{width:48px;height:48px;margin-bottom:5px}.brand h1{font-size:24px}.brand p{font-size:12px;margin-top:4px}
+ .welcome{margin-bottom:13px}.welcome h2{font-size:20px;margin-bottom:3px}.welcome p{font-size:12px}
+ .field{margin-bottom:9px}.field label{font-size:11px;margin-bottom:4px}.input-wrap input{height:44px;font-size:13px}
+ .eye{height:34px;width:36px;top:5px}.login-btn{height:44px;font-size:14px}.or{margin:10px 0;font-size:11px}
+ .method{height:39px;margin-top:6px;font-size:12px}.help{font-size:10px;margin-top:9px}
+}
+@media(max-width:420px) and (max-height:760px){
+ .visual{height:27dvh;min-height:145px;flex-basis:27dvh}.login-panel{height:73dvh}
+ .brand{margin:13px 0 9px}.logo{width:40px;height:40px}.brand h1{font-size:21px}
+ .welcome h2{font-size:18px}.method{height:35px}.input-wrap input,.login-btn{height:40px}
+}
+body.dark{--bg:#100e0c;--panel:#1a1715;--text:#f5f0e9;--muted:#aaa198;--line:#39332e;--card:#211d1a}
+body.dark .login-btn{color:#171310}
+</style>
+</head>
+<body>
+<div class="page"><div class="shell">
+<section class="visual">
+<div id="slides"></div>
+<div class="slider-nav">
+<button class="arrow" id="prevSlide" type="button">‹</button>
+<div class="dots" id="dots"></div>
+<button class="arrow" id="nextSlide" type="button">›</button>
+</div>
+</section>
+
+<section class="login-panel"><div class="panel-inner">
+<div class="theme-toggle" id="themeToggle">
+<button id="lightBtn" type="button">☀</button><button id="darkBtn" type="button">☾</button>
+</div>
+
+<div class="brand">
+<img class="logo" id="logo" alt="">
+<h1 id="brandName"></h1><p id="brandDescription"></p>
+</div>
+
+<div class="welcome"><h2 id="loginTitle"></h2><p id="loginSubtitle"></p></div>
+
+<form id="loginForm" novalidate>
+<div class="field"><label id="userLabel" for="userId"></label><div class="input-wrap"><input id="userId" autocomplete="username"></div></div>
+<div class="field"><label id="passwordLabel" for="password"></label><div class="input-wrap">
+<input id="password" type="password" autocomplete="current-password"><button type="button" class="eye" id="togglePassword">◉</button>
+</div></div>
+<button class="login-btn" id="loginBtn" type="submit"></button>
+<div class="status" id="status"></div>
+</form>
+
+<div class="or" id="orBlock">OR</div>
+<button class="method" id="googleBtn" type="button"><span class="icon" style="font-weight:800;color:#4285F4">G</span><span id="googleText"></span></button>
+<button class="method" id="mobileBtn" type="button"><span class="icon">▣</span><span id="mobileText"></span><span class="soon" id="mobileSoon"></span></button>
+<button class="method" id="faceBtn" type="button"><span class="icon">⌾</span><span id="faceText"></span><span class="soon" id="faceSoon"></span></button>
+<p class="help" id="helpText"></p>
+</div></section>
+</div></div>
+
+<script>
+const SHEET_ID='14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo';
+const SETTINGS_SHEET='Dashboard Settings';
+
+const $=id=>document.getElementById(id);
+const val=(s,k)=>s[k]==null?'':String(s[k]).trim();
+const yes=(v)=>['yes','true','1','on'].includes(String(v||'').trim().toLowerCase());
+
+function sheetJSONP(url,timeout=15000){
+ return new Promise((resolve,reject)=>{
+  const cb='loginSettings_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const sc=document.createElement('script');let done=false;
+  const cleanup=()=>{try{delete window[cb]}catch(e){}sc.remove();clearTimeout(timer)};
+  const fail=e=>{if(done)return;done=true;cleanup();reject(e)};
+  const timer=setTimeout(()=>fail(new Error('Dashboard Settings load timed out.')),timeout);
+  window[cb]=data=>{if(done)return;done=true;cleanup();resolve(data)};
+  sc.onerror=()=>fail(new Error('Dashboard Settings could not be reached.'));
+  const u=new URL('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq');
+  u.searchParams.set('sheet',SETTINGS_SHEET);
+  u.searchParams.set('range','A:B');
+  u.searchParams.set('tqx','responseHandler:'+cb);
+  u.searchParams.set('tq','select A,B');
+  u.searchParams.set('_',Date.now());
+  sc.src=u.toString();document.head.appendChild(sc);
+ });
+}
+
+async function loadSettings(){
+ const data=await sheetJSONP();
+ if(!data?.table)throw new Error('Dashboard Settings data not available.');
+ const s={};
+ (data.table.rows||[]).forEach(r=>{
+   const k=String(r.c?.[0]?.f??r.c?.[0]?.v??'').trim();
+   const v=String(r.c?.[1]?.f??r.c?.[1]?.v??'').trim();
+   if(k)s[k]=v;
+ });
+ apply(s);
+}
+
+function apply(s){
+ const root=document.documentElement;
+ const set=(css,key,fallback)=>root.style.setProperty(css,val(s,key)||fallback);
+ set('--accent','Accent Color','#c9a227');
+ set('--header','Header Color','#211a16');
+ set('--headerText','Header Text Color','#ffffff');
+ set('--bg','Body Background','#f7f5f2');
+ set('--card','Card Background','#ffffff');
+
+ $('brandName').textContent=val(s,'Brand Name');
+ $('brandDescription').textContent=val(s,'Brand Description');
+ $('logo').src=val(s,'Logo URL');
+
+ const theme=val(s,'Theme Mode').toLowerCase();
+ if(theme==='dark')setTheme('dark',false);else setTheme('light',false);
+
+ // Theme toggle stays visible. It is a UI control, not dependent on a missing setting.
+ $('loginTitle').textContent=val(s,'Login Title')||'Welcome Back';
+ $('loginSubtitle').textContent=val(s,'Login Subtitle')||'Sign in to continue to your account';
+ $('userLabel').textContent=val(s,'User ID Label')||'User ID / Email';
+ $('passwordLabel').textContent=val(s,'Password Label')||'Password';
+ $('userId').placeholder=val(s,'User ID Placeholder');
+ $('password').placeholder=val(s,'Password Placeholder');
+ $('loginBtn').textContent=val(s,'Login Button Text')||'Login →';
+
+ $('googleText').textContent=val(s,'Google Login Text')||'Login with Google';
+ $('mobileText').textContent=val(s,'Mobile Login Text')||'Login with Mobile No.';
+ $('faceText').textContent=val(s,'Face Login Text')||'Login with Face';
+ $('mobileSoon').textContent=val(s,'Mobile Login Status')||'Coming Soon';
+ $('faceSoon').textContent=val(s,'Face Login Status')||'Coming Soon';
+ $('helpText').textContent=val(s,'Login Help Text');
+
+ $('googleBtn').style.display=val(s,'Show Google Login')===''||yes(s['Show Google Login'])?'flex':'none';
+ $('mobileBtn').style.display=val(s,'Show Mobile Login')===''||yes(s['Show Mobile Login'])?'flex':'none';
+ $('faceBtn').style.display=val(s,'Show Face Login')===''||yes(s['Show Face Login'])?'flex':'none';
+
+ const slides=[1,2,3].map(i=>({
+   image:val(s,`Login Slide ${i} Image`),
+   title:val(s,`Login Slide ${i} Title`),
+   description:val(s,`Login Slide ${i} Description`)
+ })).filter(x=>x.image||x.title||x.description);
+
+ renderSlides(slides);
+
+ const duration=parseInt(val(s,'Login Slide Duration'),10)||4000;
+ restartSlider(duration);
+}
+
+let slides=[],dots=[],currentSlide=0,timer;
+
+function renderSlides(items){
+ $('slides').innerHTML='';$('dots').innerHTML='';slides=[];dots=[];currentSlide=0;
+ items.forEach((item,i)=>{
+   const el=document.createElement('div');el.className='slide'+(i===0?' active':'');
+   if(item.image)el.style.backgroundImage=`url(${item.image})`;
+   const c=document.createElement('div');c.className='slide-content';
+   if(item.title){const h=document.createElement('h2');h.className='slide-title';h.textContent=item.title;c.appendChild(h)}
+   if(item.description){const d=document.createElement('div');d.className='slide-desc';d.textContent=item.description;c.appendChild(d)}
+   el.appendChild(c);$('slides').appendChild(el);slides.push(el);
+   const dot=document.createElement('button');dot.type='button';dot.className='dot'+(i===0?' active':'');
+   dot.onclick=()=>showSlide(i,true);$('dots').appendChild(dot);dots.push(dot);
+ });
+ const multi=slides.length>1;
+ $('prevSlide').style.display=multi?'block':'none';
+ $('nextSlide').style.display=multi?'block':'none';
+ $('dots').style.display=multi?'flex':'none';
+}
+
+function showSlide(i,manual=false){
+ if(!slides.length)return;
+ currentSlide=(i+slides.length)%slides.length;
+ slides.forEach((x,n)=>x.classList.toggle('active',n===currentSlide));
+ dots.forEach((x,n)=>x.classList.toggle('active',n===currentSlide));
+ if(manual)restartSlider(window._slideMs||4000);
+}
+function restartSlider(ms){
+ window._slideMs=ms;clearInterval(timer);
+ if(slides.length>1)timer=setInterval(()=>showSlide(currentSlide+1),ms);
+}
+$('prevSlide').onclick=()=>showSlide(currentSlide-1,true);
+$('nextSlide').onclick=()=>showSlide(currentSlide+1,true);
+
+function setTheme(t,save=true){
+ document.body.classList.toggle('dark',t==='dark');
+ $('lightBtn').classList.toggle('active',t!=='dark');
+ $('darkBtn').classList.toggle('active',t==='dark');
+ if(save)localStorage.setItem('salon_login_theme',t);
+}
+$('lightBtn').onclick=()=>setTheme('light');
+$('darkBtn').onclick=()=>setTheme('dark');
+
+$('togglePassword').onclick=()=>{
+ const p=$('password');p.type=p.type==='password'?'text':'password';
+};
+
+$('loginForm').onsubmit=e=>{
+ e.preventDefault();
+ $('status').textContent='Login authentication will be connected in the next step.';
+};
+$('googleBtn').onclick=()=>{$('status').textContent='Google Login will be connected in the next step.'};
+$('mobileBtn').onclick=()=>{$('status').textContent='Mobile Login is currently on hold.'};
+$('faceBtn').onclick=()=>{$('status').textContent='Face Login is currently on hold.'};
+
+loadSettings().catch(e=>{
+ $('status').textContent=e.message;
+});
+</script>
+</body>
+</html>
