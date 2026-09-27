@@ -1,0 +1,119 @@
+<div class="sheet-update-page">
+  <div class="su-head">
+    <div>
+      <div class="su-eyebrow">YOURS SALON</div>
+      <h1>Sheet Update</h1>
+      <p>Manage master data directly from Google Sheet.</p>
+    </div>
+    <button id="suAdd">＋ Add New</button>
+  </div>
+
+  <div id="suLogin" class="su-login">
+    <div class="su-lock">🔐</div>
+    <div>
+      <h2>Master Access</h2>
+      <p>Enter an Employee List email having Master Access.</p>
+      <div class="su-login-row">
+        <input id="suEmail" type="email" placeholder="employee@example.com">
+        <button id="suContinue">Continue</button>
+      </div>
+      <div id="suLoginMsg"></div>
+    </div>
+  </div>
+
+  <div id="suApp" hidden>
+    <div class="su-toolbar">
+      <div class="su-tabs">
+        <button class="su-tab active" data-master="employee">Employee List</button>
+        <button class="su-tab" data-master="expense_type">Expense Type</button>
+        <button class="su-tab" data-master="rate">Rate List</button>
+      </div>
+      <div class="su-tools">
+        <span id="suUser"></span>
+        <button id="suRefresh" class="secondary">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="suStatus"></div>
+    <div id="suTable" class="su-table-wrap"></div>
+  </div>
+</div>
+
+<style>
+.sheet-update-page{max-width:1600px;margin:auto}
+.su-head,.su-login,.su-toolbar,.su-table-wrap{background:#fff;border:1px solid #e5eaee;border-radius:18px;box-shadow:0 6px 25px rgba(23,38,58,.05)}
+.su-head{padding:26px 30px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.su-eyebrow{color:#287d7b;font-size:11px;font-weight:800;letter-spacing:4px}
+.su-head h1{margin:8px 0 0;color:#17263a;font:36px Georgia,serif}
+.su-head p{margin:8px 0 0;color:#718096}
+button{cursor:pointer}
+.su-head button,#suContinue,.su-save{border:0;border-radius:9px;background:#287d7b;color:white;font-weight:700;padding:12px 18px}
+.su-login{margin-top:18px;padding:24px;display:flex;gap:16px}
+.su-lock{font-size:25px;background:#edf7f6;border-radius:12px;padding:12px;height:50px}
+.su-login h2{margin:0;color:#17263a}.su-login p{color:#718096}
+.su-login-row{display:flex;gap:8px}.su-login-row input{width:360px;height:44px;border:1px solid #d8e0e5;border-radius:9px;padding:0 12px}
+.su-toolbar{margin-top:18px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.su-tabs{display:flex;gap:5px;flex-wrap:wrap}.su-tab{border:0;background:transparent;color:#667085;padding:11px 15px;border-radius:8px;font-weight:700}.su-tab.active{background:#287d7b;color:#fff}
+.su-tools{display:flex;align-items:center;gap:10px;color:#718096;font-size:13px}.secondary{background:#fff;border:1px solid #d8e0e5;border-radius:8px;padding:9px 13px}
+#suStatus{min-height:28px;padding:9px 4px;color:#287d7b;font-size:13px}.error{color:#b42318!important}
+.su-table-wrap{overflow:auto}.su-table{width:100%;min-width:850px;border-collapse:collapse}.su-table th{background:#f6f8f9;padding:12px;text-align:left;font-size:12px;border-bottom:1px solid #e3e8ec}.su-table td{padding:9px 10px;border-bottom:1px solid #edf0f2}
+.su-input,.su-select{width:100%;min-width:120px;height:39px;border:1px solid #d8e0e5;border-radius:8px;padding:0 9px;background:#fff}
+.su-actions{display:flex;gap:6px}.su-delete{border:0;border-radius:8px;padding:9px 11px;background:#fff0ee;color:#b42318;font-weight:700}.su-empty{text-align:center;padding:55px;color:#7a8797}
+@media(max-width:800px){.su-head{display:block}.su-head button{width:100%;margin-top:18px}.su-login{display:block}.su-login-row{display:block}.su-login-row input{width:100%;margin-bottom:8px}.su-login-row button{width:100%;height:44px}.su-toolbar{display:block}.su-tools{margin-top:10px;justify-content:space-between}}
+</style>
+
+<script>
+(function(){
+const API='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
+const S={email:(localStorage.getItem('salon_user_email')||'').trim().toLowerCase(),master:'employee',headers:[],rows:[]};
+const $=id=>document.getElementById(id);
+const norm=v=>String(v??'').trim().toLowerCase().replace(/\s+/g,' ');
+const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function status(m,e){$('suStatus').textContent=m||'';$('suStatus').className=e?'error':''}
+function jsonp(url,timeout=15000){return new Promise((resolve,reject)=>{
+ const cb='su_'+Date.now()+'_'+Math.random().toString(36).slice(2),sc=document.createElement('script');let done=false;
+ const clean=()=>{try{delete window[cb]}catch(e){}sc.remove();clearTimeout(t)};
+ const fail=e=>{if(done)return;done=true;clean();reject(e instanceof Error?e:new Error(String(e)))};
+ const t=setTimeout(()=>fail(new Error('Apps Script request timed out.')),timeout);
+ window[cb]=d=>{if(done)return;done=true;clean();resolve(d)};
+ sc.onerror=()=>fail(new Error('Apps Script could not be reached.'));
+ const u=new URL(url);u.searchParams.set('callback',cb);u.searchParams.set('_',Date.now());sc.src=u;document.head.appendChild(sc);
+})}
+async function req(action,row,values){
+ if(!S.email)throw Error('Please enter Employee List email.');
+ const u=new URL(API);u.searchParams.set('action','master');u.searchParams.set('masterAction',action);u.searchParams.set('master',S.master);u.searchParams.set('email',S.email);u.searchParams.set('rowNumber',String(row||0));
+ if(action==='save')u.searchParams.set('values',JSON.stringify(values||[]));
+ const r=await jsonp(u);if(!r?.ok)throw Error(r?.message||'Master operation failed.');return r;
+}
+function input(h,v){
+ const n=norm(h),x=String(v??'');
+ if(n==='status')return '<select class="su-select" data-col><option '+(norm(x)==='active'?'selected':'')+'>Active</option><option '+(norm(x)==='inactive'?'selected':'')+'>Inactive</option></select>';
+ if(['entry access','counter cash','daily expense','salary','master access'].includes(n)){let y=['yes','y','true','1'].includes(norm(x));return '<select class="su-select" data-col><option value="Yes" '+(y?'selected':'')+'>Yes</option><option value="No" '+(!y?'selected':'')+'>No</option></select>'}
+ return '<input class="su-input" data-col value="'+esc(x)+'">';
+}
+function render(){
+ if(!S.rows.length){$('suTable').innerHTML='<div class="su-empty">No records found. Click ＋ Add New.</div>';return}
+ $('suTable').innerHTML='<table class="su-table"><thead><tr>'+S.headers.map(esc).map(x=>'<th>'+x+'</th>').join('')+'<th>Actions</th></tr></thead><tbody>'+
+ S.rows.map(r=>'<tr data-row="'+(r.rowNumber||0)+'">'+S.headers.map((h,i)=>'<td>'+input(h,r.values[i]||'')+'</td>').join('')+
+ '<td><div class="su-actions"><button class="su-save">Save</button><button class="su-delete">Delete</button></div></td></tr>').join('')+
+ '</tbody></table>';
+}
+async function load(){
+ status('Loading...');
+ try{let r=await req('read',0,[]);S.headers=r.headers||[];S.rows=r.rows||[];render();status('Loaded '+S.rows.length+' record'+(S.rows.length===1?'':'s')+'.')}
+ catch(e){status(e.message,true);$('suTable').innerHTML='<div class="su-empty">'+esc(e.message)+'</div>'}
+}
+function add(){
+ if(!S.headers.length)return status('Load a master first.',true);
+ S.rows.push({rowNumber:0,values:S.headers.map(()=> '')});render();
+ const rows=$('suTable').querySelectorAll('tbody tr'),r=rows[rows.length-1];r?.scrollIntoView({behavior:'smooth',block:'center'});r?.querySelector('[data-col]')?.focus();
+}
+async function save(b){let r=b.closest('tr');b.disabled=true;try{await req('save',+r.dataset.row,(...r.querySelectorAll('[data-col]')].map(x=>x.value)));status('Saved successfully.');await load()}catch(e){status(e.message,true)}finally{b.disabled=false}}
+async function del(b){let r=b.closest('tr'),n=+r.dataset.row;if(!n){r.remove();return}if(!confirm('Delete this row from Google Sheet?'))return;b.disabled=true;try{await req('delete',n,[]);status('Deleted successfully.');await load()}catch(e){status(e.message,true)}finally{b.disabled=false}}
+function login(){let e=$('suEmail').value.trim().toLowerCase();if(!e)return $('suLoginMsg').textContent='Please enter email.';S.email=e;localStorage.setItem('salon_user_email',e);$('suLogin').hidden=true;$('suApp').hidden=false;$('suUser').textContent=e;load()}
+$('suContinue').onclick=login;$('suEmail').onkeydown=e=>{if(e.key==='Enter')login()};$('suAdd').onclick=add;$('suRefresh').onclick=load;
+document.querySelectorAll('.su-tab').forEach(b=>b.onclick=()=>{S.master=b.dataset.master;document.querySelectorAll('.su-tab').forEach(x=>x.classList.toggle('active',x===b));load()});
+$('suTable').onclick=e=>{if(e.target.classList.contains('su-save'))save(e.target);if(e.target.classList.contains('su-delete'))del(e.target)};
+if(S.email){$('suEmail').value=S.email;$('suLogin').hidden=true;$('suApp').hidden=false;$('suUser').textContent=S.email;load()}
+})();
+</script>
