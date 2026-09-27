@@ -51,7 +51,7 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V7</span></div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V8</span></div>
   </div>
   <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
 </div>
@@ -73,7 +73,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "EDIT-2026.09.27-V7";
+const APP_VERSION = "EDIT-2026.09.27-V8";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -468,28 +468,69 @@ function jsonp(url, timeout=15000){
 }
 
 /*
-  V7:
-  Save directly through Apps Script doGet() using JSONP.
-  This avoids cross-origin iframe POST and avoids a second read-back request.
-  The Apps Script response itself confirms whether the row was updated.
+  V8 SAVE:
+  Use a cross-origin HTML form POST to Apps Script.
+  This does not depend on JSONP/script loading and is compatible with
+  the existing doPost(action=editSheetRow) route.
 */
 function sendEditRequest(sheetName, rowNumber, values){
-  const url =
-    EDIT_API +
-    "?action=editSheetRow" +
-    "&sheet=" + encodeURIComponent(sheetName) +
-    "&row=" + encodeURIComponent(rowNumber) +
-    "&values=" + encodeURIComponent(JSON.stringify(values));
+  return new Promise((resolve,reject)=>{
+    const frameName = "salonEditV8Frame_" + Date.now();
+    const iframe = document.createElement("iframe");
+    iframe.name = frameName;
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
 
-  return jsonp(url,20000).then(result=>{
-    if(!result || result.ok !== true || result.success !== true){
-      throw new Error(
-        result && result.message
-          ? result.message
-          : "Apps Script save failed."
-      );
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = EDIT_API;
+    form.target = frameName;
+    form.style.display = "none";
+
+    const fields = {
+      action: "editSheetRow",
+      sheet: sheetName,
+      row: String(rowNumber),
+      values: JSON.stringify(values)
+    };
+
+    Object.keys(fields).forEach(key=>{
+      const input=document.createElement("input");
+      input.type="hidden";
+      input.name=key;
+      input.value=fields[key];
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+
+    let done=false;
+    const cleanup=()=>{
+      clearTimeout(timer);
+      try{form.remove()}catch(e){}
+      try{iframe.remove()}catch(e){}
+    };
+
+    const finish=(ok,message)=>{
+      if(done)return;
+      done=true;
+      cleanup();
+      if(ok) resolve({ok:true,success:true});
+      else reject(new Error(message||"Apps Script request could not be loaded."));
+    };
+
+    // A successful form POST cannot expose the cross-origin response to the page.
+    // The iframe load event confirms that the browser completed the navigation.
+    iframe.addEventListener("load",()=>finish(true));
+    iframe.addEventListener("error",()=>finish(false,"Apps Script request could not be loaded."));
+
+    const timer=setTimeout(()=>finish(false,"Apps Script request timed out. Please check the Apps Script deployment."),20000);
+
+    try{
+      form.submit();
+    }catch(e){
+      finish(false,e.message||String(e));
     }
-    return result;
   });
 }
 
