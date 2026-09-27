@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YOURS SALON - Sheet Data | Final</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f5f7;color:#20242a}
+.header{background:#17191d;color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #6fc0c4}
+.brand{font-size:23px;font-weight:800;letter-spacing:1px}
+.sub{font-size:12px;color:#c8cbd0;margin-top:4px}
+button{border:1px solid #ddd;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer;background:#fff;color:#222}
+.refresh{background:#c9a227;border-color:#c9a227;color:#111}
+.edit-btn{background:#fff;border-color:#c9a227;color:#222;padding:6px 10px;border-radius:7px;font-size:12px}
+.save-btn{background:#198754;border-color:#198754;color:#fff;padding:6px 10px;border-radius:7px;font-size:12px}
+.cancel-btn{background:#f1f1f1;border-color:#ccc;color:#333;padding:6px 10px;border-radius:7px;font-size:12px}
+.action-cell{white-space:nowrap;min-width:125px}
+.edit-input{width:100%;min-width:100px;border:1px solid #c9a227;border-radius:6px;padding:7px 8px;font:inherit;background:#fffdf3}
+.edit-input:focus{outline:2px solid #c9a227}
+.refresh:disabled{opacity:.6}
+.wrap{padding:18px 24px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:11px}
+.tab{white-space:nowrap}
+.tab.active{background:#c9a227;border-color:#c9a227}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px #0000000d;overflow:hidden}
+.cardhead{padding:18px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
+.title{font-size:19px;font-weight:800}
+.count{font-size:12px;color:#777;margin-top:5px}
+.status{font-size:12px;color:#777}
+.tablewrap{width:100%;overflow:auto;max-height:calc(100vh - 190px)}
+table{border-collapse:collapse;width:max-content;min-width:100%;table-layout:auto}
+th,td{border-bottom:1px solid #eee;border-right:1px solid #eee;padding:9px 11px;text-align:left;font-size:13px;vertical-align:top}
+th{position:sticky;top:0;background:#20242a;color:#fff;z-index:2;font-weight:700;white-space:nowrap;min-width:90px;max-width:360px}
+td{white-space:nowrap;overflow-wrap:normal;word-break:normal;min-width:80px;max-width:360px}
+td:hover{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+tr:hover td{background:#faf8ef}
+.loading,.empty{padding:38px;text-align:center;color:#777}
+.error{color:#a33}
+.settings-table{width:100%;table-layout:fixed}
+.settings-table th:first-child,.settings-table td:first-child{width:220px;max-width:260px}
+.settings-table th:nth-child(2),.settings-table td:nth-child(2){width:auto;max-width:none}
+@media(max-width:700px){
+ .header{padding:14px 16px}.brand{font-size:19px}.wrap{padding:10px}.cardhead{padding:13px}
+ th,td{font-size:12px;padding:8px;min-width:85px;max-width:360px}
+ .settings-table th:first-child,.settings-table td:first-child{width:160px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="brand">YOURS SALON</div>
+    <div class="sub">Google Sheet Data • View & Edit</div>
+  </div>
+  <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
+</div>
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="card">
+    <div class="cardhead">
+      <div>
+        <div class="title" id="sheetTitle">Loading...</div>
+        <div class="count" id="rowCount"></div>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+    <div id="tableArea" class="loading">Loading data...</div>
+  </div>
+</div>
+
+<script>
+const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
+const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
+const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
+let current = 0;
+let callbackCounter = 0;
+
+function makeTabs(){
+  const box = document.getElementById("tabs");
+  box.innerHTML = "";
+  SHEETS.forEach((name,i)=>{
+    const b = document.createElement("button");
+    b.className = "tab" + (i===current ? " active" : "");
+    b.textContent = name;
+    b.onclick = () => {
+      current = i;
+      makeTabs();
+      loadCurrent();
+    };
+    box.appendChild(b);
+  });
+}
+
+function loadGviz(sheetName, rangeOverride = null, useHeaders = true){
+  return new Promise((resolve,reject)=>{
+    const cb = "gvizCallback_" + Date.now() + "_" + (++callbackCounter);
+    const script = document.createElement("script");
+    let finished = false;
+
+    function cleanup(){
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      try { delete window[cb]; } catch(e) {}
+      script.remove();
+    }
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("Request timeout"));
+    }, 20000);
+
+    window[cb] = function(data){
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = function(){
+      cleanup();
+      reject(new Error("Google Sheet request failed"));
+    };
+
+    const query = sheetName === "Dashboard Settings"
+      ? "select A,B where A is not null"
+      : "select *";
+
+    let url =
+      "https://docs.google.com/spreadsheets/d/" +
+      encodeURIComponent(SHEET_ID) +
+      "/gviz/tq?tqx=" +
+      encodeURIComponent("out:json;responseHandler:" + cb) +
+      "&sheet=" + encodeURIComponent(sheetName) +
+      "&headers=" + (useHeaders ? "1" : "0");
+
+    if (rangeOverride) {
+      url += "&range=" + encodeURIComponent(rangeOverride);
+    } else {
+      url += "&tq=" + encodeURIComponent(query);
+    }
+
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+
+function colLetter(n){
+  let s = "";
+  while(n > 0){
+    const r = (n - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+function cellValue(cell){
+  if (!cell) return "";
+  if (cell.f !== null && cell.f !== undefined) return String(cell.f);
+  if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+  return "";
+}
+
+async function repairMissingCells(data, sheetName){
+  if (!data || !data.table || !data.table.rows) return data;
+
+  const cols = data.table.cols || [];
+  const rows = data.table.rows || [];
+  const missingRows = [];
+
+  // Google Visualization infers a column type. If a column contains both
+  // numbers and text (e.g. Rate List Amount = 70 and 200/300/350/400),
+  // incompatible text values can come back as null. Re-read only affected
+  // rows as raw single-row ranges so every visible sheet value is preserved.
+  rows.forEach((row, ri) => {
+    const needsRepair = cols.some((_, ci) => {
+      const c = row && row.c ? row.c[ci] : null;
+      return !c || (c.v === null || c.v === undefined) &&
+             (c.f === null || c.f === undefined);
+    });
+    if (needsRepair) missingRows.push({ri, sheetRow: ri + 2});
+  });
+
+  if (!missingRows.length) return data;
+
+  // Avoid unnecessary requests on completely empty sheets. For affected
+  // rows, one request per row preserves mixed-type values without changing
+  // the existing Google Sheet / Apps Script sync flow.
+  const lastCol = Math.max(cols.length, 1);
+  const lastColLetter = colLetter(lastCol);
+
+  for (const item of missingRows){
+    try{
+      const rowData = await loadGviz(
+        sheetName,
+        "A" + item.sheetRow + ":" + lastColLetter + item.sheetRow,
+        false
+      );
+
+      const sourceRow =
+        rowData && rowData.table && rowData.table.rows &&
+        rowData.table.rows[0];
+
+      if (!sourceRow) continue;
+
+      if (!data.table.rows[item.ri].c) {
+        data.table.rows[item.ri].c = [];
+      }
+
+      for (let ci = 0; ci < lastCol; ci++){
+        const sourceCell = sourceRow.c ? sourceRow.c[ci] : null;
+        if (sourceCell){
+          data.table.rows[item.ri].c[ci] = {
+            v: sourceCell.v,
+            f: sourceCell.f
+          };
+        }
+      }
+    }catch(e){
+      // Keep the successful primary sync intact if a repair request fails.
+    }
+  }
+
+  return data;
+}
+
+async function loadCurrent(){
+  const sheetName = SHEETS[current];
+  document.getElementById("sheetTitle").textContent = sheetName;
+  document.getElementById("rowCount").textContent = "";
+  document.getElementById("status").textContent = "Syncing...";
+  document.getElementById("tableArea").innerHTML = '<div class="loading">Loading data...</div>';
+  document.getElementById("refreshBtn").disabled = true;
+
+  try {
+    let data = await loadGviz(sheetName);
+    data = await repairMissingCells(data, sheetName);
+    renderGviz(data, sheetName);
+    document.getElementById("status").textContent = "View & Edit";
+  } catch(e) {
+    document.getElementById("status").textContent = "Sync Failed";
+    document.getElementById("tableArea").innerHTML =
+      '<div class="empty error">Unable to load this sheet.<br><small>' + esc(e.message) + '</small></div>';
+  } finally {
+    document.getElementById("refreshBtn").disabled = false;
+  }
+}
+
+function renderGviz(data, sheetName){
+  if (!data || !data.table) throw new Error("No data returned from Google Sheet.");
+
+  const table = data.table;
+  const cols = table.cols || [];
+  const rows = table.rows || [];
+
+  let headers = cols.map((c,i) =>
+    (c && c.label) ? String(c.label) : ("Column " + (i+1))
+  );
+
+  if (sheetName === "Dashboard Settings") headers = ["Setting", "Value"];
+
+  const cleanRows = rows.map((r, ri) => {
+    const out = [];
+    for (let i = 0; i < headers.length; i++) {
+      const cell = r && r.c ? r.c[i] : null;
+      let value = "";
+      if (cell) {
+        if (cell.f !== null && cell.f !== undefined) value = cell.f;
+        else if (cell.v !== null && cell.v !== undefined) value = cell.v;
+      }
+      out.push(value === null || value === undefined ? "" : String(value));
+    }
+    return {values:out, sheetRow:ri + 2};
+  }).filter(item => item.values.some(v => v.trim() !== ""));
+
+  document.getElementById("rowCount").textContent =
+    cleanRows.length + " record" + (cleanRows.length === 1 ? "" : "s");
+
+  const area = document.getElementById("tableArea");
+  area.innerHTML = "";
+
+  if (!headers.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No columns found.";
+    area.appendChild(empty);
+    return;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "tablewrap";
+
+  const tbl = document.createElement("table");
+  if (sheetName === "Dashboard Settings") tbl.className = "settings-table";
+
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+
+  headers.forEach((header, index) => {
+    const th = document.createElement("th");
+    th.textContent = header;
+    th.title = header;
+    th.dataset.col = index;
+    hr.appendChild(th);
+  });
+
+  const actionTh = document.createElement("th");
+  actionTh.textContent = "Action";
+  actionTh.className = "action-cell";
+  hr.appendChild(actionTh);
+  thead.appendChild(hr);
+
+  const tbody = document.createElement("tbody");
+
+  if (!cleanRows.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = headers.length + 1;
+    td.className = "empty";
+    td.textContent = "No records found.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  } else {
+    cleanRows.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.dataset.sheetRow = item.sheetRow;
+      tr.dataset.sheetName = sheetName;
+
+      item.values.forEach((value, index) => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        td.title = value;
+        td.dataset.col = index;
+        tr.appendChild(td);
+      });
+
+      const actionTd = document.createElement("td");
+      actionTd.className = "action-cell";
+
+      const edit = document.createElement("button");
+      edit.className = "edit-btn";
+      edit.textContent = "✎ Edit";
+      edit.onclick = () => startEdit(tr, headers, sheetName);
+
+      actionTd.appendChild(edit);
+      tr.appendChild(actionTd);
+      tbody.appendChild(tr);
+    });
+  }
+
+  tbl.appendChild(thead);
+  tbl.appendChild(tbody);
+  wrap.appendChild(tbl);
+  area.appendChild(wrap);
+}
+
+function startEdit(tr, headers, sheetName){
+  if (tr.dataset.editing === "1") return;
+  tr.dataset.editing = "1";
+
+  const original = [];
+  const cells = [...tr.querySelectorAll("td[data-col]")];
+
+  cells.forEach((td, i) => {
+    original.push(td.textContent);
+    const input = document.createElement("input");
+    input.className = "edit-input";
+    input.type = "text";
+    input.value = td.textContent;
+    input.dataset.col = i;
+    td.textContent = "";
+    td.appendChild(input);
+  });
+
+  const action = tr.querySelector(".action-cell");
+  action.innerHTML = "";
+
+  const save = document.createElement("button");
+  save.className = "save-btn";
+  save.textContent = "✓ Save";
+
+  const cancel = document.createElement("button");
+  cancel.className = "cancel-btn";
+  cancel.textContent = "Cancel";
+  cancel.style.marginLeft = "5px";
+
+  save.onclick = () => saveEdit(tr, headers, sheetName);
+  cancel.onclick = () => cancelEdit(tr, original);
+
+  action.appendChild(save);
+  action.appendChild(cancel);
+}
+
+function cancelEdit(tr, original){
+  const cells = [...tr.querySelectorAll("td[data-col]")];
+  cells.forEach((td, i) => {
+    td.textContent = original[i] ?? "";
+  });
+
+  const action = tr.querySelector(".action-cell");
+  action.innerHTML = "";
+  const edit = document.createElement("button");
+  edit.className = "edit-btn";
+  edit.textContent = "✎ Edit";
+  edit.onclick = () => startEdit(tr, [...tr.closest("table").querySelectorAll("thead th[data-col]")].map(x=>x.textContent), tr.dataset.sheetName);
+  action.appendChild(edit);
+  tr.dataset.editing = "0";
+}
+
+function jsonp(url){
+  return new Promise((resolve,reject)=>{
+    const cb = "editCallback_" + Date.now() + "_" + (++callbackCounter);
+    const script = document.createElement("script");
+    let done = false;
+
+    function cleanup(){
+      if(done) return;
+      done = true;
+      clearTimeout(timer);
+      try { delete window[cb]; } catch(e) {}
+      script.remove();
+    }
+
+    const timer = setTimeout(()=>{
+      cleanup();
+      reject(new Error("Edit request timed out."));
+    }, 20000);
+
+    window[cb] = function(data){
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = function(){
+      cleanup();
+      reject(new Error("Unable to connect to Apps Script."));
+    };
+
+    script.src = url + "&callback=" + encodeURIComponent(cb);
+    document.head.appendChild(script);
+  });
+}
+
+async function saveEdit(tr, headers, sheetName){
+  const inputs = [...tr.querySelectorAll("input.edit-input")];
+  const values = inputs.map(x => x.value);
+
+  const action = tr.querySelector(".action-cell");
+  action.textContent = "Saving...";
+
+  try{
+    const payload = {
+      sheet: sheetName,
+      row: Number(tr.dataset.sheetRow),
+      values: values
+    };
+
+    const url = EDIT_API +
+      "?action=editSheetRow" +
+      "&sheet=" + encodeURIComponent(payload.sheet) +
+      "&row=" + encodeURIComponent(payload.row) +
+      "&values=" + encodeURIComponent(JSON.stringify(payload.values));
+
+    const result = await jsonp(url);
+
+    if (!result || result.ok === false || result.success === false){
+      throw new Error(result?.message || "Save failed");
+    }
+
+    document.getElementById("status").textContent = "Saved";
+    await loadCurrent();
+  }catch(e){
+    action.innerHTML = "";
+    const retry = document.createElement("button");
+    retry.className = "save-btn";
+    retry.textContent = "✓ Save";
+    retry.onclick = () => saveEdit(tr, headers, sheetName);
+    action.appendChild(retry);
+
+    const cancel = document.createElement("button");
+    cancel.className = "cancel-btn";
+    cancel.textContent = "Cancel";
+    cancel.style.marginLeft = "5px";
+    cancel.onclick = () => loadCurrent();
+    action.appendChild(cancel);
+
+    document.getElementById("status").textContent = "Save Failed";
+    alert(e.message);
+  }
+}
+
+
+makeTabs();
+loadCurrent();
+</script>
+</body>
+</html>
