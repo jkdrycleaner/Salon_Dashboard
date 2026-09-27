@@ -51,7 +51,7 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit</div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V4</span></div>
   </div>
   <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
 </div>
@@ -73,6 +73,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
+const APP_VERSION = "EDIT-2026.09.27-V4";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -409,54 +410,58 @@ function cancelEdit(tr, original){
 }
 
 
-function jsonp(url, timeout=15000){
-  return new Promise((resolve, reject)=>{
-    const cb =
-      'salonEditCb_' + Date.now() + '_' +
-      Math.random().toString(36).slice(2);
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    const script = document.createElement('script');
-    let done = false;
+/*
+  EDIT TRANSPORT V4
+  Do not depend on JSONP/script loading. A no-cors GET is sent to Apps Script.
+  The actual result is verified by reading the edited Google Sheet row again.
+*/
+async function sendEditRequest(url){
+  await fetch(url + "&_=" + Date.now(), {
+    method: "GET",
+    mode: "no-cors",
+    cache: "no-store",
+    credentials: "omit"
+  });
+}
 
-    const cleanup = ()=>{
-      try{ delete window[cb]; }catch(e){}
-      if(script.parentNode) script.parentNode.removeChild(script);
-      clearTimeout(timer);
-    };
-
-    const fail = (err)=>{
-      if(done) return;
-      done = true;
-      cleanup();
-      reject(err instanceof Error ? err : new Error(String(err)));
-    };
-
-    const timer = setTimeout(()=>{
-      fail(new Error('Apps Script request timed out. Please check the Web App deployment.'));
-    }, timeout);
-
-    window[cb] = (data)=>{
-      if(done) return;
-      done = true;
-      cleanup();
-      resolve(data);
-    };
-
-    script.onerror = ()=>{
-      fail(new Error('Unable to connect to Apps Script.'));
-    };
+async function verifyEditedRow(sheetName, rowNumber, expectedValues){
+  // Apps Script normally writes immediately; give Sheets a moment to publish it.
+  for(let attempt = 0; attempt < 5; attempt++){
+    await sleep(attempt === 0 ? 1200 : 800);
 
     try{
-      const u = new URL(url);
-      u.searchParams.set('callback', cb);
-      u.searchParams.set('_', Date.now().toString());
-      script.src = u.toString();
-      script.async = true;
-      document.head.appendChild(script);
+      const data = await loadGviz(
+        sheetName,
+        "A" + rowNumber + ":" + colLetter(expectedValues.length) + rowNumber,
+        false
+      );
+
+      const row = data && data.table && data.table.rows
+        ? data.table.rows[0]
+        : null;
+
+      if(!row) continue;
+
+      const actual = expectedValues.map((_, i) => {
+        const c = row.c ? row.c[i] : null;
+        return c ? cellValue(c) : "";
+      });
+
+      const same = expectedValues.every((v, i) =>
+        String(actual[i] ?? "") === String(v ?? "")
+      );
+
+      if(same) return true;
     }catch(e){
-      fail(e);
+      // Keep retrying; the sheet may still be publishing the update.
     }
-  });
+  }
+
+  return false;
 }
 
 async function saveEdit(tr, headers, sheetName){
@@ -467,28 +472,40 @@ async function saveEdit(tr, headers, sheetName){
   action.textContent = "Saving...";
 
   try{
-    const payload = {
-      sheet: sheetName,
-      row: Number(tr.dataset.sheetRow),
-      values: values
-    };
+    const rowNumber = Number(tr.dataset.sheetRow);
 
-    const url = EDIT_API +
-      "?action=editSheetRow" +
-      "&sheet=" + encodeURIComponent(payload.sheet) +
-      "&row=" + encodeURIComponent(payload.row) +
-      "&values=" + encodeURIComponent(JSON.stringify(payload.values));
-
-    const result = await jsonp(url);
-
-    if (!result || result.ok === false || result.success === false){
-      throw new Error(result?.message || "Save failed");
+    if(!Number.isInteger(rowNumber) || rowNumber < 2){
+      throw new Error("Invalid sheet row.");
     }
 
-    document.getElementById("status").textContent = "Saved";
+    const url =
+      EDIT_API +
+      "?action=editSheetRow" +
+      "&sheet=" + encodeURIComponent(sheetName) +
+      "&row=" + encodeURIComponent(rowNumber) +
+      "&values=" + encodeURIComponent(JSON.stringify(values));
+
+    // Send the write request without requiring CORS/JSONP access.
+    await sendEditRequest(url);
+
+    // Verify by reading the actual Google Sheet row.
+    const verified = await verifyEditedRow(sheetName, rowNumber, values);
+
+    if(!verified){
+      throw new Error(
+        "Save could not be verified. The Apps Script request was sent, " +
+        "but the Google Sheet did not show the new values."
+      );
+    }
+
+    document.getElementById("status").textContent =
+      APP_VERSION + " • Saved";
+
     await loadCurrent();
+
   }catch(e){
     action.innerHTML = "";
+
     const retry = document.createElement("button");
     retry.className = "save-btn";
     retry.textContent = "✓ Save";
@@ -502,7 +519,9 @@ async function saveEdit(tr, headers, sheetName){
     cancel.onclick = () => loadCurrent();
     action.appendChild(cancel);
 
-    document.getElementById("status").textContent = "Save Failed";
+    document.getElementById("status").textContent =
+      APP_VERSION + " • Save Failed";
+
     alert(e.message);
   }
 }
