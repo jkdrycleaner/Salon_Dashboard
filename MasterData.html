@@ -51,7 +51,7 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V10</span></div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V11</span></div>
   </div>
   <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
 </div>
@@ -74,7 +74,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "EDIT-2026.09.27-V10";
+const APP_VERSION = "EDIT-2026.09.27-V11";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -495,81 +495,102 @@ function jsonp(url, timeout=15000){
 */
 function sendEditRequest(sheetName, rowNumber, values){
   return new Promise((resolve,reject)=>{
-    const requestId = "req_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-    const frameName = "salonEditV10Frame_" + Date.now();
-    const iframe = document.createElement("iframe");
-    iframe.name = frameName;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = EDIT_API;
-    form.target = frameName;
-    form.style.display = "none";
-
-    const fields = {
-      action: "editSheetRow",
-      sheet: sheetName,
-      row: String(rowNumber),
-      values: JSON.stringify(values),
-      debugRequestId: requestId
-    };
-
-    debugLog("STEP 4 - Preparing POST", "sheet="+sheetName+" row="+rowNumber+" columns="+values.length);
-    debugLog("STEP 5 - POST values", JSON.stringify(values));
-
-    Object.keys(fields).forEach(key=>{
-      const input=document.createElement("input");
-      input.type="hidden";
-      input.name=key;
-      input.value=fields[key];
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
+    const cb =
+      "salonEditV11Cb_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2);
 
     let done=false;
+    let timer=null;
+    const script=document.createElement("script");
+
     const cleanup=()=>{
-      clearTimeout(timer);
-      try{form.remove()}catch(e){}
-      try{iframe.remove()}catch(e){}
-      if(window.__salonEditPending && window.__salonEditPending.requestId===requestId){
-        window.__salonEditPending=null;
-      }
+      try{delete window[cb]}catch(e){}
+      try{script.remove()}catch(e){}
+      if(timer)clearTimeout(timer);
     };
+
     const finish=(result)=>{
       if(done)return;
       done=true;
       cleanup();
+
       if(result && result.ok && result.success){
-        debugLog("STEP 9 - Server says UPDATE SUCCESS");
+        debugLog("STEP 9 - Apps Script returned UPDATE SUCCESS",
+          JSON.stringify(result));
         resolve(result);
       }else{
-        const msg=(result&&result.message)||"Apps Script update failed.";
-        debugLog("STEP 9 - Server says UPDATE FAILED", msg);
+        const msg=(result&&result.message) ||
+          "Apps Script update failed.";
+        debugLog("STEP 9 - Apps Script returned UPDATE FAILED", msg);
         reject(new Error(msg));
       }
     };
-    window.__salonEditPending={requestId,finish};
 
-    iframe.addEventListener("load",()=>debugLog("STEP 7 - Apps Script iframe loaded; waiting for server response"));
-    iframe.addEventListener("error",()=>{
-      debugLog("STEP 7 ERROR - iframe error");
-      finish({ok:false,success:false,message:"Apps Script iframe request failed."});
-    });
+    window[cb]=(result)=>{
+      debugLog("STEP 8 - JSONP callback received",
+        JSON.stringify(result));
+      finish(result);
+    };
 
-    const timer=setTimeout(()=>{
-      debugLog("STEP 8 TIMEOUT - No server response received", "Check Apps Script deployment/execution log");
-      finish({ok:false,success:false,message:"Apps Script did not return the update result within 25 seconds."});
+    script.onerror=()=>{
+      debugLog("STEP 8 ERROR - Apps Script JSONP could not be loaded");
+      finish({
+        ok:false,
+        success:false,
+        message:
+          "Apps Script request could not be loaded. " +
+          "The request did not reach the callback."
+      });
+    };
+
+    timer=setTimeout(()=>{
+      debugLog(
+        "STEP 8 TIMEOUT",
+        "No JSONP response received within 25 seconds."
+      );
+      finish({
+        ok:false,
+        success:false,
+        message:
+          "Apps Script did not return a response within 25 seconds."
+      });
     },25000);
 
     try{
-      debugLog("STEP 6 - Submitting POST to Apps Script");
-      form.submit();
+      const u=new URL(EDIT_API);
+      u.searchParams.set("action","editSheetRow");
+      u.searchParams.set("sheet",sheetName);
+      u.searchParams.set("row",String(rowNumber));
+      u.searchParams.set("values",JSON.stringify(values));
+      u.searchParams.set("callback",cb);
+      u.searchParams.set("_",String(Date.now()));
+
+      debugLog(
+        "STEP 4 - Preparing JSONP GET",
+        "sheet="+sheetName+" row="+rowNumber+
+        " columns="+values.length
+      );
+      debugLog(
+        "STEP 5 - Request values",
+        JSON.stringify(values)
+      );
+      debugLog("STEP 6 - Loading Apps Script JSONP URL");
+
+      script.src=u.toString();
+      script.async=true;
+      document.head.appendChild(script);
+
+      debugLog("STEP 7 - Apps Script JSONP script appended");
     }catch(e){
-      debugLog("STEP 6 ERROR - form.submit failed", e.message||String(e));
-      finish({ok:false,success:false,message:e.message||String(e)});
+      debugLog(
+        "STEP 6 ERROR - Could not build Apps Script URL",
+        e.message||String(e)
+      );
+      finish({
+        ok:false,
+        success:false,
+        message:e.message||String(e)
+      });
     }
   });
 }
