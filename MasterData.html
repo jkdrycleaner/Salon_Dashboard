@@ -51,10 +51,9 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V12</span></div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.28-V13</span></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
-<button class="refresh" id="testApiBtn" onclick="testAppsScript()">⚙ Test Apps Script</button>
 <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
 </div>
 </div>
@@ -70,14 +69,13 @@ tr:hover td{background:#faf8ef}
       <div class="status" id="status"></div>
     </div>
     <div id="tableArea" class="loading">Loading data...</div>
-    <div id="debugPanel" style="display:none;margin:0 18px 18px;border:1px solid #ddd;border-radius:10px;background:#111;color:#ddd;padding:12px;font:12px/1.45 Consolas,monospace;max-height:220px;overflow:auto;white-space:pre-wrap;"></div>
-  </div>
+    </div>
 </div>
 
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "EDIT-2026.09.27-V12";
+const APP_VERSION = "EDIT-2026.09.28-V13";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -416,311 +414,183 @@ function cancelEdit(tr, original){
 
 
 
-function debugLog(step, detail){
-  const msg='['+new Date().toLocaleTimeString()+'] '+step+(detail!==undefined?' :: '+detail:'');
-  console.log('[YOURS SALON V12] '+msg);
-  const box=document.getElementById('debugPanel');
-  if(box){box.style.display='block'; box.textContent += msg+'\n'; box.scrollTop=box.scrollHeight;}
-}
-function clearDebug(){
-  const box=document.getElementById('debugPanel');
-  if(box){box.textContent='';box.style.display='block';}
-}
-window.addEventListener('message', function(ev){
-  if(!ev.data || ev.data.type!=='YOURS_SALON_EDIT_RESULT') return;
-  debugLog('STEP 8 - Server response received', JSON.stringify(ev.data.result));
-  const pending=window.__salonEditPending;
-  if(pending && ev.data.requestId===pending.requestId){
-    pending.finish(ev.data.result);
-  }
-});
+
+/*
+  V13 SAVE TRANSPORT
+  -------------------
+  JSONP is intentionally NOT used for Apps Script writes.
+  A hidden HTML form POST is submitted to the Web App, so the browser
+  does not need CORS or script-redirect handling for the write.
+  After POST, the same Google Visualization read method already used
+  by this page verifies the exact sheet row.
+*/
 
 function sleep(ms){
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/* V10 JSONP helper for Apps Script reads. */
-function jsonp(url, timeout=15000){
-  return new Promise((resolve,reject)=>{
-    const cb =
-      "salonEditV10Cb_" + Date.now() + "_" +
+function postEditViaForm(sheetName, rowNumber, values){
+  return new Promise((resolve, reject)=>{
+    const iframeName =
+      "salonEditFrame_" + Date.now() + "_" +
       Math.random().toString(36).slice(2);
 
-    const script = document.createElement("script");
-    let finished = false;
+    const iframe = document.createElement("iframe");
+    iframe.name = iframeName;
+    iframe.style.display = "none";
+    iframe.setAttribute("aria-hidden","true");
 
-    const cleanup = ()=>{
-      try{ delete window[cb]; }catch(e){}
-      if(script.parentNode) script.parentNode.removeChild(script);
-      clearTimeout(timer);
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = EDIT_API;
+    form.target = iframeName;
+    form.style.display = "none";
+
+    const fields = {
+      action: "editSheetRow",
+      sheet: sheetName,
+      row: String(rowNumber),
+      values: JSON.stringify(values)
     };
 
-    const fail = (e)=>{
-      if(finished) return;
-      finished = true;
-      cleanup();
-      reject(e instanceof Error ? e : new Error(String(e)));
-    };
-
-    const timer = setTimeout(()=>{
-      fail(new Error("Apps Script request timed out."));
-    }, timeout);
-
-    window[cb] = data=>{
-      if(finished) return;
-      finished = true;
-      cleanup();
-      resolve(data);
-    };
-
-    script.onerror = ()=>{
-      fail(new Error("Apps Script request could not be loaded."));
-    };
-
-    try{
-      const u = new URL(url);
-      u.searchParams.set("callback", cb);
-      u.searchParams.set("_", String(Date.now()));
-      script.src = u.toString();
-      script.async = true;
-      document.head.appendChild(script);
-    }catch(e){
-      fail(e);
-    }
-  });
-}
-
-/*
-  V8 SAVE:
-  Use a cross-origin HTML form POST to Apps Script.
-  This does not depend on JSONP/script loading and is compatible with
-  the existing doPost(action=editSheetRow) route.
-*/
-
-async function testAppsScript(){
-  clearDebug();
-  debugLog("TEST 1 - Diagnostic test started");
-
-  const sheetName=SHEETS[current];
-  const testRow=2;
-
-  try{
-    debugLog(
-      "TEST 2 - Calling Apps Script debug endpoint",
-      "sheet="+sheetName+" row="+testRow
-    );
-
-    const u=new URL(EDIT_API);
-    const cb =
-      "salonDebugV12Cb_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2);
-
-    const result=await new Promise((resolve,reject)=>{
-      let done=false;
-      const s=document.createElement("script");
-
-      const cleanup=()=>{
-        try{delete window[cb]}catch(e){}
-        try{s.remove()}catch(e){}
-        clearTimeout(timer);
-      };
-
-      const fail=(e)=>{
-        if(done)return;
-        done=true;
-        cleanup();
-        reject(e instanceof Error?e:new Error(String(e)));
-      };
-
-      const timer=setTimeout(
-        ()=>fail(new Error(
-          "Diagnostic timeout: Apps Script did not return JSONP."
-        )),
-        15000
-      );
-
-      window[cb]=(data)=>{
-        if(done)return;
-        done=true;
-        cleanup();
-        resolve(data);
-      };
-
-      s.onerror=()=>{
-        fail(new Error(
-          "Diagnostic script.onerror: Apps Script JSONP could not be loaded."
-        ));
-      };
-
-      u.searchParams.set("action","debugEdit");
-      u.searchParams.set("sheet",sheetName);
-      u.searchParams.set("row",String(testRow));
-      u.searchParams.set("callback",cb);
-      u.searchParams.set("_",String(Date.now()));
-
-      debugLog("TEST 3 - Script URL prepared");
-      debugLog("TEST 4 - Appending diagnostic script");
-
-      s.src=u.toString();
-      s.async=true;
-      document.head.appendChild(s);
+    Object.keys(fields).forEach(key=>{
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
     });
 
-    debugLog("TEST 5 - Diagnostic response received",JSON.stringify(result));
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
 
-    if(result && result.ok){
-      debugLog(
-        "TEST 6 - SUCCESS",
-        "Apps Script JSONP transport is working."
-      );
-      alert(
-        "Apps Script connection is working.\n\n" +
-        "Now click Edit → Save to test the actual sheet update."
-      );
-    }else{
-      throw new Error(
-        result&&result.message ?
-        result.message :
-        "Diagnostic endpoint returned an invalid response."
-      );
-    }
+    let settled = false;
 
-  }catch(e){
-    debugLog("TEST FINAL ERROR",e.message||String(e));
-    alert("Diagnostic failed:\n\n"+(e.message||String(e)));
-  }
-}
-
-function sendEditRequest(sheetName, rowNumber, values){
-  return new Promise((resolve,reject)=>{
-    const cb =
-      "salonEditV11Cb_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2);
-
-    let done=false;
-    let timer=null;
-    const script=document.createElement("script");
-
-    const cleanup=()=>{
-      try{delete window[cb]}catch(e){}
-      try{script.remove()}catch(e){}
-      if(timer)clearTimeout(timer);
+    const cleanup = ()=>{
+      try{ form.remove(); }catch(e){}
+      try{ iframe.remove(); }catch(e){}
     };
 
-    const finish=(result)=>{
-      if(done)return;
-      done=true;
+    const failTimer = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
       cleanup();
+      reject(new Error(
+        "Apps Script save request timed out. Please check the sheet and try again."
+      ));
+    }, 15000);
 
-      if(result && result.ok && result.success){
-        debugLog("STEP 9 - Apps Script returned UPDATE SUCCESS",
-          JSON.stringify(result));
-        resolve(result);
-      }else{
-        const msg=(result&&result.message) ||
-          "Apps Script update failed.";
-        debugLog("STEP 9 - Apps Script returned UPDATE FAILED", msg);
-        reject(new Error(msg));
-      }
+    iframe.onload = ()=>{
+      /*
+        The iframe load event only tells us the POST navigation completed.
+        The actual success is confirmed separately by verifyEditedRow().
+      */
+      if(settled) return;
+      settled = true;
+      clearTimeout(failTimer);
+      setTimeout(cleanup, 1000);
+      resolve({ok:true, submitted:true});
     };
-
-    window[cb]=(result)=>{
-      debugLog("STEP 8 - JSONP callback received",
-        JSON.stringify(result));
-      finish(result);
-    };
-
-    script.onerror=()=>{
-      debugLog("STEP 8 ERROR - Apps Script JSONP could not be loaded");
-      finish({
-        ok:false,
-        success:false,
-        message:
-          "Apps Script request could not be loaded. " +
-          "The request did not reach the callback."
-      });
-    };
-
-    timer=setTimeout(()=>{
-      debugLog(
-        "STEP 8 TIMEOUT",
-        "No JSONP response received within 25 seconds."
-      );
-      finish({
-        ok:false,
-        success:false,
-        message:
-          "Apps Script did not return a response within 25 seconds."
-      });
-    },25000);
 
     try{
-      const u=new URL(EDIT_API);
-      u.searchParams.set("action","editSheetRow");
-      u.searchParams.set("sheet",sheetName);
-      u.searchParams.set("row",String(rowNumber));
-      u.searchParams.set("values",JSON.stringify(values));
-      u.searchParams.set("callback",cb);
-      u.searchParams.set("_",String(Date.now()));
-
-      debugLog(
-        "STEP 4 - Preparing JSONP GET",
-        "sheet="+sheetName+" row="+rowNumber+
-        " columns="+values.length
-      );
-      debugLog(
-        "STEP 5 - Request values",
-        JSON.stringify(values)
-      );
-      debugLog("STEP 6 - Loading Apps Script JSONP URL");
-
-      script.src=u.toString();
-      script.async=true;
-      document.head.appendChild(script);
-
-      debugLog("STEP 7 - Apps Script JSONP script appended");
+      form.submit();
     }catch(e){
-      debugLog(
-        "STEP 6 ERROR - Could not build Apps Script URL",
-        e.message||String(e)
-      );
-      finish({
-        ok:false,
-        success:false,
-        message:e.message||String(e)
-      });
+      if(settled) return;
+      settled = true;
+      clearTimeout(failTimer);
+      cleanup();
+      reject(e);
     }
   });
+}
+
+async function verifyEditedRow(sheetName, rowNumber, expectedValues){
+  const lastColLetter = colLetter(expectedValues.length);
+
+  for(let attempt=1; attempt<=4; attempt++){
+    try{
+      const data = await loadGviz(
+        sheetName,
+        "A" + rowNumber + ":" + lastColLetter + rowNumber,
+        false
+      );
+
+      const row =
+        data && data.table && data.table.rows &&
+        data.table.rows[0];
+
+      if(row){
+        const actual = [];
+        for(let i=0; i<expectedValues.length; i++){
+          const cell = row.c ? row.c[i] : null;
+          let value = "";
+          if(cell){
+            if(cell.f !== null && cell.f !== undefined) value = cell.f;
+            else if(cell.v !== null && cell.v !== undefined) value = cell.v;
+          }
+          actual.push(value === null || value === undefined ? "" : String(value));
+        }
+
+        const same =
+          actual.length === expectedValues.length &&
+          actual.every((v,i)=>String(v) === String(expectedValues[i]));
+
+        if(same){
+          return {
+            ok:true,
+            success:true,
+            message:"Row updated and verified successfully.",
+            sheet:sheetName,
+            row:rowNumber
+          };
+        }
+      }
+    }catch(e){
+      // Retry because the Sheet visualization endpoint may briefly lag.
+    }
+
+    if(attempt<4) await sleep(1200);
+  }
+
+  return {
+    ok:false,
+    success:false,
+    message:"Save request was submitted, but the updated values could not be verified in the Google Sheet."
+  };
 }
 
 async function saveEdit(tr,headers,sheetName){
-  clearDebug();
-  debugLog("STEP 1 - Save clicked", "sheet="+sheetName+" row="+tr.dataset.sheetRow);
   const inputs=[...tr.querySelectorAll("input.edit-input")];
   const values=inputs.map(x=>x.value);
-  debugLog("STEP 2 - Read form values", JSON.stringify(values));
 
   const action=tr.querySelector(".action-cell");
   action.textContent="Saving...";
 
   try{
     const rowNumber=Number(tr.dataset.sheetRow);
-    debugLog("STEP 3 - Validate row", String(rowNumber));
+
     if(!Number.isInteger(rowNumber)||rowNumber<2){
       throw new Error("Invalid sheet row.");
     }
 
-    const result=await sendEditRequest(sheetName,rowNumber,values);
-    debugLog("STEP 10 - Browser received confirmed success", JSON.stringify(result));
+    if(values.length !== headers.length){
+      throw new Error("Column count mismatch. Please refresh and try again.");
+    }
+
+    await postEditViaForm(sheetName,rowNumber,values);
+
+    const result=await verifyEditedRow(sheetName,rowNumber,values);
+
+    if(!result.ok || !result.success){
+      throw new Error(result.message || "Save could not be verified.");
+    }
 
     document.getElementById("status").textContent =
       APP_VERSION + " • Saved";
 
     await loadCurrent();
-    debugLog("STEP 11 - Data reloaded after save");
 
   }catch(e){
-    debugLog("FINAL ERROR", e.message||String(e));
     action.innerHTML="";
 
     const retry=document.createElement("button");
@@ -739,12 +609,11 @@ async function saveEdit(tr,headers,sheetName){
     document.getElementById("status").textContent =
       APP_VERSION + " • Save Failed";
 
-    alert(e.message);
+    alert(e.message || String(e));
   }
 }
 
 
-debugLog("PAGE START", APP_VERSION);
 makeTabs();
 loadCurrent();
 </script>
