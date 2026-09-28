@@ -51,7 +51,7 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.28-V13</span></div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.28-V14</span></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
 <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
@@ -75,7 +75,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "EDIT-2026.09.28-V13";
+const APP_VERSION = "EDIT-2026.09.28-V14";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -135,7 +135,8 @@ function loadGviz(sheetName, rangeOverride = null, useHeaders = true){
       "/gviz/tq?tqx=" +
       encodeURIComponent("out:json;responseHandler:" + cb) +
       "&sheet=" + encodeURIComponent(sheetName) +
-      "&headers=" + (useHeaders ? "1" : "0");
+      "&headers=" + (useHeaders ? "1" : "0") +
+      "&_=" + Date.now() + Math.random().toString(36).slice(2);
 
     if (rangeOverride) {
       url += "&range=" + encodeURIComponent(rangeOverride);
@@ -506,8 +507,11 @@ function postEditViaForm(sheetName, rowNumber, values){
 
 async function verifyEditedRow(sheetName, rowNumber, expectedValues){
   const lastColLetter = colLetter(expectedValues.length);
+  const wanted = expectedValues.map(v => String(v ?? '').trim());
 
-  for(let attempt=1; attempt<=4; attempt++){
+  // Apps Script writes can be visible to Sheets before the Visualization
+  // endpoint refreshes. Retry long enough for that propagation/cache delay.
+  for(let attempt=1; attempt<=10; attempt++){
     try{
       const data = await loadGviz(
         sheetName,
@@ -515,10 +519,7 @@ async function verifyEditedRow(sheetName, rowNumber, expectedValues){
         false
       );
 
-      const row =
-        data && data.table && data.table.rows &&
-        data.table.rows[0];
-
+      const row = data && data.table && data.table.rows && data.table.rows[0];
       if(row){
         const actual = [];
         for(let i=0; i<expectedValues.length; i++){
@@ -528,12 +529,12 @@ async function verifyEditedRow(sheetName, rowNumber, expectedValues){
             if(cell.f !== null && cell.f !== undefined) value = cell.f;
             else if(cell.v !== null && cell.v !== undefined) value = cell.v;
           }
-          actual.push(value === null || value === undefined ? "" : String(value));
+          actual.push(String(value ?? '').trim());
         }
 
         const same =
-          actual.length === expectedValues.length &&
-          actual.every((v,i)=>String(v) === String(expectedValues[i]));
+          actual.length === wanted.length &&
+          actual.every((v,i) => v === wanted[i]);
 
         if(same){
           return {
@@ -546,16 +547,16 @@ async function verifyEditedRow(sheetName, rowNumber, expectedValues){
         }
       }
     }catch(e){
-      // Retry because the Sheet visualization endpoint may briefly lag.
+      // Keep retrying while the Sheets Visualization endpoint catches up.
     }
 
-    if(attempt<4) await sleep(1200);
+    if(attempt < 10) await sleep(1500);
   }
 
   return {
     ok:false,
     success:false,
-    message:"Save request was submitted, but the updated values could not be verified in the Google Sheet."
+    message:"The save request was sent, but Google Sheets did not show the new value yet. Please click Refresh once and check the row."
   };
 }
 
