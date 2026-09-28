@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>YOURS SALON — Employee Salary Portal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%}
+body{background:#12100E;color:#F3EEE3;font-family:Arial,sans-serif;min-height:100dvh;padding:18px}
+.container{max-width:760px;width:100%;margin:0 auto;background:#1B1815;border:1px solid #332C22;border-radius:14px;padding:20px}
+.logo{font-size:24px;font-weight:700;color:#C9A227;border-bottom:1px solid #332C22;padding-bottom:10px;margin-bottom:12px}
+.logo span{color:#E4C55C}
+.login{text-align:center;padding:34px 10px}
+.login h1{font-size:24px;margin-bottom:7px}
+.sub{font-size:12px;color:#9C9284;margin-bottom:20px}
+.btn{width:100%;height:42px;background:#C9A227;color:#1B1508;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+.google-btn{background:#F3EEE3;color:#1B1815;border:1px solid #CFC7B8}
+#portal{display:none}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.empName{font-size:21px;font-weight:800;color:#E4C55C}
+.email{font-size:10px;color:#9C9284;margin-top:3px}
+.logout{width:auto;padding:0 13px;background:#332C22;color:#F3EEE3}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+select{width:100%;height:40px;background:#242019;border:1px solid #332C22;color:#F3EEE3;border-radius:8px;padding:0 10px;outline:none}
+.hero{background:linear-gradient(145deg,#2b2414,#1b1815);border:1px solid rgba(201,162,39,.35);border-radius:14px;padding:18px;margin-bottom:12px}
+.kicker{font-size:10px;color:#9C9284;text-transform:uppercase;letter-spacing:1px}
+.heroAmt{font-size:34px;font-weight:900;color:#fff;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.card{background:#242019;border:1px solid #332C22;border-radius:10px;padding:12px}
+.card span{display:block;font-size:9px;color:#9C9284;text-transform:uppercase}
+.card b{display:block;font-size:15px;margin-top:5px;color:#F3EEE3}
+.panel{background:#1B1815;border:1px solid #332C22;border-radius:12px;padding:14px;margin-top:10px}
+.panel h2{font-size:15px;margin-bottom:3px}
+.panelSub{font-size:10px;color:#9C9284;margin-bottom:10px}
+.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{padding:9px 7px;border-bottom:1px solid #2d2820;text-align:left;white-space:nowrap}
+th{color:#9C9284;font-size:9px;text-transform:uppercase}
+.num{text-align:right}
+.monthRow{cursor:pointer}
+.monthRow:hover{background:#211d18}
+.monthDetail{display:none;background:#151310}
+.monthDetail td{padding:7px}
+.badge{display:inline-block;padding:4px 7px;border-radius:99px;background:rgba(201,162,39,.1);color:#E4C55C;font-size:9px}
+.status{margin-top:10px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}
+.status.show{display:block;background:rgba(201,162,39,.06);border:1px solid #332C22;color:#9C9284}
+.error{background:rgba(181,71,63,.2)!important;border-color:#B5473F!important;color:#E88A82!important}
+@media(max-width:650px){
+ body{padding:0}.container{max-width:none;min-height:100dvh;border:0;border-radius:0;padding:14px 16px}
+ .grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.empName{font-size:18px}.heroAmt{font-size:29px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">YOURS <span>SALON</span></div>
+
+  <section id="login" class="login">
+    <h1>Employee Salary Portal</h1>
+    <div class="sub">Sign in with your Google account to view your salary details.</div>
+    <button class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
+    <div id="loginStatus" class="status"></div>
+  </section>
+
+  <section id="portal">
+    <div class="top">
+      <div>
+        <div class="empName" id="employeeName">Employee</div>
+        <div class="email" id="employeeEmail"></div>
+      </div>
+      <button class="btn logout" id="logoutBtn">Sign Out</button>
+    </div>
+
+    <div class="controls">
+      <select id="monthSelect"><option value="ALL">All Months</option></select>
+      <button class="btn" id="syncBtn">↻ Sync Salary</button>
+    </div>
+
+    <div class="hero">
+      <div class="kicker">Final Salary Payable</div>
+      <div class="heroAmt" id="payable">₹0</div>
+      <div class="sub" id="heroSub">All Months</div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><span>Collection</span><b id="collection">₹0</b></div>
+      <div class="card"><span>50% Earned</span><b id="earned">₹0</b></div>
+      <div class="card"><span>Expenses</span><b id="expenses">₹0</b></div>
+      <div class="card"><span>Salary Paid</span><b id="paid">₹0</b></div>
+    </div>
+
+    <div class="panel">
+      <h2>Salary Calculation</h2>
+      <div class="panelSub">Collection × 50% − Expenses − Salary Paid</div>
+      <div class="scroll">
+        <table>
+          <tbody>
+            <tr><td>Total Collection</td><td class="num" id="calcCollection">₹0</td></tr>
+            <tr><td>Earned Salary (50%)</td><td class="num" id="calcEarned">₹0</td></tr>
+            <tr><td>Expenses</td><td class="num" id="calcExpenses">₹0</td></tr>
+            <tr><td>Salary Already Paid</td><td class="num" id="calcPaid">₹0</td></tr>
+            <tr><th>Final Payable</th><th class="num" id="calcPayable">₹0</th></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>All Months Salary</h2>
+      <div class="panelSub">Click a month to open its daily details.</div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Month</th><th class="num">Collection</th><th class="num">Earned</th><th class="num">Expense</th><th class="num">Paid</th><th class="num">Payable</th></tr></thead>
+          <tbody id="monthBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Salary Payment History</h2>
+      <div class="panelSub">Payments recorded in the Salary sheet.</div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Date</th><th>Type</th><th>Mode</th><th class="num">Amount</th></tr></thead>
+          <tbody id="paymentBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Expense History</h2>
+      <div class="panelSub">Expenses linked to this employee.</div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Date</th><th>Category</th><th>Remark</th><th class="num">Amount</th></tr></thead>
+          <tbody id="expenseBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="syncStatus" class="status"></div>
+  </section>
+</div>
+
+<script>
+const CONFIG={
+  SHEET_ID:'14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo',
+  SYNC_INTERVAL:60000,
+  SHEETS:['Form responses 1','Salary','Expenses']
+};
+
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
+const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
+const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+const STORAGE_CREDENTIAL='salon_google_credential';
+const STORAGE_EMAIL='salon_user_email';
+
+/* Same employee mapping used by Expenses.html */
+const EMAIL_NAME_MAP={
+  'ashukumar12211551@gmail.com':'Ashu Kumar',
+  'aamir839398058@gmail.com':'Amir Khan',
+  's45351520@gmail.com':'Suhail Khan'
+};
+
+let googleCredential=null,userEmail='',userName='',isAuthenticated=false;
+let collections=[],payments=[],expenses=[],months=[];
+
+const $=id=>document.getElementById(id);
+const money=n=>'₹'+Math.round(Number(n)||0).toLocaleString('en-IN');
+const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function storageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function storageSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function storageRemove(k){try{localStorage.removeItem(k)}catch(e){}}
+function status(msg,error=false){
+  const el=$('syncStatus'); el.textContent=msg; el.className='status show'+(error?' error':'');
+}
+function loginStatus(msg,error=false){
+  const el=$('loginStatus'); el.textContent=msg; el.className='status show'+(error?' error':'');
+}
+
+function randomString(length=32){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes=new Uint8Array(length); crypto.getRandomValues(bytes);
+  let out=''; for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length]; return out;
+}
+function redirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/Employee_Salary.html';}
+
+function startGoogleLogin(){
+  const state=randomString();
+  storageSet('salon_salary_oauth_state',state);
+  const params=new URLSearchParams({
+    client_id:GOOGLE_CLIENT_ID,
+    redirect_uri:redirectUri(),
+    response_type:'token',
+    scope:'openid email profile',
+    state,
+    include_granted_scopes:'true',
+    prompt:'select_account'
+  });
+  loginStatus('Opening Google Sign-In...');
+  location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params.toString());
+}
+
+async function handleOAuthReturn(){
+  const hash=location.hash?location.hash.substring(1):'';
+  if(!hash)return false;
+  const p=new URLSearchParams(hash);
+  const error=p.get('error'), token=p.get('access_token'), returnedState=p.get('state');
+  const savedState=storageGet('salon_salary_oauth_state');
+  history.replaceState(null,document.title,location.pathname+location.search);
+  if(error){loginStatus('Google Sign-In was cancelled or denied.',true);return false}
+  if(!token){loginStatus('Google Sign-In did not return an account. Please try again.',true);return false}
+  if(savedState&&returnedState&&savedState!==returnedState){loginStatus('Google verification failed. Please try again.',true);return false}
+
+  try{
+    loginStatus('Verifying Google account...');
+    const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok)throw new Error('Google account verification failed.');
+    const info=await r.json();
+    const email=(info.email||'').toLowerCase().trim();
+    if(!email)throw new Error('Google email could not be read.');
+
+    googleCredential=token; userEmail=email; userName=EMAIL_NAME_MAP[email]||'';
+    if(!userName)throw new Error('This Google account is not mapped to an employee.');
+    isAuthenticated=true;
+    storageSet(STORAGE_CREDENTIAL,googleCredential);
+    storageSet(STORAGE_EMAIL,userEmail);
+    storageRemove('salon_salary_oauth_state');
+    return true;
+  }catch(e){
+    googleCredential=null;userEmail='';userName='';isAuthenticated=false;
+    storageRemove(STORAGE_CREDENTIAL);storageRemove(STORAGE_EMAIL);
+    loginStatus(e.message||'Google account verification failed.',true);
+    return false;
+  }
+}
+
+function checkExistingSession(){
+  const c=storageGet(STORAGE_CREDENTIAL),e=storageGet(STORAGE_EMAIL);
+  if(c&&e){
+    const email=e.toLowerCase().trim(),name=EMAIL_NAME_MAP[email]||'';
+    if(name){googleCredential=c;userEmail=email;userName=name;isAuthenticated=true;return true}
+  }
+  return false;
+}
+
+function showPortal(){
+  $('login').style.display='none'; $('portal').style.display='block';
+  $('employeeName').textContent=userName;
+  $('employeeEmail').textContent=userEmail;
+}
+
+function sheetRead(sheetName){
+  return new Promise((resolve,reject)=>{
+    const cb='__salaryPortal_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    let done=false;
+    const timer=setTimeout(()=>finish(new Error('Google Sheet read timed out.')),15000);
+    function finish(err,data){
+      if(done)return; done=true; clearTimeout(timer);
+      try{delete window[cb]}catch(e){}
+      script.remove();
+      err?reject(err):resolve(data);
+    }
+    window[cb]=response=>{
+      if(!response){finish(new Error('Empty Google Sheet response.'));return}
+      if(response.status==='error'){finish(new Error(response.errors?.[0]?.detailed_message||'Google Sheet query failed.'));return}
+      const cols=response.table?.cols||[],rows=response.table?.rows||[];
+      const headers=cols.map(c=>String(c.label||c.id||'').trim());
+      const values=[headers,...rows.map(r=>(r.c||[]).map(c=>c==null?'':(c.f??c.v??'')))];
+      finish(null,values);
+    };
+    script.onerror=()=>finish(new Error('Google Sheet could not be reached.'));
+    const params=new URLSearchParams({
+      tqx:`responseHandler:${cb}`,sheet:sheetName,range:'A:Z',tq:'select *',_sync:Date.now()
+    });
+    script.src='https://docs.google.com/spreadsheets/d/'+CONFIG.SHEET_ID+'/gviz/tq?'+params.toString();
+    document.head.appendChild(script);
+  });
+}
+
+function idx(headers,tests){
+  return headers.findIndex(h=>tests.some(t=>String(h||'').toLowerCase().includes(t)));
+}
+function parseDate(v){
+  const s=String(v||'').trim();
+  let m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m)return `${m[3]}-${m[2]}-${m[1]}`;
+  m=s.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  const d=new Date(s); return isNaN(d)?'':d.toISOString().slice(0,10);
+}
+function amount(v){const n=Number(String(v??'').replace(/[^0-9.-]/g,''));return isNaN(n)?0:n}
+function monthKey(d){return String(d||'').slice(0,7)}
+function monthLabel(k){
+  if(!k)return '';
+  const [y,m]=k.split('-'); return new Date(Number(y),Number(m)-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
+}
+function parseRows(values,kind){
+  if(!values||values.length<2)return [];
+  const h=values[0];
+  const nameI=idx(h,['employee','name','staff','your name']);
+  const dateI=idx(h,['date','timestamp','time stamp','entry time','date/time']);
+  const amountI=idx(h,['amount','collection','salary']);
+  const modeI=idx(h,['payment','mode']);
+  const typeI=idx(h,['type','expense type','category']);
+  const remarkI=idx(h,['remark','remarks','note']);
+  return values.slice(1).map(r=>({
+    employee:String(r[nameI]??'').trim(),
+    date:parseDate(r[dateI]),
+    amount:amount(r[amountI]),
+    mode:String(r[modeI]??'').trim(),
+    type:String(r[typeI]??'').trim(),
+    remark:String(r[remarkI]??'').trim()
+  })).filter(x=>x.employee&&x.amount>=0);
+}
+
+async function sync(){
+  if(!isAuthenticated)return;
+  status('Syncing your salary data...');
+  try{
+    const [c,s,e]=await Promise.all(CONFIG.SHEETS.map(sheetRead));
+    collections=parseRows(c,'collection').filter(x=>x.employee===userName);
+    payments=parseRows(s,'salary').filter(x=>x.employee===userName);
+    expenses=parseRows(e,'expense').filter(x=>x.employee===userName);
+    render();
+    status('Last synced: '+new Date().toLocaleString('en-IN'));
+  }catch(err){
+    status('Sync failed: '+err.message,true);
+  }
+}
+
+function calc(arr){
+  const collection=arr.c.reduce((a,x)=>a+x.amount,0);
+  const earned=collection*.5;
+  const expense=arr.e.reduce((a,x)=>a+x.amount,0);
+  const paid=arr.p.reduce((a,x)=>a+x.amount,0);
+  return {collection,earned,expense,paid,payable:Math.max(0,earned-expense-paid)};
+}
+function rowsFor(k){
+  const filter=(arr)=>k==='ALL'?arr:arr.filter(x=>monthKey(x.date)===k);
+  return {c:filter(collections),e:filter(expenses),p:filter(payments)};
+}
+
+function render(){
+  months=[...new Set([...collections,...expenses,...payments].map(x=>monthKey(x.date)).filter(Boolean))].sort().reverse();
+  const select=$('monthSelect'),old=select.value||'ALL';
+  select.innerHTML='<option value="ALL">All Months</option>'+months.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
+  select.value=months.includes(old)||old==='ALL'?old:'ALL';
+
+  const k=select.value, a=calc(rowsFor(k));
+  $('collection').textContent=money(a.collection);$('earned').textContent=money(a.earned);
+  $('expenses').textContent=money(a.expense);$('paid').textContent=money(a.paid);$('payable').textContent=money(a.payable);
+  $('heroSub').textContent=k==='ALL'?'All Months':monthLabel(k);
+  $('calcCollection').textContent=money(a.collection);$('calcEarned').textContent=money(a.earned);
+  $('calcExpenses').textContent=money(a.expense);$('calcPaid').textContent=money(a.paid);$('calcPayable').textContent=money(a.payable);
+
+  $('monthBody').innerHTML=months.length?months.map(m=>{
+    const x=calc(rowsFor(m));
+    return `<tr class="monthRow" data-month="${m}">
+      <td><span class="badge">${monthLabel(m)}</span></td>
+      <td class="num">${money(x.collection)}</td><td class="num">${money(x.earned)}</td>
+      <td class="num">${money(x.expense)}</td><td class="num">${money(x.paid)}</td><td class="num">${money(x.payable)}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6">No salary data found.</td></tr>';
+
+  $('paymentBody').innerHTML=payments.length?payments.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
+    `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Salary')}</td><td>${esc(x.mode||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
+  ).join(''):'<tr><td colspan="4">No salary payments found.</td></tr>';
+
+  $('expenseBody').innerHTML=expenses.length?expenses.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
+    `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Expense')}</td><td>${esc(x.remark||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
+  ).join(''):'<tr><td colspan="4">No expenses found.</td></tr>';
+}
+
+$('googleSignInBtn').addEventListener('click',startGoogleLogin);
+$('monthSelect').addEventListener('change',render);
+$('syncBtn').addEventListener('click',sync);
+$('logoutBtn').addEventListener('click',()=>{
+  googleCredential=null;userEmail='';userName='';isAuthenticated=false;
+  storageRemove(STORAGE_CREDENTIAL);storageRemove(STORAGE_EMAIL);
+  $('portal').style.display='none';$('login').style.display='block';
+  loginStatus('Signed out.');
+});
+document.addEventListener('click',e=>{
+  const row=e.target.closest('.monthRow'); if(!row)return;
+  $('monthSelect').value=row.dataset.month; render(); window.scrollTo({top:0,behavior:'smooth'});
+});
+
+(async function init(){
+  const returned=await handleOAuthReturn();
+  if(!returned)checkExistingSession();
+  if(isAuthenticated){showPortal();await sync();}
+})();
+setInterval(()=>{if(isAuthenticated)sync()},CONFIG.SYNC_INTERVAL);
+</script>
+</body>
+</html>
