@@ -183,7 +183,7 @@ function randomString(length=32){
   const bytes=new Uint8Array(length); crypto.getRandomValues(bytes);
   let out=''; for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length]; return out;
 }
-function redirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/Employee_Salary.html';}
+function redirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/EmpDash';}
 
 function startGoogleLogin(){
   const state=randomString();
