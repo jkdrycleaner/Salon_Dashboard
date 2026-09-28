@@ -51,9 +51,12 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V11</span></div>
+    <div class="sub">Google Sheet Data • View & Edit <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: EDIT-2026.09.27-V12</span></div>
   </div>
-  <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
+  <div style="display:flex;gap:8px;align-items:center">
+<button class="refresh" id="testApiBtn" onclick="testAppsScript()">⚙ Test Apps Script</button>
+<button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
+</div>
 </div>
 
 <div class="wrap">
@@ -74,7 +77,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "EDIT-2026.09.27-V11";
+const APP_VERSION = "EDIT-2026.09.27-V12";
 const SHEETS = ["Employee List", "Expense Type", "Rate List", "Expenses", "Salary", "Counter Cash", "Dashboard Settings"];
 let current = 0;
 let callbackCounter = 0;
@@ -415,7 +418,7 @@ function cancelEdit(tr, original){
 
 function debugLog(step, detail){
   const msg='['+new Date().toLocaleTimeString()+'] '+step+(detail!==undefined?' :: '+detail:'');
-  console.log('[YOURS SALON V10] '+msg);
+  console.log('[YOURS SALON V12] '+msg);
   const box=document.getElementById('debugPanel');
   if(box){box.style.display='block'; box.textContent += msg+'\n'; box.scrollTop=box.scrollHeight;}
 }
@@ -493,6 +496,101 @@ function jsonp(url, timeout=15000){
   This does not depend on JSONP/script loading and is compatible with
   the existing doPost(action=editSheetRow) route.
 */
+
+async function testAppsScript(){
+  clearDebug();
+  debugLog("TEST 1 - Diagnostic test started");
+
+  const sheetName=SHEETS[current];
+  const testRow=2;
+
+  try{
+    debugLog(
+      "TEST 2 - Calling Apps Script debug endpoint",
+      "sheet="+sheetName+" row="+testRow
+    );
+
+    const u=new URL(EDIT_API);
+    const cb =
+      "salonDebugV12Cb_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2);
+
+    const result=await new Promise((resolve,reject)=>{
+      let done=false;
+      const s=document.createElement("script");
+
+      const cleanup=()=>{
+        try{delete window[cb]}catch(e){}
+        try{s.remove()}catch(e){}
+        clearTimeout(timer);
+      };
+
+      const fail=(e)=>{
+        if(done)return;
+        done=true;
+        cleanup();
+        reject(e instanceof Error?e:new Error(String(e)));
+      };
+
+      const timer=setTimeout(
+        ()=>fail(new Error(
+          "Diagnostic timeout: Apps Script did not return JSONP."
+        )),
+        15000
+      );
+
+      window[cb]=(data)=>{
+        if(done)return;
+        done=true;
+        cleanup();
+        resolve(data);
+      };
+
+      s.onerror=()=>{
+        fail(new Error(
+          "Diagnostic script.onerror: Apps Script JSONP could not be loaded."
+        ));
+      };
+
+      u.searchParams.set("action","debugEdit");
+      u.searchParams.set("sheet",sheetName);
+      u.searchParams.set("row",String(testRow));
+      u.searchParams.set("callback",cb);
+      u.searchParams.set("_",String(Date.now()));
+
+      debugLog("TEST 3 - Script URL prepared");
+      debugLog("TEST 4 - Appending diagnostic script");
+
+      s.src=u.toString();
+      s.async=true;
+      document.head.appendChild(s);
+    });
+
+    debugLog("TEST 5 - Diagnostic response received",JSON.stringify(result));
+
+    if(result && result.ok){
+      debugLog(
+        "TEST 6 - SUCCESS",
+        "Apps Script JSONP transport is working."
+      );
+      alert(
+        "Apps Script connection is working.\n\n" +
+        "Now click Edit → Save to test the actual sheet update."
+      );
+    }else{
+      throw new Error(
+        result&&result.message ?
+        result.message :
+        "Diagnostic endpoint returned an invalid response."
+      );
+    }
+
+  }catch(e){
+    debugLog("TEST FINAL ERROR",e.message||String(e));
+    alert("Diagnostic failed:\n\n"+(e.message||String(e)));
+  }
+}
+
 function sendEditRequest(sheetName, rowNumber, values){
   return new Promise((resolve,reject)=>{
     const cb =
