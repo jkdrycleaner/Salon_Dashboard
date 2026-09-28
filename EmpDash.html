@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="app-version" content="v1.0.1">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>YOURS SALON — Employee Salary Portal</title>
@@ -51,6 +52,17 @@ th{color:#9C9284;font-size:9px;text-transform:uppercase}
  .grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.empName{font-size:18px}.heroAmt{font-size:29px}
 }
 </style>
+<script>
+(function(){
+  try {
+    const u = new URL(window.location.href);
+    if (u.searchParams.get("v") !== APP_VERSION) {
+      u.searchParams.set("v", APP_VERSION);
+      window.history.replaceState({}, "", u.toString());
+    }
+  } catch(e) {}
+})();
+</script>
 </head>
 <body>
 <div class="container">
@@ -143,10 +155,11 @@ th{color:#9C9284;font-size:9px;text-transform:uppercase}
 </div>
 
 <script>
+const APP_VERSION="v1.0.1";
 const CONFIG={
   SHEET_ID:'14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo',
   SYNC_INTERVAL:60000,
-  SHEETS:['Form responses 1','Salary','Expenses']
+  SHEETS:['Employee List','Form responses 1','Salary','Expenses']
 };
 
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
@@ -155,14 +168,9 @@ const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googl
 const STORAGE_CREDENTIAL='salon_google_credential';
 const STORAGE_EMAIL='salon_user_email';
 
-/* Same employee mapping used by Expenses.html */
-const EMAIL_NAME_MAP={
-  'ashukumar12211551@gmail.com':'Ashu Kumar',
-  'aamir839398058@gmail.com':'Amir Khan',
-  's45351520@gmail.com':'Suhail Khan',
-      'yourssaloon@gmail.com':'Jaan Mohd',
-      'janurob07@gmail.com':'Jaan Mohd'
-};
+/* Employee access is verified from the Employee List sheet. No hardcoded email/name mapping. */
+let employeeRecord=null;
+let employeeUserId='';
 
 let googleCredential=null,userEmail='',userName='',isAuthenticated=false;
 let collections=[],payments=[],expenses=[],months=[];
@@ -222,8 +230,8 @@ async function handleOAuthReturn(){
     const email=(info.email||'').toLowerCase().trim();
     if(!email)throw new Error('Google email could not be read.');
 
-    googleCredential=token; userEmail=email; userName=EMAIL_NAME_MAP[email]||'';
-    if(!userName)throw new Error('This Google account is not mapped to an employee.');
+    googleCredential=token; userEmail=email;
+    await verifyEmployeeFromSheet(email);
     isAuthenticated=true;
     storageSet(STORAGE_CREDENTIAL,googleCredential);
     storageSet(STORAGE_EMAIL,userEmail);
@@ -238,12 +246,32 @@ async function handleOAuthReturn(){
 }
 
 function checkExistingSession(){
-  const c=storageGet(STORAGE_CREDENTIAL),e=storageGet(STORAGE_EMAIL);
-  if(c&&e){
-    const email=e.toLowerCase().trim(),name=EMAIL_NAME_MAP[email]||'';
-    if(name){googleCredential=c;userEmail=email;userName=name;isAuthenticated=true;return true}
-  }
-  return false;
+  return !!(storageGet(STORAGE_CREDENTIAL)&&storageGet(STORAGE_EMAIL));
+}
+
+async function verifyEmployeeFromSheet(email){
+  const values=await sheetRead('Employee List');
+  if(!values||values.length<2) throw new Error('Employee List sheet is empty or unavailable.');
+  const h=values[0].map(v=>String(v??'').trim());
+  const emailI=idx(h,['email address','email']);
+  const nameI=idx(h,['employee name','employee','name']);
+  const statusI=idx(h,['status']);
+  const googleLoginI=idx(h,['google login']);
+  const userIdI=idx(h,['user id','userid','user_id']);
+  if(emailI<0||nameI<0||userIdI<0) throw new Error('Employee List must contain Email address, Employee Name and User ID columns.');
+  const target=String(email||'').toLowerCase().trim();
+  const row=values.slice(1).find(r=>String(r[emailI]??'').toLowerCase().trim()===target);
+  if(!row) throw new Error('This Google account is not registered in the Employee List.');
+  const statusValue=String(row[statusI]??'').trim().toLowerCase();
+  const googleLoginValue=String(row[googleLoginI]??'').trim().toLowerCase();
+  if(statusI>=0 && statusValue && statusValue!=='active') throw new Error('This employee account is not Active.');
+  if(googleLoginI>=0 && googleLoginValue && !['yes','true','1'].includes(googleLoginValue)) throw new Error('Google Login is not enabled for this employee.');
+  userName=String(row[nameI]??'').trim();
+  employeeUserId=String(row[userIdI]??'').trim();
+  employeeRecord={email:target,name:userName,userId:employeeUserId};
+  if(!userName||!employeeUserId) throw new Error('Employee Name or User ID is missing in Employee List.');
+  storageSet(STORAGE_EMAIL,target);
+  return employeeRecord;
 }
 
 function showPortal(){
@@ -302,6 +330,7 @@ function parseRows(values,kind){
   if(!values||values.length<2)return [];
   const h=values[0];
   const nameI=idx(h,['employee','name','staff','your name']);
+  const userIdI=idx(h,['user id','userid','user_id']);
   const dateI=idx(h,['date','timestamp','time stamp','entry time','date/time']);
   const amountI=idx(h,['amount','collection','salary']);
   const modeI=idx(h,['payment','mode']);
@@ -309,6 +338,7 @@ function parseRows(values,kind){
   const remarkI=idx(h,['remark','remarks','note']);
   return values.slice(1).map(r=>({
     employee:String(r[nameI]??'').trim(),
+    userId:String(userIdI>=0 ? (r[userIdI]??'') : '').trim(),
     date:parseDate(r[dateI]),
     amount:amount(r[amountI]),
     mode:String(r[modeI]??'').trim(),
@@ -322,9 +352,10 @@ async function sync(){
   status('Syncing your salary data...');
   try{
     const [c,s,e]=await Promise.all(CONFIG.SHEETS.map(sheetRead));
-    collections=parseRows(c,'collection').filter(x=>x.employee===userName);
-    payments=parseRows(s,'salary').filter(x=>x.employee===userName);
-    expenses=parseRows(e,'expense').filter(x=>x.employee===userName);
+    const matchEmployee=row=>row.userId ? row.userId===employeeUserId : row.employee===userName;
+    collections=parseRows(c,'collection').filter(matchEmployee);
+    payments=parseRows(s,'salary').filter(matchEmployee);
+    expenses=parseRows(e,'expense').filter(matchEmployee);
     render();
     status('Last synced: '+new Date().toLocaleString('en-IN'));
   }catch(err){
@@ -391,10 +422,17 @@ document.addEventListener('click',e=>{
 
 (async function init(){
   const returned=await handleOAuthReturn();
-  if(!returned)checkExistingSession();
+  if(!returned){
+    const c=storageGet(STORAGE_CREDENTIAL),e=storageGet(STORAGE_EMAIL);
+    if(c&&e){
+      try{ googleCredential=c; userEmail=e.toLowerCase().trim(); await verifyEmployeeFromSheet(userEmail); isAuthenticated=true; }
+      catch(err){ storageRemove(STORAGE_CREDENTIAL); storageRemove(STORAGE_EMAIL); loginStatus(err.message||'Employee verification failed.',true); }
+    }
+  }
   if(isAuthenticated){showPortal();await sync();}
 })();
 setInterval(()=>{if(isAuthenticated)sync()},CONFIG.SYNC_INTERVAL);
 </script>
+<div id="appVersion" style="text-align:center;font-size:10px;opacity:.55;margin:10px 0 14px;">Version v1.0.1</div>
 </body>
 </html>
