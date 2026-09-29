@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YOURS SALON - Sheet Data | Final V15</title>
+<title>YOURS SALON - Sheet Data | Final V17 Sorted</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f4f5f7;color:#20242a}
@@ -53,7 +53,7 @@ tr:hover td{background:#faf8ef}
 <div class="header">
   <div>
     <div class="brand">YOURS SALON</div>
-    <div class="sub">Google Sheet Data • View, Add, Edit &amp; Delete <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: CRUD-2026.09.29-V15</span></div>
+    <div class="sub">Google Sheet Data • View, Add, Edit &amp; Delete <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: CRUD-2026.09.29-V17-SORTED</span></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
     <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
@@ -80,7 +80,7 @@ tr:hover td{background:#faf8ef}
 <script>
 const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
-const APP_VERSION = "CRUD-2026.09.29-V15";
+const APP_VERSION = "CRUD-2026.09.29-V17-SORTED";
 const SHEETS = ["Employee List","Expense Type","Rate List","Expenses","Salary","Counter Cash","Dashboard Settings"];
 const READONLY_SHEETS = ["Dashboard Settings"];
 
@@ -247,6 +247,21 @@ function renderGviz(data, sheetName){
     return {values:out, sheetRow:ri + 2};
   }).filter(item => item.values.some(v => v.trim() !== ""));
 
+  /* ✅ SORT — पहले column (SR) के हिसाब से ascending */
+  cleanRows.sort((a, b) => {
+    const av = a.values[0] ?? "";
+    const bv = b.values[0] ?? "";
+    const an = Number(av);
+    const bn = Number(bv);
+
+    // दोनों numeric हैं → numeric compare (2 < 10)
+    if(Number.isFinite(an) && Number.isFinite(bn) && av !== "" && bv !== ""){
+      return an - bn;
+    }
+    // वरना natural string compare ("Item 2" < "Item 10")
+    return String(av).localeCompare(String(bv), undefined, {numeric:true, sensitivity:'base'});
+  });
+
   document.getElementById("rowCount").textContent =
     cleanRows.length + " record" + (cleanRows.length === 1 ? "" : "s");
 
@@ -264,7 +279,6 @@ function renderGviz(data, sheetName){
   const tbl = document.createElement("table");
   if (sheetName === "Dashboard Settings") tbl.className = "settings-table";
 
-  /* THEAD */
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
   headers.forEach((header, index) => {
@@ -280,7 +294,6 @@ function renderGviz(data, sheetName){
   hr.appendChild(actionTh);
   thead.appendChild(hr);
 
-  /* TBODY */
   const tbody = document.createElement("tbody");
 
   if (!cleanRows.length){
@@ -428,14 +441,14 @@ function postViaForm(fields){
       if(settled) return;
       settled = true;
       cleanup();
-      reject(new Error("Apps Script request timed out. Please check the sheet and try again."));
+      reject(new Error("Apps Script request timed out."));
     }, 15000);
 
     iframe.onload = ()=>{
       if(settled) return;
       settled = true;
       clearTimeout(failTimer);
-      setTimeout(cleanup, 800);
+      setTimeout(cleanup, 500);
       resolve({ok:true, submitted:true});
     };
 
@@ -450,12 +463,12 @@ function postViaForm(fields){
   });
 }
 
-/* ============ VERIFY ============ */
-async function verifyRow(sheetName, rowNumber, expectedValues){
+/* ============ FAST VERIFY (background) ============ */
+async function verifyRowFast(sheetName, rowNumber, expectedValues){
   const lastColLetter = colLetter(expectedValues.length);
   const wanted = expectedValues.map(v => String(v ?? '').trim());
 
-  for(let attempt=1; attempt<=10; attempt++){
+  for(let attempt=1; attempt<=5; attempt++){
     try{
       const data = await loadGviz(sheetName, "A" + rowNumber + ":" + lastColLetter + rowNumber, false);
       const row = data && data.table && data.table.rows && data.table.rows[0];
@@ -465,26 +478,55 @@ async function verifyRow(sheetName, rowNumber, expectedValues){
           actual.push(cellValue(row.c ? row.c[i] : null).trim());
         }
         const same = actual.length === wanted.length && actual.every((v,i) => v === wanted[i]);
-        if(same) return {ok:true, success:true, message:"Verified."};
+        if(same) return true;
       }
     }catch(e){ /* retry */ }
-    if(attempt < 10) await sleep(1500);
+    if(attempt < 5) await sleep(400);
   }
-  return {ok:false, success:false, message:"Save sent but not verified. Please Refresh."};
+  return false;
 }
 
-/* ============ SAVE EDIT ============ */
+/* ============ SAVE EDIT (OPTIMISTIC UI) ============ */
 async function saveEdit(tr, headers, sheetName){
   const inputs = [...tr.querySelectorAll("input.edit-input")];
   const values = inputs.map(x => x.value);
   const action = tr.querySelector(".action-cell");
-  action.textContent = "Saving...";
 
+  const rowNumber = Number(tr.dataset.sheetRow);
+  if(!Number.isInteger(rowNumber) || rowNumber < 2){
+    alert("Invalid sheet row.");
+    return;
+  }
+  if(values.length !== headers.length){
+    alert("Column count mismatch. Please refresh.");
+    return;
+  }
+
+  /* STEP 1: तुरंत UI update */
+  const cells = [...tr.querySelectorAll("td[data-col]")];
+  cells.forEach((td, i) => {
+    td.textContent = values[i];
+    td.title = values[i];
+  });
+
+  action.innerHTML = "";
+  const edit = document.createElement("button");
+  edit.className = "edit-btn";
+  edit.textContent = "✎ Edit";
+  edit.onclick = () => startEdit(tr, headers, sheetName);
+  action.appendChild(edit);
+
+  const del = document.createElement("button");
+  del.className = "delete-btn";
+  del.textContent = "🗑 Delete";
+  del.onclick = () => deleteRow(tr, sheetName);
+  action.appendChild(del);
+
+  tr.dataset.editing = "0";
+  document.getElementById("status").textContent = APP_VERSION + " • Saving...";
+
+  /* STEP 2: Background POST + Verify */
   try{
-    const rowNumber = Number(tr.dataset.sheetRow);
-    if(!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error("Invalid sheet row.");
-    if(values.length !== headers.length) throw new Error("Column count mismatch. Please refresh.");
-
     await postViaForm({
       action: "editSheetRow",
       sheet: sheetName,
@@ -492,39 +534,31 @@ async function saveEdit(tr, headers, sheetName){
       values: JSON.stringify(values)
     });
 
-    const result = await verifyRow(sheetName, rowNumber, values);
-    if(!result.ok || !result.success) throw new Error(result.message || "Save could not be verified.");
-
     document.getElementById("status").textContent = APP_VERSION + " • Saved";
-    await loadCurrent();
+
+    verifyRowFast(sheetName, rowNumber, values).then(ok => {
+      if(ok){
+        document.getElementById("status").textContent = APP_VERSION + " • Verified";
+      }else{
+        document.getElementById("status").textContent = APP_VERSION + " • Saved (verify slow)";
+      }
+    });
+
   }catch(e){
-    action.innerHTML = "";
-
-    const retry = document.createElement("button");
-    retry.className = "save-btn";
-    retry.textContent = "✓ Save";
-    retry.onclick = () => saveEdit(tr, headers, sheetName);
-    action.appendChild(retry);
-
-    const cancel = document.createElement("button");
-    cancel.className = "cancel-btn";
-    cancel.textContent = "Cancel";
-    cancel.style.marginLeft = "5px";
-    cancel.onclick = () => loadCurrent();
-    action.appendChild(cancel);
-
     document.getElementById("status").textContent = APP_VERSION + " • Save Failed";
-    alert(e.message || String(e));
+    alert("Save failed: " + (e.message || e));
+    setTimeout(() => loadCurrent(), 500);
   }
 }
 
-/* ============ DELETE ROW ============ */
+/* ============ DELETE ROW (OPTIMISTIC UI) ============ */
 async function deleteRow(tr, sheetName){
   const rowNumber = Number(tr.dataset.sheetRow);
   if(!confirm("Delete this row permanently?\nRow #" + rowNumber + " in " + sheetName)) return;
 
-  const action = tr.querySelector(".action-cell");
-  action.textContent = "Deleting...";
+  tr.style.transition = "opacity .2s";
+  tr.style.opacity = "0.3";
+  document.getElementById("status").textContent = APP_VERSION + " • Deleting...";
 
   try{
     await postViaForm({
@@ -532,13 +566,20 @@ async function deleteRow(tr, sheetName){
       sheet: sheetName,
       row: String(rowNumber)
     });
+
+    tr.remove();
     document.getElementById("status").textContent = APP_VERSION + " • Deleted";
-    await sleep(800);
-    await loadCurrent();
+
+    const remaining = document.querySelectorAll("#tableArea tbody tr").length;
+    document.getElementById("rowCount").textContent =
+      remaining + " record" + (remaining === 1 ? "" : "s");
+
+    setTimeout(() => loadCurrent(), 1500);
+
   }catch(e){
+    tr.style.opacity = "1";
     document.getElementById("status").textContent = APP_VERSION + " • Delete Failed";
     alert("Delete failed: " + (e.message || e));
-    await loadCurrent();
   }
 }
 
@@ -560,7 +601,7 @@ function startAdd(){
 }
 
 async function addRow(sheetName, values){
-  document.getElementById("status").textContent = "Adding...";
+  document.getElementById("status").textContent = APP_VERSION + " • Adding...";
 
   try{
     await postViaForm({
@@ -570,8 +611,8 @@ async function addRow(sheetName, values){
     });
 
     document.getElementById("status").textContent = APP_VERSION + " • Added";
-    await sleep(1000);
-    await loadCurrent();
+    setTimeout(() => loadCurrent(), 800);
+
   }catch(e){
     document.getElementById("status").textContent = APP_VERSION + " • Add Failed";
     alert("Add failed: " + (e.message || e));
