@@ -31,4 +31,556 @@ button{border:1px solid #ddd;border-radius:9px;padding:10px 16px;font-weight:700
 .count{font-size:12px;color:#777;margin-top:5px}
 .status{font-size:12px;color:#777}
 .tablewrap{width:100%;overflow:auto;max-height:calc(100vh - 190px)}
-table{border-collapse:collapse;width:max-content;min
+table{border-collapse:collapse;width:max-content;min-width:100%;table-layout:auto}
+th,td{border-bottom:1px solid #eee;border-right:1px solid #eee;padding:9px 11px;text-align:left;font-size:13px;vertical-align:top}
+th{position:sticky;top:0;background:#20242a;color:#fff;z-index:2;font-weight:700;white-space:nowrap;min-width:90px;max-width:360px}
+td{white-space:nowrap;overflow-wrap:normal;word-break:normal;min-width:80px;max-width:360px}
+td:hover{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+tr:hover td{background:#faf8ef}
+.loading,.empty{padding:38px;text-align:center;color:#777}
+.error{color:#a33}
+.settings-table{width:100%;table-layout:fixed}
+.settings-table th:first-child,.settings-table td:first-child{width:220px;max-width:260px}
+.settings-table th:nth-child(2),.settings-table td:nth-child(2){width:auto;max-width:none}
+@media(max-width:700px){
+ .header{padding:14px 16px}.brand{font-size:19px}.wrap{padding:10px}.cardhead{padding:13px}
+ th,td{font-size:12px;padding:8px;min-width:85px;max-width:360px}
+ .settings-table th:first-child,.settings-table td:first-child{width:160px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="brand">YOURS SALON</div>
+    <div class="sub">Google Sheet Data • View, Add, Edit &amp; Delete <span id="buildVersion" style="margin-left:10px;color:#c9a227;font-weight:700;">Build: CRUD-2026.09.29-V15</span></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="refresh" id="refreshBtn" onclick="loadCurrent()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="card">
+    <div class="cardhead">
+      <div>
+        <div class="title" id="sheetTitle">Loading...</div>
+        <div class="count" id="rowCount"></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="add-btn" id="addBtn" onclick="startAdd()" style="display:none;">+ Add Row</button>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+    <div id="tableArea" class="loading">Loading data...</div>
+  </div>
+</div>
+
+<script>
+const EDIT_API = 'https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUcB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
+const SHEET_ID = "14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo";
+const APP_VERSION = "CRUD-2026.09.29-V15";
+const SHEETS = ["Employee List","Expense Type","Rate List","Expenses","Salary","Counter Cash","Dashboard Settings"];
+const READONLY_SHEETS = ["Dashboard Settings"];
+
+let current = 0;
+let callbackCounter = 0;
+let currentHeaders = [];
+
+/* ============ TABS ============ */
+function makeTabs(){
+  const box = document.getElementById("tabs");
+  box.innerHTML = "";
+  SHEETS.forEach((name,i)=>{
+    const b = document.createElement("button");
+    b.className = "tab" + (i===current ? " active" : "");
+    b.textContent = name;
+    b.onclick = () => { current = i; makeTabs(); loadCurrent(); };
+    box.appendChild(b);
+  });
+}
+
+/* ============ GVIZ LOADER ============ */
+function loadGviz(sheetName, rangeOverride = null, useHeaders = true){
+  return new Promise((resolve,reject)=>{
+    const cb = "gvizCallback_" + Date.now() + "_" + (++callbackCounter);
+    const script = document.createElement("script");
+    let finished = false;
+
+    function cleanup(){
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      try { delete window[cb]; } catch(e) {}
+      script.remove();
+    }
+
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Request timeout")); }, 20000);
+
+    window[cb] = function(data){ cleanup(); resolve(data); };
+    script.onerror = function(){ cleanup(); reject(new Error("Google Sheet request failed")); };
+
+    const query = sheetName === "Dashboard Settings" ? "select A,B where A is not null" : "select *";
+
+    let url = "https://docs.google.com/spreadsheets/d/" +
+      encodeURIComponent(SHEET_ID) +
+      "/gviz/tq?tqx=" + encodeURIComponent("out:json;responseHandler:" + cb) +
+      "&sheet=" + encodeURIComponent(sheetName) +
+      "&headers=" + (useHeaders ? "1" : "0") +
+      "&_=" + Date.now() + Math.random().toString(36).slice(2);
+
+    if (rangeOverride) url += "&range=" + encodeURIComponent(rangeOverride);
+    else url += "&tq=" + encodeURIComponent(query);
+
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+
+/* ============ HELPERS ============ */
+function colLetter(n){
+  let s = "";
+  while(n > 0){ const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+function cellValue(cell){
+  if (!cell) return "";
+  if (cell.f !== null && cell.f !== undefined) return String(cell.f);
+  if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+  return "";
+}
+
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+/* ============ REPAIR MISSING CELLS ============ */
+async function repairMissingCells(data, sheetName){
+  if (!data || !data.table || !data.table.rows) return data;
+
+  const cols = data.table.cols || [];
+  const rows = data.table.rows || [];
+  const missingRows = [];
+
+  rows.forEach((row, ri) => {
+    const needsRepair = cols.some((_, ci) => {
+      const c = row && row.c ? row.c[ci] : null;
+      return !c || ((c.v === null || c.v === undefined) && (c.f === null || c.f === undefined));
+    });
+    if (needsRepair) missingRows.push({ri, sheetRow: ri + 2});
+  });
+
+  if (!missingRows.length) return data;
+
+  const lastCol = Math.max(cols.length, 1);
+  const lastColLetter = colLetter(lastCol);
+
+  const minRow = Math.min.apply(null, missingRows.map(x => x.sheetRow));
+  const maxRow = Math.max.apply(null, missingRows.map(x => x.sheetRow));
+
+  try {
+    const block = await loadGviz(sheetName, "A" + minRow + ":" + lastColLetter + maxRow, false);
+    const blockRows = block && block.table && block.table.rows ? block.table.rows : [];
+
+    missingRows.forEach((item) => {
+      const sourceRow = blockRows[item.sheetRow - minRow];
+      if (!sourceRow) return;
+      if (!data.table.rows[item.ri].c) data.table.rows[item.ri].c = [];
+      for (let ci = 0; ci < lastCol; ci++){
+        const sourceCell = sourceRow.c ? sourceRow.c[ci] : null;
+        if (sourceCell) data.table.rows[item.ri].c[ci] = { v: sourceCell.v, f: sourceCell.f };
+      }
+    });
+  } catch(e) { /* keep primary sync intact */ }
+
+  return data;
+}
+
+/* ============ LOAD CURRENT SHEET ============ */
+async function loadCurrent(){
+  const sheetName = SHEETS[current];
+  document.getElementById("sheetTitle").textContent = sheetName;
+  document.getElementById("rowCount").textContent = "";
+  document.getElementById("status").textContent = "Syncing...";
+  document.getElementById("tableArea").innerHTML = '<div class="loading">Loading data...</div>';
+  document.getElementById("refreshBtn").disabled = true;
+
+  const isReadOnly = READONLY_SHEETS.includes(sheetName);
+  document.getElementById("addBtn").style.display = isReadOnly ? "none" : "inline-block";
+
+  try {
+    let data = await loadGviz(sheetName);
+    data = await repairMissingCells(data, sheetName);
+    renderGviz(data, sheetName);
+    document.getElementById("status").textContent = isReadOnly ? "Read Only" : "Ready";
+  } catch(e) {
+    document.getElementById("status").textContent = "Sync Failed";
+    document.getElementById("tableArea").innerHTML =
+      '<div class="empty error">Unable to load this sheet.<br><small>' + esc(e.message) + '</small></div>';
+  } finally {
+    document.getElementById("refreshBtn").disabled = false;
+  }
+}
+
+/* ============ RENDER TABLE ============ */
+function renderGviz(data, sheetName){
+  if (!data || !data.table) throw new Error("No data returned from Google Sheet.");
+
+  const table = data.table;
+  const cols = table.cols || [];
+  const rows = table.rows || [];
+
+  let headers = cols.map((c,i) => (c && c.label) ? String(c.label) : ("Column " + (i+1)));
+  if (sheetName === "Dashboard Settings") headers = ["Setting","Value"];
+  currentHeaders = headers;
+
+  const cleanRows = rows.map((r, ri) => {
+    const out = [];
+    for (let i = 0; i < headers.length; i++){
+      const cell = r && r.c ? r.c[i] : null;
+      out.push(cellValue(cell));
+    }
+    return {values:out, sheetRow:ri + 2};
+  }).filter(item => item.values.some(v => v.trim() !== ""));
+
+  document.getElementById("rowCount").textContent =
+    cleanRows.length + " record" + (cleanRows.length === 1 ? "" : "s");
+
+  const area = document.getElementById("tableArea");
+  area.innerHTML = "";
+
+  if (!headers.length){
+    area.innerHTML = '<div class="empty">No columns found.</div>';
+    return;
+  }
+
+  const isReadOnly = READONLY_SHEETS.includes(sheetName);
+  const wrap = document.createElement("div");
+  wrap.className = "tablewrap";
+  const tbl = document.createElement("table");
+  if (sheetName === "Dashboard Settings") tbl.className = "settings-table";
+
+  /* THEAD */
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  headers.forEach((header, index) => {
+    const th = document.createElement("th");
+    th.textContent = header;
+    th.title = header;
+    th.dataset.col = index;
+    hr.appendChild(th);
+  });
+  const actionTh = document.createElement("th");
+  actionTh.textContent = "Action";
+  actionTh.className = "action-cell";
+  hr.appendChild(actionTh);
+  thead.appendChild(hr);
+
+  /* TBODY */
+  const tbody = document.createElement("tbody");
+
+  if (!cleanRows.length){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = headers.length + 1;
+    td.className = "empty";
+    td.textContent = "No records found.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  } else {
+    cleanRows.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.dataset.sheetRow = item.sheetRow;
+      tr.dataset.sheetName = sheetName;
+
+      item.values.forEach((value, index) => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        td.title = value;
+        td.dataset.col = index;
+        tr.appendChild(td);
+      });
+
+      const actionTd = document.createElement("td");
+      actionTd.className = "action-cell";
+
+      if (isReadOnly){
+        actionTd.textContent = "—";
+      } else {
+        const edit = document.createElement("button");
+        edit.className = "edit-btn";
+        edit.textContent = "✎ Edit";
+        edit.onclick = () => startEdit(tr, headers, sheetName);
+        actionTd.appendChild(edit);
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "🗑 Delete";
+        del.onclick = () => deleteRow(tr, sheetName);
+        actionTd.appendChild(del);
+      }
+
+      tr.appendChild(actionTd);
+      tbody.appendChild(tr);
+    });
+  }
+
+  tbl.appendChild(thead);
+  tbl.appendChild(tbody);
+  wrap.appendChild(tbl);
+  area.appendChild(wrap);
+}
+
+/* ============ EDIT INLINE ============ */
+function startEdit(tr, headers, sheetName){
+  if (tr.dataset.editing === "1") return;
+  tr.dataset.editing = "1";
+
+  const original = [];
+  const cells = [...tr.querySelectorAll("td[data-col]")];
+
+  cells.forEach((td, i) => {
+    original.push(td.textContent);
+    const input = document.createElement("input");
+    input.className = "edit-input";
+    input.type = "text";
+    input.value = td.textContent;
+    input.dataset.col = i;
+    td.textContent = "";
+    td.appendChild(input);
+  });
+
+  const action = tr.querySelector(".action-cell");
+  action.innerHTML = "";
+
+  const save = document.createElement("button");
+  save.className = "save-btn";
+  save.textContent = "✓ Save";
+
+  const cancel = document.createElement("button");
+  cancel.className = "cancel-btn";
+  cancel.textContent = "Cancel";
+  cancel.style.marginLeft = "5px";
+
+  save.onclick = () => saveEdit(tr, headers, sheetName);
+  cancel.onclick = () => cancelEdit(tr, original);
+
+  action.appendChild(save);
+  action.appendChild(cancel);
+}
+
+function cancelEdit(tr, original){
+  const cells = [...tr.querySelectorAll("td[data-col]")];
+  cells.forEach((td, i) => { td.textContent = original[i] ?? ""; });
+
+  const action = tr.querySelector(".action-cell");
+  action.innerHTML = "";
+
+  const edit = document.createElement("button");
+  edit.className = "edit-btn";
+  edit.textContent = "✎ Edit";
+  edit.onclick = () => startEdit(tr, currentHeaders, tr.dataset.sheetName);
+  action.appendChild(edit);
+
+  const del = document.createElement("button");
+  del.className = "delete-btn";
+  del.textContent = "🗑 Delete";
+  del.onclick = () => deleteRow(tr, tr.dataset.sheetName);
+  action.appendChild(del);
+
+  tr.dataset.editing = "0";
+}
+
+/* ============ POST TRANSPORT (hidden form) ============ */
+function postViaForm(fields){
+  return new Promise((resolve, reject)=>{
+    const iframeName = "salonFrame_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const iframe = document.createElement("iframe");
+    iframe.name = iframeName;
+    iframe.style.display = "none";
+    iframe.setAttribute("aria-hidden","true");
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = EDIT_API;
+    form.target = iframeName;
+    form.style.display = "none";
+
+    Object.keys(fields).forEach(key=>{
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+
+    let settled = false;
+    const cleanup = ()=>{ try{ form.remove(); }catch(e){} try{ iframe.remove(); }catch(e){} };
+
+    const failTimer = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error("Apps Script request timed out. Please check the sheet and try again."));
+    }, 15000);
+
+    iframe.onload = ()=>{
+      if(settled) return;
+      settled = true;
+      clearTimeout(failTimer);
+      setTimeout(cleanup, 800);
+      resolve({ok:true, submitted:true});
+    };
+
+    try{ form.submit(); }
+    catch(e){
+      if(settled) return;
+      settled = true;
+      clearTimeout(failTimer);
+      cleanup();
+      reject(e);
+    }
+  });
+}
+
+/* ============ VERIFY ============ */
+async function verifyRow(sheetName, rowNumber, expectedValues){
+  const lastColLetter = colLetter(expectedValues.length);
+  const wanted = expectedValues.map(v => String(v ?? '').trim());
+
+  for(let attempt=1; attempt<=10; attempt++){
+    try{
+      const data = await loadGviz(sheetName, "A" + rowNumber + ":" + lastColLetter + rowNumber, false);
+      const row = data && data.table && data.table.rows && data.table.rows[0];
+      if(row){
+        const actual = [];
+        for(let i=0; i<expectedValues.length; i++){
+          actual.push(cellValue(row.c ? row.c[i] : null).trim());
+        }
+        const same = actual.length === wanted.length && actual.every((v,i) => v === wanted[i]);
+        if(same) return {ok:true, success:true, message:"Verified."};
+      }
+    }catch(e){ /* retry */ }
+    if(attempt < 10) await sleep(1500);
+  }
+  return {ok:false, success:false, message:"Save sent but not verified. Please Refresh."};
+}
+
+/* ============ SAVE EDIT ============ */
+async function saveEdit(tr, headers, sheetName){
+  const inputs = [...tr.querySelectorAll("input.edit-input")];
+  const values = inputs.map(x => x.value);
+  const action = tr.querySelector(".action-cell");
+  action.textContent = "Saving...";
+
+  try{
+    const rowNumber = Number(tr.dataset.sheetRow);
+    if(!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error("Invalid sheet row.");
+    if(values.length !== headers.length) throw new Error("Column count mismatch. Please refresh.");
+
+    await postViaForm({
+      action: "editSheetRow",
+      sheet: sheetName,
+      row: String(rowNumber),
+      values: JSON.stringify(values)
+    });
+
+    const result = await verifyRow(sheetName, rowNumber, values);
+    if(!result.ok || !result.success) throw new Error(result.message || "Save could not be verified.");
+
+    document.getElementById("status").textContent = APP_VERSION + " • Saved";
+    await loadCurrent();
+  }catch(e){
+    action.innerHTML = "";
+
+    const retry = document.createElement("button");
+    retry.className = "save-btn";
+    retry.textContent = "✓ Save";
+    retry.onclick = () => saveEdit(tr, headers, sheetName);
+    action.appendChild(retry);
+
+    const cancel = document.createElement("button");
+    cancel.className = "cancel-btn";
+    cancel.textContent = "Cancel";
+    cancel.style.marginLeft = "5px";
+    cancel.onclick = () => loadCurrent();
+    action.appendChild(cancel);
+
+    document.getElementById("status").textContent = APP_VERSION + " • Save Failed";
+    alert(e.message || String(e));
+  }
+}
+
+/* ============ DELETE ROW ============ */
+async function deleteRow(tr, sheetName){
+  const rowNumber = Number(tr.dataset.sheetRow);
+  if(!confirm("Delete this row permanently?\nRow #" + rowNumber + " in " + sheetName)) return;
+
+  const action = tr.querySelector(".action-cell");
+  action.textContent = "Deleting...";
+
+  try{
+    await postViaForm({
+      action: "deleteSheetRow",
+      sheet: sheetName,
+      row: String(rowNumber)
+    });
+    document.getElementById("status").textContent = APP_VERSION + " • Deleted";
+    await sleep(800);
+    await loadCurrent();
+  }catch(e){
+    document.getElementById("status").textContent = APP_VERSION + " • Delete Failed";
+    alert("Delete failed: " + (e.message || e));
+    await loadCurrent();
+  }
+}
+
+/* ============ ADD ROW ============ */
+function startAdd(){
+  const sheetName = SHEETS[current];
+  if(READONLY_SHEETS.includes(sheetName)){ alert("This sheet is read-only."); return; }
+
+  const headers = currentHeaders;
+  if(!headers.length){ alert("Headers not loaded yet. Please refresh."); return; }
+
+  const values = headers.map(h => prompt(h + ":", "") ?? "");
+
+  if(values.every(v => v.trim() === "")){
+    if(!confirm("All fields are empty. Still add?")) return;
+  }
+
+  addRow(sheetName, values);
+}
+
+async function addRow(sheetName, values){
+  document.getElementById("status").textContent = "Adding...";
+
+  try{
+    await postViaForm({
+      action: "addSheetRow",
+      sheet: sheetName,
+      values: JSON.stringify(values)
+    });
+
+    document.getElementById("status").textContent = APP_VERSION + " • Added";
+    await sleep(1000);
+    await loadCurrent();
+  }catch(e){
+    document.getElementById("status").textContent = APP_VERSION + " • Add Failed";
+    alert("Add failed: " + (e.message || e));
+  }
+}
+
+/* ============ INIT ============ */
+makeTabs();
+loadCurrent();
+</script>
+</body>
+</html>
