@@ -54,7 +54,7 @@ th{color:#9C9284;font-size:9px;text-transform:uppercase}
 </head>
 <body>
 <div class="container">
-  <div class="logo">YOURS <span>SALON</span> <small id="appVersion" style="font-size:10px;color:#9C9284;font-weight:600;margin-left:8px;">Version 1.1</small></div>
+  <div class="logo">YOURS <span>SALON</span> <small id="appVersion" style="font-size:10px;color:#9C9284;font-weight:600;margin-left:8px;">Version 1.2</small></div>
 
   <section id="login" class="login">
     <h1>Employee Salary Portal</h1>
@@ -146,24 +146,21 @@ th{color:#9C9284;font-size:9px;text-transform:uppercase}
 const CONFIG={
   SHEET_ID:'14Xdl0QXuXorhQBDxGSSGXu3fpQQzvBJGWRGjIlu5-Qo',
   SYNC_INTERVAL:60000,
-  SHEETS:['Form responses 1','Salary','Expenses']
+  SHEETS:['Form responses 1','Salary','Expenses'],
+  EMPLOYEE_SHEET:'Employee List'
 };
 
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
 const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
-const OAUTH_REDIRECT_URI='https://jkdrycleaner.github.io/Salon_Dashboard/EmpDash';
 const STORAGE_CREDENTIAL='salon_google_credential';
 const STORAGE_EMAIL='salon_user_email';
 
-/* Same employee mapping used by Expenses.html */
-const EMAIL_NAME_MAP={
-  'ashukumar12211551@gmail.com':'Ashu Kumar',
-  'aamir839398058@gmail.com':'Amir Khan',
-  's45351520@gmail.com':'Suhail Khan'
-};
-
+/* Employee access is resolved from the Employee List sheet.
+   User ID (column I) = logged-in Google email; Employee Name (column C)
+   determines whose dashboard is shown. No hard-coded email/name mapping. */
 let googleCredential=null,userEmail='',userName='',isAuthenticated=false;
+let employeeDirectory=[];
 let collections=[],payments=[],expenses=[],months=[];
 
 const $=id=>document.getElementById(id);
@@ -184,7 +181,7 @@ function randomString(length=32){
   const bytes=new Uint8Array(length); crypto.getRandomValues(bytes);
   let out=''; for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length]; return out;
 }
-function redirectUri(){return OAUTH_REDIRECT_URI;}
+function redirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/EmpDash';}
 
 function startGoogleLogin(){
   const state=randomString();
@@ -200,6 +197,26 @@ function startGoogleLogin(){
   });
   loginStatus('Opening Google Sign-In...');
   location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params.toString());
+}
+
+function employeeDirectoryFromValues(values){
+  if(!values||values.length<2)return [];
+  const h=values[0].map(v=>String(v||'').trim().toLowerCase());
+  const userIdI=h.findIndex(x=>x==='user id' || x==='userid' || x==='user id ' || x.includes('user id'));
+  const nameI=h.findIndex(x=>x==='employee name' || x==='name' || x.includes('employee name'));
+  if(userIdI<0 || nameI<0)return [];
+  return values.slice(1).map(r=>({
+    userId:String(r[userIdI]??'').trim().toLowerCase(),
+    name:String(r[nameI]??'').trim()
+  })).filter(x=>x.userId&&x.name);
+}
+
+async function resolveEmployeeByEmail(email){
+  const values=await sheetRead(CONFIG.EMPLOYEE_SHEET);
+  employeeDirectory=employeeDirectoryFromValues(values);
+  const row=employeeDirectory.find(x=>x.userId===String(email||'').trim().toLowerCase());
+  if(!row)throw new Error('This Google account is not mapped to an employee.');
+  return row.name;
 }
 
 async function handleOAuthReturn(){
@@ -221,8 +238,9 @@ async function handleOAuthReturn(){
     const email=(info.email||'').toLowerCase().trim();
     if(!email)throw new Error('Google email could not be read.');
 
-    googleCredential=token; userEmail=email; userName=EMAIL_NAME_MAP[email]||'';
-    if(!userName)throw new Error('This Google account is not mapped to an employee.');
+    googleCredential=token; userEmail=email;
+    loginStatus('Checking Employee List...');
+    userName=await resolveEmployeeByEmail(email);
     isAuthenticated=true;
     storageSet(STORAGE_CREDENTIAL,googleCredential);
     storageSet(STORAGE_EMAIL,userEmail);
@@ -236,11 +254,16 @@ async function handleOAuthReturn(){
   }
 }
 
-function checkExistingSession(){
+async function checkExistingSession(){
   const c=storageGet(STORAGE_CREDENTIAL),e=storageGet(STORAGE_EMAIL);
   if(c&&e){
-    const email=e.toLowerCase().trim(),name=EMAIL_NAME_MAP[email]||'';
-    if(name){googleCredential=c;userEmail=email;userName=name;isAuthenticated=true;return true}
+    try{
+      const email=e.toLowerCase().trim();
+      const name=await resolveEmployeeByEmail(email);
+      googleCredential=c;userEmail=email;userName=name;isAuthenticated=true;return true;
+    }catch(err){
+      storageRemove(STORAGE_CREDENTIAL);storageRemove(STORAGE_EMAIL);
+    }
   }
   return false;
 }
@@ -283,76 +306,37 @@ function sheetRead(sheetName){
 function idx(headers,tests){
   return headers.findIndex(h=>tests.some(t=>String(h||'').toLowerCase().includes(t)));
 }
-// Date parsing kept aligned with the main Index dashboard.
-// Google Sheets commonly returns Timestamp as: 06/09/2026 14:43:15
 function parseDate(v){
-  const s=String(v??'').trim();
-  if(!s)return '';
-
-  let m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
-
+  const s=String(v||'').trim();
+  let m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m)return `${m[3]}-${m[2]}-${m[1]}`;
   m=s.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
   if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
-
-  const d=new Date(s);
-  return isNaN(d.getTime())?'':d.toISOString().slice(0,10);
+  const d=new Date(s); return isNaN(d)?'':d.toISOString().slice(0,10);
 }
-function amount(v){
-  const n=Number(String(v??'').replace(/[^0-9.-]/g,''));
-  return Number.isFinite(n)?n:0;
-}
+function amount(v){const n=Number(String(v??'').replace(/[^0-9.-]/g,''));return isNaN(n)?0:n}
 function monthKey(d){return String(d||'').slice(0,7)}
 function monthLabel(k){
   if(!k)return '';
-  const [y,m]=k.split('-');
-  return new Date(Number(y),Number(m)-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
+  const [y,m]=k.split('-'); return new Date(Number(y),Number(m)-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
 }
-
-// Parse each sheet using the same column-detection logic as Index.
-// For the collection sheet, Timestamp/Date is used to create the month key,
-// and Amount/Collection is used as the collection amount. Cost Cutting is NOT
-// added to the employee collection figure, matching Index's staff-wise month
-// collection column.
 function parseRows(values,kind){
   if(!values||values.length<2)return [];
-  const h=values[0].map(v=>String(v??'').trim());
-  const lower=h.map(v=>v.toLowerCase());
-
-  const find=(tests)=>lower.findIndex(v=>tests.some(t=>v.includes(t)));
-  const exact=(tests)=>lower.findIndex(v=>tests.includes(v));
-
-  const timestampI=lower.findIndex(v =>
-    v.includes('timestamp') || v.includes('time stamp') || v==='time' ||
-    v.includes('entry time') || v.includes('date & time') || v.includes('date/time')
-  );
-  const dateI=lower.findIndex(v => v==='date' || v.includes('entry date'));
-  const nameI=find(['your name','name','employee']);
-  const amountI=find(['amount','collection','salary']);
-  const modeI=find(['payment','mode']);
-  const typeI=find(['expense type','type','category']);
-  const remarkI=find(['remark','remarks','note']);
-  const costI=find(['cost','cutting']);
-
-  if(nameI===-1 || amountI===-1)return [];
-
-  return values.slice(1).map(r=>{
-    // Index gives Timestamp priority over a separate Date column.
-    const rawTimestamp=timestampI!==-1 ? String(r[timestampI]??'').trim() : '';
-    const rawDate=dateI!==-1 ? String(r[dateI]??'').trim() : '';
-    const date=parseDate(rawTimestamp || rawDate);
-
-    return {
-      employee:String(r[nameI]??'').trim(),
-      date,
-      rawTimestamp,
-      amount:amount(r[amountI]),
-      saving:costI!==-1 ? amount(r[costI]) : 0,
-      mode:modeI!==-1?String(r[modeI]??'').trim():'',
-      type:typeI!==-1?String(r[typeI]??'').trim():'',
-      remark:remarkI!==-1?String(r[remarkI]??'').trim():''
-    };
-  }).filter(x=>x.employee&&x.date&&x.amount>=0);
+  const h=values[0];
+  const nameI=idx(h,['employee','name','staff','your name']);
+  const dateI=idx(h,['date','timestamp','time stamp','entry time','date/time']);
+  const amountI=idx(h,['amount','collection','salary']);
+  const modeI=idx(h,['payment','mode']);
+  const typeI=idx(h,['type','expense type','category']);
+  const remarkI=idx(h,['remark','remarks','note']);
+  return values.slice(1).map(r=>({
+    employee:String(r[nameI]??'').trim(),
+    date:parseDate(r[dateI]),
+    amount:amount(r[amountI]),
+    mode:String(r[modeI]??'').trim(),
+    type:String(r[typeI]??'').trim(),
+    remark:String(r[remarkI]??'').trim()
+  })).filter(x=>x.employee&&x.amount>=0);
 }
 
 async function sync(){
@@ -383,10 +367,7 @@ function rowsFor(k){
 }
 
 function render(){
-  // Month dropdown is driven ONLY by collection data, exactly like the Index
-  // dashboard's monthly collection report. Salary/expense rows cannot create
-  // an extra month that has no collection data.
-  months=[...new Set(collections.map(x=>monthKey(x.date)).filter(Boolean))].sort().reverse();
+  months=[...new Set([...collections,...expenses,...payments].map(x=>monthKey(x.date)).filter(Boolean))].sort().reverse();
   const select=$('monthSelect'),old=select.value||'ALL';
   select.innerHTML='<option value="ALL">All Months</option>'+months.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
   select.value=months.includes(old)||old==='ALL'?old:'ALL';
@@ -432,7 +413,7 @@ document.addEventListener('click',e=>{
 
 (async function init(){
   const returned=await handleOAuthReturn();
-  if(!returned)checkExistingSession();
+  if(!returned)await checkExistingSession();
   if(isAuthenticated){showPortal();await sync();}
 })();
 setInterval(()=>{if(isAuthenticated)sync()},CONFIG.SYNC_INTERVAL);
