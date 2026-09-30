@@ -54,7 +54,7 @@ th{color:#9C9284;font-size:9px;text-transform:uppercase}
 </head>
 <body>
 <div class="container">
-  <div class="logo">YOURS <span>SALON</span></div>
+  <div class="logo">YOURS <span>SALON</span> <small id="appVersion" style="font-size:10px;color:#9C9284;font-weight:600;margin-left:8px;">Version 1.1</small></div>
 
   <section id="login" class="login">
     <h1>Employee Salary Portal</h1>
@@ -152,6 +152,7 @@ const CONFIG={
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwHRNE9vw17BDgUgVVOVdIyl4hFMtjBEzqxCkDUuB1ncER6WsLAADtAMrmeCB3IWmQr5g/exec';
 const DASHBOARD_URL='https://jkdrycleaner.github.io/Salon_Dashboard/';
 const GOOGLE_CLIENT_ID='326263063666-ndmfvf4eidtvdkr5imc19din2evqbinv.apps.googleusercontent.com';
+const OAUTH_REDIRECT_URI='https://jkdrycleaner.github.io/Salon_Dashboard/EmpDash';
 const STORAGE_CREDENTIAL='salon_google_credential';
 const STORAGE_EMAIL='salon_user_email';
 
@@ -183,7 +184,7 @@ function randomString(length=32){
   const bytes=new Uint8Array(length); crypto.getRandomValues(bytes);
   let out=''; for(let i=0;i<length;i++)out+=chars[bytes[i]%chars.length]; return out;
 }
-function redirectUri(){return 'https://jkdrycleaner.github.io/Salon_Dashboard/Employee_Salary.html';}
+function redirectUri(){return OAUTH_REDIRECT_URI;}
 
 function startGoogleLogin(){
   const state=randomString();
@@ -207,7 +208,7 @@ async function handleOAuthReturn(){
   const p=new URLSearchParams(hash);
   const error=p.get('error'), token=p.get('access_token'), returnedState=p.get('state');
   const savedState=storageGet('salon_salary_oauth_state');
-  history.replaceState(null,document.title,location.pathname+location.search);
+  history.replaceState(null,document.title,location.pathname);
   if(error){loginStatus('Google Sign-In was cancelled or denied.',true);return false}
   if(!token){loginStatus('Google Sign-In did not return an account. Please try again.',true);return false}
   if(savedState&&returnedState&&savedState!==returnedState){loginStatus('Google verification failed. Please try again.',true);return false}
