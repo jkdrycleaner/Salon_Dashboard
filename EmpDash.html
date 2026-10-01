@@ -207,6 +207,20 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   #mobileBottomNav .navLabel{display:block !important;font-size:9px !important;font-weight:700 !important;line-height:1 !important}
 }
 @media(min-width:901px){#mobileBottomNav{display:none !important}}
+
+/* v2.3 - Collection Add Entry, same Light Theme */
+.addEntryTopBtn,.addEntryBtn{background:#f6c33a!important;color:#17202b!important;border-color:#e7b52c!important;box-shadow:0 3px 10px rgba(190,137,0,.12)}
+.collectionHeaderPanel{padding:14px 16px}.collectionHeaderRow{display:flex;align-items:center;justify-content:space-between;gap:12px}.collectionHeaderRow h2{color:#182536}
+.entryPanel{margin-top:12px}.entryPanelHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.entryPanelHead h2{color:#182536}
+.collectionEntryForm{width:100%}.entryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formField label{display:block;font-size:10px;font-weight:800;color:#526276;margin:0 0 5px}
+.formField input,.formField select{width:100%;height:42px;background:#fff;border:1px solid #d5dee8;border-radius:10px;padding:0 11px;color:#26364a;font-size:12px;outline:none;box-shadow:0 2px 7px rgba(31,47,65,.03)}
+.formField input:focus,.formField select:focus{border-color:#1677e8;box-shadow:0 0 0 3px rgba(22,119,232,.08)}
+.entryActions{display:flex;gap:9px;margin-top:14px}.entryActions .btn{min-width:170px}
+.secondaryBtn{background:#eef2f6!important;color:#405167!important;border-color:#d5dee8!important}
+.entryStatus{display:none;margin-top:10px;padding:9px 11px;border-radius:9px;font-size:11px}.entryStatus.show{display:block;background:#effaf5;border:1px solid #bde7d6;color:#137a59}.entryStatus.error{display:block;background:#fff1f1;border:1px solid #f0b6b6;color:#b5473f}
+@media(max-width:650px){.collectionHeaderRow{align-items:center}.collectionHeaderRow .addEntryBtn{height:38px;padding:0 11px;font-size:11px;white-space:nowrap}.entryGrid{grid-template-columns:1fr;gap:9px}.entryPanelHead{align-items:center}.entryActions{position:sticky;bottom:76px;background:#fff;padding:8px 0 2px;z-index:3}.entryActions .btn{flex:1;min-width:0}.formField input,.formField select{height:40px}}
+
 </style>
 </head>
 <body>
@@ -226,7 +240,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.2</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.3</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -250,7 +264,11 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
       <main class="content">
         <div class="pageTop">
           <div><div class="pageTitle" id="dashboardTitle">Employee Dashboard</div><div class="pageDesc">View your salary, collections and expenses details.</div></div>
-          <div class="controls"><button class="btn" id="syncBtn">⟳ &nbsp; Sync</button><select id="monthSelect"><option value="ALL">All Months</option></select></div>
+          <div class="controls">
+            <button class="btn" id="syncBtn">⟳ &nbsp; Sync</button>
+            <button class="btn addEntryTopBtn" id="addEntryTopBtn" type="button" style="display:none">＋ &nbsp; Add Entry</button>
+            <select id="monthSelect"><option value="ALL">All Months</option></select>
+          </div>
         </div>
 
         <section id="dashboardView" class="sectionView active">
@@ -278,9 +296,17 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
         </section>
 
         <section id="collectionView" class="sectionView">
-          <div class="panel">
-            <h2>Collection</h2>
-            <div class="panelSub" id="collectionSub">Year-wise collection · Click Year → Month → Week → Date</div>
+          <div class="panel collectionHeaderPanel">
+            <div class="collectionHeaderRow">
+              <div>
+                <h2>Collection</h2>
+                <div class="panelSub" id="collectionSub">Year-wise collection · Click Year → Month → Week → Date</div>
+              </div>
+              <button class="btn addEntryBtn" id="addEntryBtn" type="button">＋ &nbsp; Add Entry</button>
+            </div>
+          </div>
+
+          <div class="panel" id="collectionListPanel">
             <div class="scroll">
               <table id="collectionHierarchyTable">
                 <thead>
@@ -289,6 +315,28 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
                 <tbody id="collectionBody"></tbody>
               </table>
             </div>
+          </div>
+
+          <div class="panel entryPanel" id="collectionEntryPanel" style="display:none">
+            <div class="entryPanelHead">
+              <div>
+                <h2>＋ Add New Entry</h2>
+                <div class="panelSub">Enter collection details using the existing collection entry flow.</div>
+              </div>
+              <button type="button" class="miniAction" id="backToCollectionBtn">← Collection</button>
+            </div>
+            <form id="collectionEntryForm" class="collectionEntryForm" autocomplete="off">
+              <div class="entryGrid">
+                <div class="formField"><label for="ceEntryNo">Entry No</label><input type="text" id="ceEntryNo" inputmode="numeric" pattern="[0-9]*" placeholder="Enter Entry No" required></div>
+                <div class="formField"><label for="ceStaff">Name</label><select id="ceStaff" required><option value="">Select Staff Member</option><option value="Amir Khan">Amir Khan</option><option value="Ashu Kumar">Ashu Kumar</option><option value="Jaan Mohd">Jaan Mohd</option><option value="Suhail Khan">Suhail Khan</option></select></div>
+                <div class="formField"><label for="ceServiceType">Service Type</label><input type="text" id="ceServiceType" placeholder="e.g., Haircut, Coloring, Facial, etc." required></div>
+                <div class="formField"><label for="ceAmount">Amount (₹)</label><input type="number" id="ceAmount" placeholder="0" min="1" step="1" required></div>
+                <div class="formField"><label for="ceCost">Cost Cutting (₹)</label><input type="number" id="ceCost" placeholder="0" min="0" step="1"></div>
+                <div class="formField"><label for="cePayment">Payment Mode</label><select id="cePayment"><option value="Cash">Cash</option><option value="Online">Online</option></select></div>
+              </div>
+              <div class="entryActions"><button type="submit" class="btn" id="ceSubmitBtn">Save and New Entry</button><button type="button" class="btn secondaryBtn" id="ceCancelBtn">Cancel</button></div>
+              <div id="entryStatus" class="entryStatus"></div>
+            </form>
           </div>
         </section>
         <section id="expensesView" class="sectionView">
@@ -749,6 +797,66 @@ function renderDailyChart(k){
   el.innerHTML=keys.slice(-31).map(d=>`<div class="chartCol" title="${d}"><div class="bar" style="height:${Math.max(2,((data[d].c||0)/max)*100)}%"></div><div class="bar red" style="height:${Math.max(2,((data[d].e||0)/max)*100)}%"></div></div>`).join('');
 }
 
+
+function setCollectionControls(view){
+  const monthSelect=$('monthSelect'), addTop=$('addEntryTopBtn');
+  if(monthSelect) monthSelect.style.display=view==='collection'?'none':'';
+  if(addTop) addTop.style.display=view==='collection'?'':'none';
+}
+function showCollectionEntryForm(){
+  const list=$('collectionListPanel'), form=$('collectionEntryPanel');
+  if(!list||!form)return;
+  list.style.display='none'; form.style.display='block';
+  $('collectionEntryForm')?.scrollIntoView({behavior:'smooth',block:'start'});
+  const staff=$('ceStaff');
+  if(staff&&userName){
+    let opt=[...staff.options].find(o=>o.value===userName);
+    if(!opt){opt=document.createElement('option');opt.value=userName;opt.textContent=userName;staff.appendChild(opt);}
+    staff.value=userName;
+  }
+}
+function hideCollectionEntryForm(){
+  const list=$('collectionListPanel'), form=$('collectionEntryPanel');
+  if(!list||!form)return;
+  form.style.display='none';list.style.display='';
+  const st=$('entryStatus');if(st){st.textContent='';st.className='entryStatus';}
+}
+function showEntryStatus(msg,error=false){
+  const el=$('entryStatus');if(!el)return;el.textContent=msg;el.className='entryStatus show'+(error?' error':'');
+}
+async function sendCollectionEntryToSheet(d){
+  const f=new URLSearchParams();
+  f.append('staff',d.staff);f.append('paymentMode',d.paymentMode);f.append('amount',d.amount);
+  f.append('costCutting',d.costCutting);f.append('serviceType',d.serviceType);f.append('entryNo',d.entryNo);
+  f.append('credential',googleCredential||'');f.append('email',userEmail||'');
+  await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:f.toString()});
+  return true;
+}
+$('addEntryBtn')?.addEventListener('click',showCollectionEntryForm);
+$('addEntryTopBtn')?.addEventListener('click',showCollectionEntryForm);
+$('backToCollectionBtn')?.addEventListener('click',hideCollectionEntryForm);
+$('ceCancelBtn')?.addEventListener('click',hideCollectionEntryForm);
+$('ceEntryNo')?.addEventListener('input',function(){this.value=this.value.replace(/[^0-9]/g,'')});
+$('collectionEntryForm')?.addEventListener('submit',async function(ev){
+  ev.preventDefault();if(this.dataset.submitting==='1')return;
+  if(!googleCredential||!isAuthenticated){showEntryStatus('Please sign in with Google first.',true);return}
+  const entryNo=$('ceEntryNo').value.replace(/[^0-9]/g,'');
+  const staff=$('ceStaff').value,serviceType=$('ceServiceType').value.trim();
+  const amountVal=parseFloat($('ceAmount').value)||0,costCutting=parseFloat($('ceCost').value)||0,paymentMode=$('cePayment').value;
+  if(!entryNo){showEntryStatus('Please enter Entry No.',true);return}
+  if(!staff){showEntryStatus('Please select a staff member.',true);return}
+  if(!serviceType){showEntryStatus('Please enter the service type.',true);return}
+  if(amountVal<=0){showEntryStatus('Please enter a valid amount.',true);return}
+  this.dataset.submitting='1';const b=$('ceSubmitBtn');if(b){b.disabled=true;b.textContent='Saving...'}showEntryStatus('Saving...');
+  try{
+    await sendCollectionEntryToSheet({entryNo,staff,serviceType,amount:amountVal,costCutting,paymentMode});
+    this.reset();$('ceCost').value='';if(userName)$('ceStaff').value=userName;
+    showEntryStatus('Saved successfully. Ready for new entry.');
+    setTimeout(()=>{const s=$('entryStatus');if(s){s.textContent='';s.className='entryStatus'}},2500);
+    await sync();
+  }catch(err){showEntryStatus('Failed to save: '+(err.message||'Please try again.'),true)}
+  finally{this.dataset.submitting='0';if(b){b.disabled=false;b.textContent='Save and New Entry'}}
+});
 $('googleSignInBtn').addEventListener('click',startGoogleLogin);
 $('monthSelect').addEventListener('change',render);
 $('syncBtn').addEventListener('click',sync);
@@ -817,11 +925,14 @@ document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',(
   document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.querySelectorAll('.sectionView').forEach(v=>v.classList.remove('active'));
   const v=$(btn.dataset.view+'View'); if(v)v.classList.add('active');
+  setCollectionControls(btn.dataset.view);
   if(btn.dataset.view==='collection') renderCollectionHierarchy();
+  else hideCollectionEntryForm();
   syncMobileNav(btn.dataset.view);
 }));
 
 createMobileBottomNav();
+setCollectionControls('dashboard');
 window.addEventListener('resize', createMobileBottomNav);
 window.addEventListener('orientationchange', ()=>setTimeout(createMobileBottomNav,100));
 
