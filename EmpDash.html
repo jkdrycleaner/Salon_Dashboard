@@ -20,7 +20,7 @@ body{color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100dvh;
 .status{margin-top:10px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}.status.show{display:block;background:rgba(29,111,194,.08);border:1px solid #29415a;color:#9eb8d1}.error{background:rgba(181,71,63,.2)!important;border-color:#B5473F!important;color:#E88A82!important}
 #portal{display:none;min-height:100dvh}
 .appHeader{height:102px;margin:0 6px;border:1px solid #1e2c3a;border-radius:17px;background:linear-gradient(180deg,#0e151d,#0b1118);display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
-.brandWrap{display:flex;align-items:center;gap:12px}.brandIcon{width:46px;height:46px;border-radius:13px;background:#f3b91d;color:#10151b;display:grid;place-items:center;font-size:25px;font-weight:900}.brandTitle{font-size:25px;font-weight:900;color:#f7be24;letter-spacing:.2px}.brandSub{font-size:12px;color:#94a1af;margin-top:3px}.version{font-size:10px;color:#738293;margin-left:8px;font-weight:700}
+.brandWrap{display:flex;align-items:center;gap:12px}.brandIcon{width:46px;height:46px;border-radius:13px;background:#f3b91d;color:#10151b;display:grid;place-items:center;font-size:25px;font-weight:900;overflow:hidden}.brandIcon img{width:100%;height:100%;object-fit:cover;display:none}.brandIcon #salonLogoFallback{display:block}.brandTitle{font-size:25px;font-weight:900;color:#f7be24;letter-spacing:.2px}.brandSub{font-size:12px;color:#94a1af;margin-top:3px}.version{font-size:10px;color:#738293;margin-left:8px;font-weight:700}
 .profile{display:flex;align-items:center;gap:12px}.avatar{width:46px;height:46px;border-radius:50%;background:#f3b91d;color:#151515;display:grid;place-items:center;font-size:20px;font-weight:900}.profileText .name{font-size:14px;font-weight:800}.profileText .mail{font-size:10px;color:#8b99a9;margin-top:4px}.role{background:rgba(242,189,40,.12);color:#f2bd28;border-radius:14px;padding:8px 13px;font-size:10px;font-weight:800}.logout{width:42px;padding:0;background:#121b24;border:1px solid #293746;color:#dce5ee;font-size:16px}
 .mainShell{display:flex;gap:10px;padding:10px 6px 0}.sidebar{width:137px;flex:0 0 137px;background:#0d141c;border:1px solid #1c2a38;border-radius:16px;min-height:calc(100dvh - 112px);padding:10px 10px}.navBtn{width:100%;height:38px;border:0;background:transparent;color:#aab5c1;border-radius:10px;text-align:left;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px}.navBtn:hover{background:#151f29;color:#fff}.navBtn.active{background:#f4bd26;color:#16130a}.navIcon{display:inline-block;width:19px;text-align:center;margin-right:7px}.content{flex:1;min-width:0;padding:0 0 28px}.pageTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 10px}.pageTitle{font-size:25px;font-weight:900}.pageDesc{font-size:11px;color:#8190a0;margin-top:5px}.controls{display:flex;align-items:center;gap:8px;margin:0}.controls select{min-width:225px}.controls .btn{background:#0e477e;color:#eaf4ff;border-color:#1c6ab2}
 select{height:40px;background:#0f1821;border:1px solid #274052;color:#e9eef4;border-radius:9px;padding:0 12px;outline:none;font-size:12px}
@@ -92,6 +92,21 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   .dashboardGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.statCard{min-width:0;height:142px;padding:11px}.statIcon{width:38px;height:38px;font-size:18px;margin-bottom:8px}.statLabel{font-size:9px}.statValue{font-size:20px;white-space:nowrap}.statFoot{font-size:8px;margin-top:7px}.cardGlow{width:46px;height:46px}
   .dashboardTwoCol{grid-template-columns:minmax(0,1fr);gap:8px}.overviewPanel,.recentPanel{width:100%;min-width:0;padding:11px}.overviewHead,.recentHead{min-width:0}.overviewTitle{min-width:0}.overviewTitle h2{font-size:14px}.earnedBadge{min-width:100px}.overviewChart{height:175px}.recentItem{min-width:0}.recentMain{overflow:hidden}
 }
+
+/* ================= v1.9 MOBILE NAV + DYNAMIC SHOP LOGO ================= */
+#salonLogo{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+@media(max-width:650px){
+  html,body{width:100%;min-width:0;overflow-x:hidden}
+  #portal{min-height:100dvh;padding-bottom:0}
+  .mainShell{display:block;position:relative;padding:7px 4px 84px !important;margin:0;min-height:0}
+  .content{width:100%;min-width:0;min-height:0;padding-bottom:8px}
+  .sidebar{position:fixed !important;left:4px !important;right:4px !important;top:auto !important;bottom:4px !important;width:auto !important;height:66px !important;min-height:66px !important;z-index:9999;display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:4px !important;padding:5px 6px !important;margin:0 !important}
+  .navBtn{min-width:0 !important;width:100% !important;height:54px !important;margin:0 !important;padding:2px 0 !important;font-size:0 !important;line-height:1 !important;display:flex !important;align-items:center !important;justify-content:center !important;gap:0 !important;white-space:nowrap !important}
+  .navIcon{display:block !important;width:auto !important;margin:0 !important;font-size:21px !important;line-height:1 !important}
+  .navBtn.active{background:#f6c33a !important}
+  .brandIcon{width:40px;height:40px;flex:0 0 40px}
+  .brandIcon img{border-radius:10px}
+}
 </style>
 </head>
 <body>
@@ -110,8 +125,8 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   <section id="portal">
     <header class="appHeader">
       <div class="brandWrap">
-        <div class="brandIcon">✂</div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.8</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.9</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -338,6 +353,29 @@ function showPortal(){
   employeePhoto=normalizePhotoUrl(employeePhoto);
   if(employeePhoto){ img.src=employeePhoto; img.style.display='block'; $('avatarInitial').style.display='none'; }
   else { img.removeAttribute('src'); img.style.display='none'; $('avatarInitial').style.display='block'; }
+}
+
+async function loadDashboardLogo(){
+  try{
+    const values=await sheetRead('Dashboard Settings');
+    if(!values||values.length<2)return;
+    const headers=values[0].map(v=>String(v||'').trim().toLowerCase());
+    const settingI=headers.findIndex(h=>h==='setting' || h==='settings');
+    const valueI=headers.findIndex(h=>h==='value');
+    if(settingI<0 || valueI<0)return;
+    let logoUrl='';
+    for(const row of values.slice(1)){
+      const key=String(row[settingI]??'').trim().toLowerCase();
+      if(key==='logo url'){ logoUrl=String(row[valueI]??'').trim(); break; }
+    }
+    logoUrl=normalizePhotoUrl(logoUrl);
+    if(!logoUrl)return;
+    const img=$('salonLogo'), fallback=$('salonLogoFallback');
+    if(!img)return;
+    img.onload=()=>{img.style.display='block';if(fallback)fallback.style.display='none'};
+    img.onerror=()=>{img.style.display='none';if(fallback)fallback.style.display='block'};
+    img.src=logoUrl;
+  }catch(e){ console.warn('Dashboard Settings logo:',e); }
 }
 
 function sheetRead(sheetName){
@@ -645,7 +683,7 @@ document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',(
 (async function init(){
   const returned=await handleOAuthReturn();
   if(!returned)await checkExistingSession();
-  if(isAuthenticated){showPortal();await sync();}
+  if(isAuthenticated){showPortal();loadDashboardLogo();await sync();}
 })();
 setInterval(()=>{if(isAuthenticated)sync()},CONFIG.SYNC_INTERVAL);
 </script>
