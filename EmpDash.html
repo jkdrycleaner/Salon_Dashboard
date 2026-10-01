@@ -142,6 +142,45 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   }
   #mobileBottomNav button.active{background:#f6c33a !important;color:#17202b !important}
 }
+
+/* ================= v2.1 PROFILE + MOBILE NAV FIX ================= */
+.logout{display:none !important}
+@media(max-width:650px){
+  #mobileBottomNav{
+    display:grid !important;
+    position:fixed !important;
+    left:6px !important;
+    right:6px !important;
+    bottom:6px !important;
+    width:auto !important;
+    height:66px !important;
+    min-height:66px !important;
+    z-index:2147483647 !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:4px !important;
+    padding:5px !important;
+    margin:0 !important;
+    background:#fff !important;
+    border:1px solid #dce3eb !important;
+    border-radius:16px !important;
+    box-shadow:0 -5px 20px rgba(31,47,65,.18) !important;
+    overflow:hidden !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+  #mobileBottomNav button{
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    min-width:0 !important; width:100% !important; height:54px !important;
+    border:0 !important; border-radius:11px !important; background:transparent !important;
+    color:#526276 !important; align-items:center !important; justify-content:center !important;
+    padding:0 !important; margin:0 !important; font-size:22px !important; line-height:1 !important;
+  }
+  #mobileBottomNav button.active{background:#f6c33a !important;color:#17202b !important}
+  #mobileBottomNav .navIcon{display:block !important;font-size:22px !important;margin:0 !important;width:auto !important}
+  .mainShell{padding-bottom:88px !important}
+}
 </style>
 </head>
 <body>
@@ -161,7 +200,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.0</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.1</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -715,29 +754,38 @@ function syncMobileNav(view){
 }
 
 function createMobileBottomNav(){
-  if(document.getElementById('mobileBottomNav'))return;
+  let nav=document.getElementById('mobileBottomNav');
   const original=document.querySelector('.mainShell > .sidebar');
   if(!original)return;
-  const nav=document.createElement('nav');
-  nav.id='mobileBottomNav';
-  nav.setAttribute('aria-label','Mobile navigation');
-  const icons={dashboard:'⌂',collection:'₹',expenses:'▣',salary:'▤'};
-  original.querySelectorAll('.navBtn').forEach(src=>{
-    const b=document.createElement('button');
-    b.type='button'; b.dataset.view=src.dataset.view; b.title=src.textContent.trim();
-    b.innerHTML='<span class="navIcon">'+(icons[src.dataset.view]||'•')+'</span>';
-    b.addEventListener('click',()=>{
-      const target=original.querySelector('.navBtn[data-view="'+src.dataset.view+'"]');
-      if(target)target.click();
-      syncMobileNav(src.dataset.view);
-      window.scrollTo({top:0,behavior:'smooth'});
+  if(!nav){
+    nav=document.createElement('nav');
+    nav.id='mobileBottomNav';
+    nav.setAttribute('aria-label','Mobile navigation');
+    const icons={dashboard:'⌂',collection:'₹',expenses:'▣',salary:'▤'};
+    original.querySelectorAll('.navBtn').forEach(src=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.dataset.view=src.dataset.view;
+      b.title=src.textContent.trim();
+      b.innerHTML='<span class="navIcon">'+(icons[src.dataset.view]||'•')+'</span>';
+      b.addEventListener('click',()=>{
+        const target=original.querySelector('.navBtn[data-view="'+src.dataset.view+'"]');
+        if(target)target.click();
+        syncMobileNav(src.dataset.view);
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+      nav.appendChild(b);
     });
-    nav.appendChild(b);
-  });
-  document.body.appendChild(nav);
+    document.body.appendChild(nav);
+  }
+  // Force the mobile nav visible on narrow screens even if an older CSS block hides it.
+  if(window.innerWidth<=650){
+    Object.assign(nav.style,{display:'grid',position:'fixed',left:'6px',right:'6px',bottom:'6px',height:'66px',minHeight:'66px',zIndex:'2147483647',visibility:'visible',opacity:'1'});
+  }
   const active=original.querySelector('.navBtn.active');
   syncMobileNav(active?active.dataset.view:'dashboard');
 }
+
 
 document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
@@ -748,6 +796,8 @@ document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',(
 }));
 
 createMobileBottomNav();
+window.addEventListener('resize', createMobileBottomNav);
+window.addEventListener('orientationchange', ()=>setTimeout(createMobileBottomNav,100));
 
 (async function init(){
   const returned=await handleOAuthReturn();
