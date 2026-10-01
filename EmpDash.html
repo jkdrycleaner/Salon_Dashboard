@@ -30,6 +30,42 @@ select{height:40px;background:#0f1821;border:1px solid #274052;color:#e9eef4;bor
 .sectionView{display:none}.sectionView.active{display:block}
 @media(max-width:900px){.dashboardGrid{grid-template-columns:1fr 1fr}.sidebar{width:125px;flex-basis:125px}.pageTop{align-items:flex-start;flex-direction:column}.controls{width:100%}.controls select{flex:1}}
 @media(max-width:650px){.appHeader{height:auto;min-height:88px;padding:12px}.brandTitle{font-size:19px}.brandIcon{width:40px;height:40px}.profileText,.role{display:none}.mainShell{padding:8px 5px}.sidebar{width:66px;flex-basis:66px;padding:8px 6px}.navBtn{padding:0;text-align:center;font-size:0}.navIcon{margin:0;font-size:15px}.content{width:calc(100vw - 82px)}.dashboardGrid{grid-template-columns:1fr 1fr}.statCard{height:145px;padding:12px}.statIcon{width:40px;height:40px;font-size:19px}.statValue{font-size:19px}.chartPanel{height:260px}.controls{flex-wrap:wrap}.controls select{width:100%}}
+
+/* ================= LIGHT THEME v1.4 ================= */
+:root{--bg:#f6f8fb;--panel:#ffffff;--panel2:#fbfcfe;--line:#dfe5ec;--text:#182536;--muted:#66758a;--blue:#1677e8;--blue2:#0d63c9;--gold:#f4b91e;--green:#08a96d;--red:#ef6268;--purple:#7540b8}
+html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(--text)}
+.container{background:transparent}
+#login{background:linear-gradient(180deg,#f7f9fc,#eef2f7)}
+.loginBox{background:#fff;border:1px solid #dfe5ec;box-shadow:0 18px 50px rgba(28,45,65,.10)}
+.login h1{color:#182536}.sub{color:#66758a}
+.google-btn{background:#fff;color:#182536;border:1px solid #d4dce5;box-shadow:0 2px 8px rgba(28,45,65,.05)}
+.status.show{background:#eef6ff;border-color:#b9d8fb;color:#28629a}.error{background:#fff0f0!important;border-color:#ef9a9f!important;color:#c54b53!important}
+.appHeader{border-color:#dce3eb;background:#fff;box-shadow:0 5px 20px rgba(31,47,65,.08)}
+.brandTitle{color:#182536}.brandSub{color:#718095}.version{color:#7c8898}
+.profileText .name{color:#182536}.profileText .mail{color:#718095}
+.role{background:#fff4d7;color:#a56d00;border:1px solid #f2dfaa}
+.logout{background:#fff;border-color:#d6dee7;color:#34465a}
+.mainShell{background:transparent}
+.sidebar{background:#fff;border-color:#dce3eb;box-shadow:0 4px 16px rgba(31,47,65,.05)}
+.navBtn{color:#526276}.navBtn:hover{background:#f3f6fa;color:#182536}.navBtn.active{background:#f6c33a;color:#17202b;box-shadow:0 2px 7px rgba(190,137,0,.12)}
+.pageTitle{color:#182536}.pageDesc{color:#718095}
+.controls select,select{background:#fff;border-color:#d5dee8;color:#26364a;box-shadow:0 2px 7px rgba(31,47,65,.04)}
+.controls .btn{background:#1677e8;color:#fff;border-color:#1677e8;box-shadow:0 3px 8px rgba(22,119,232,.18)}
+.dashboardGrid{gap:12px}
+.statCard{border-color:#d7e0e8;box-shadow:0 5px 16px rgba(31,47,65,.05)}
+.statCard:after{background:rgba(255,255,255,.45)}
+.statCard.collection{background:linear-gradient(145deg,#effbf6,#e4f6ef);border-color:#bde7d6}
+.statCard.expenses{background:linear-gradient(145deg,#eef6ff,#e3f0fd);border-color:#bfdcf8}
+.statCard.salary{background:linear-gradient(145deg,#fffaf0,#fff4d8);border-color:#f1dda5}
+.statCard.payable{background:linear-gradient(145deg,#faf3ff,#f1e8fb);border-color:#ddc8ef}
+.collection .statIcon{background:#08a96d;color:#fff}.expenses .statIcon{background:#1677d8;color:#fff}.salary .statIcon{background:#b27b08;color:#fff}.payable .statIcon{background:#7540b8;color:#fff}
+.statLabel{color:#46586c}.statValue{color:#182536}.statFoot{color:#718095}
+.panel{background:#fff;border-color:#dce3eb;box-shadow:0 5px 16px rgba(31,47,65,.045)}
+.panel h2{color:#182536}.panelSub{color:#718095}.chartLegend{color:#65758a}.legendDot{background:#20c98b}.legendDot.red{background:#ef6268}.chartArea{border-top-color:#e4e9ef}.emptyChart{color:#98a5b4}
+.scroll table{color:#33465b}th,td{border-bottom-color:#e8edf2}th{color:#7a899a}.monthRow:hover{background:#f6f8fb}.monthDetail{background:#fbfcfe}.badge{background:#fff4d7;color:#9b6a00}
+#syncStatus{color:#526276}
+.btn{box-shadow:0 2px 6px rgba(31,47,65,.05)}
+@media(max-width:650px){.appHeader{box-shadow:0 4px 14px rgba(31,47,65,.07)}}
 </style>
 </head>
 <body>
@@ -49,7 +85,7 @@ select{height:40px;background:#0f1821;border:1px solid #274052;color:#e9eef4;bor
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon">✂</div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.3</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.4</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <div class="avatar" id="avatar">A</div>
