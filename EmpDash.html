@@ -221,6 +221,28 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
 .entryStatus{display:none;margin-top:10px;padding:9px 11px;border-radius:9px;font-size:11px}.entryStatus.show{display:block;background:#effaf5;border:1px solid #bde7d6;color:#137a59}.entryStatus.error{display:block;background:#fff1f1;border:1px solid #f0b6b6;color:#b5473f}
 @media(max-width:650px){.collectionHeaderRow{align-items:center}.collectionHeaderRow .addEntryBtn{height:38px;padding:0 11px;font-size:11px;white-space:nowrap}.entryGrid{grid-template-columns:1fr;gap:9px}.entryPanelHead{align-items:center}.entryActions{position:sticky;bottom:76px;background:#fff;padding:8px 0 2px;z-index:3}.entryActions .btn{flex:1;min-width:0}.formField input,.formField select{height:40px}}
 
+
+
+/* v2.4 - Expense month/date drill-down + embedded existing expense flow */
+.addExpenseTopBtn,.addExpenseBtn{background:#f6c33a!important;color:#17202b!important;border-color:#e7b52c!important;box-shadow:0 3px 10px rgba(190,137,0,.12)}
+.expenseHeaderPanel{padding:14px 16px}.expenseHeaderRow{display:flex;align-items:center;justify-content:space-between;gap:12px}.expenseHeaderRow h2{color:#182536}
+.expenseEntryPanel{margin-top:12px}.expenseEntryHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.expenseEntryHead h2{color:#182536}
+.expenseSteps{display:flex;gap:5px;margin-bottom:12px}.expenseDot{height:5px;flex:1;background:#dfe6ee;border-radius:8px}.expenseDot.on,.expenseDot.done{background:#f6c33a}
+.expenseStep{display:none}.expenseStep.on{display:block}.expenseStep h3{font-size:15px;color:#182536;margin-bottom:9px}
+.expenseChoiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.expenseTypeGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.expenseChoice{min-height:42px;border:1px solid #d5dee8;background:#fff;border-radius:10px;color:#405167;font-size:12px;font-weight:700;padding:9px;cursor:pointer}.expenseChoice.sel{border-color:#f0bb2c;background:#fff7df;color:#17202b;box-shadow:0 0 0 2px rgba(246,195,58,.14)}
+.expenseStep label{display:block;font-size:10px;font-weight:800;color:#526276;margin:10px 0 5px;text-transform:uppercase}
+.portalExpenseInput,.portalExpenseTextarea{width:100%;background:#fff;border:1px solid #d5dee8;border-radius:10px;color:#26364a;padding:10px;font-size:12px;outline:none}.portalExpenseInput{height:42px}.portalExpenseTextarea{height:72px;resize:none}
+.expenseStep .btn{margin-top:9px}.expenseEntryStatus{margin-top:10px;padding:9px 11px;border-radius:9px;font-size:11px}.expenseEntryStatus.show{display:block;background:#effaf5;border:1px solid #bde7d6;color:#137a59}.expenseEntryStatus.error{display:block;background:#fff1f1;border:1px solid #f0b6b6;color:#b5473f}
+.expenseRow,.expenseMonthRow{cursor:pointer}.expenseRow:hover,.expenseMonthRow:hover{background:#f8fafc}
+.expenseDetailWrap{background:#fafcff;border-top:1px solid #e3e9ef}.expenseDetailWrap table{width:100%}.expenseDetailWrap td{font-size:11px}
+.expenseBackBtn{margin-bottom:10px}
+@media(max-width:650px){
+  .expenseHeaderRow{align-items:center}.expenseHeaderRow .addExpenseBtn{height:38px;padding:0 11px;font-size:11px;white-space:nowrap}
+  .expenseEntryHead{align-items:center}.expenseChoiceGrid{grid-template-columns:1fr 1fr;gap:7px}.expenseTypeGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .expenseChoice{min-height:39px;padding:7px 5px;font-size:10px}.expenseStep h3{font-size:14px}
+}
+
 </style>
 </head>
 <body>
@@ -240,7 +262,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.3</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.4</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -267,6 +289,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
           <div class="controls">
             <button class="btn" id="syncBtn">⟳ &nbsp; Sync</button>
             <button class="btn addEntryTopBtn" id="addEntryTopBtn" type="button" style="display:none">＋ &nbsp; Add Entry</button>
+            <button class="btn addExpenseTopBtn" id="addExpenseTopBtn" type="button" style="display:none">＋ &nbsp; Add Expense</button>
             <select id="monthSelect"><option value="ALL">All Months</option></select>
           </div>
         </div>
@@ -340,7 +363,67 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
           </div>
         </section>
         <section id="expensesView" class="sectionView">
-          <div class="panel"><h2>Expense History</h2><div class="panelSub">Expenses linked to this employee.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Remark</th><th class="num">Amount</th></tr></thead><tbody id="expenseBody"></tbody></table></div></div>
+          <div class="panel expenseHeaderPanel">
+            <div class="expenseHeaderRow">
+              <div>
+                <h2>Expenses</h2>
+                <div class="panelSub" id="expenseSub">Month-wise expenses · Click Month → Date</div>
+              </div>
+              <button class="btn addExpenseBtn" id="addExpenseBtn" type="button">＋ &nbsp; Add Expense</button>
+            </div>
+          </div>
+
+          <div class="panel" id="expenseListPanel">
+            <div class="scroll">
+              <table id="expenseHierarchyTable">
+                <thead><tr><th>Period</th><th class="num">Total Expense</th></tr></thead>
+                <tbody id="expenseHierarchyBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel expenseEntryPanel" id="expenseEntryPanel" style="display:none">
+            <div class="expenseEntryHead">
+              <div>
+                <h2>＋ Add Expense</h2>
+                <div class="panelSub">Use the existing expense entry flow.</div>
+              </div>
+              <button type="button" class="miniAction" id="backToExpensesBtn">← Expenses</button>
+            </div>
+
+            <div class="expenseSteps">
+              <i class="expenseDot on" id="x1"></i><i class="expenseDot" id="x2"></i><i class="expenseDot" id="x3"></i>
+            </div>
+
+            <section id="expenseStep1" class="expenseStep on">
+              <h3>Daily Expense — Employee</h3>
+              <div id="expenseEmployeeChoices" class="expenseChoiceGrid"></div>
+              <button type="button" class="btn secondaryBtn" id="expenseStep1Back">← Expenses</button>
+            </section>
+
+            <section id="expenseStep2" class="expenseStep">
+              <h3>Daily Expense — Details</h3>
+              <label>Expense Date</label>
+              <div id="expenseDateChoices" class="expenseChoiceGrid"></div>
+              <label>Expense Type</label>
+              <div id="expenseTypeChoices" class="expenseChoiceGrid expenseTypeGrid"></div>
+              <button type="button" class="btn secondaryBtn" id="expenseStep2Back">← Back</button>
+            </section>
+
+            <section id="expenseStep3" class="expenseStep">
+              <h3>Payment &amp; Details</h3>
+              <label>Payment Mode</label>
+              <div id="expensePaymentChoices" class="expenseChoiceGrid"></div>
+              <label for="portalExpenseAmount">Amount</label>
+              <input id="portalExpenseAmount" class="portalExpenseInput" type="number" min="0.01" step="0.01">
+              <label for="portalExpenseRemark">Remark</label>
+              <textarea id="portalExpenseRemark" class="portalExpenseTextarea"></textarea>
+              <button type="button" class="btn secondaryBtn" id="expenseStep3Back">← Back</button>
+              <button type="button" class="btn" id="reviewExpenseBtn">Review &amp; Submit</button>
+            </section>
+
+            <div id="expenseEntryStatus" class="entryStatus"></div>
+          </div>
         </section>
         <section id="salaryView" class="sectionView">
           <div class="panel"><h2>Salary Payment History</h2><div class="panelSub">Payments recorded in the Salary sheet.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Mode</th><th class="num">Amount</th></tr></thead><tbody id="paymentBody"></tbody></table></div></div>
@@ -653,12 +736,84 @@ function render(){
     `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Salary')}</td><td>${esc(x.mode||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
   ).join(''):'<tr><td colspan="4">No salary payments found.</td></tr>';
 
-  if($('expenseBody'))$('expenseBody').innerHTML=expenses.length?expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
-    `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Expense')}</td><td>${esc(x.remark||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
-  ).join(''):'<tr><td colspan="4">No expenses found.</td></tr>';
-
+  renderExpenseHierarchy();
   renderCollectionHierarchy();
   renderDashboardOverview(k);
+}
+
+
+function groupExpensesByMonth(){
+  const map={};
+  expenses.forEach(x=>{
+    if(!x.date)return;
+    const month=monthKey(x.date);
+    if(!map[month])map[month]={total:0,dates:{}};
+    map[month].total+=Number(x.amount||0);
+    if(!map[month].dates[x.date])map[month].dates[x.date]=[];
+    map[month].dates[x.date].push(x);
+  });
+  return map;
+}
+function renderExpenseHierarchy(){
+  const body=$('expenseHierarchyBody');
+  if(!body)return;
+  const data=groupExpensesByMonth();
+  const monthsList=Object.keys(data).sort().reverse();
+  if(!monthsList.length){
+    body.innerHTML='<tr><td colspan="2" style="text-align:center;color:#7b8796;padding:20px">No expenses found.</td></tr>';
+    if($('expenseSub'))$('expenseSub').textContent='No expense data available';
+    return;
+  }
+  if($('expenseSub'))$('expenseSub').textContent='Month-wise expenses · Click Month → Date';
+  body.innerHTML=monthsList.map(m=>{
+    const x=data[m];
+    return `<tr class="expenseMonthRow" data-expense-month="${m}">
+      <td><span class="badge">${monthLabel(m)}</span></td>
+      <td class="num">${money(x.total)}</td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('.expenseMonthRow').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const m=row.dataset.expenseMonth;
+      renderExpenseDates(m);
+    });
+  });
+}
+function renderExpenseDates(month){
+  const body=$('expenseHierarchyBody');
+  const data=groupExpensesByMonth();
+  const obj=data[month];
+  if(!body||!obj)return;
+  const dates=Object.keys(obj.dates).sort().reverse();
+  if($('expenseSub'))$('expenseSub').textContent=monthLabel(month)+' · Click Date for details';
+  let html=`<tr><td colspan="2"><button type="button" class="miniAction expenseBackBtn" id="expenseBackMonths">← Months</button></td></tr>`;
+  html+=dates.map(d=>{
+    const total=obj.dates[d].reduce((s,x)=>s+Number(x.amount||0),0);
+    return `<tr class="expenseRow" data-expense-date="${d}" data-expense-month="${month}">
+      <td>${esc(d)}</td><td class="num">${money(total)}</td>
+    </tr>`;
+  }).join('');
+  body.innerHTML=html||'<tr><td colspan="2">No expenses found.</td></tr>';
+  $('expenseBackMonths')?.addEventListener('click',renderExpenseHierarchy);
+  body.querySelectorAll('.expenseRow').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const d=row.dataset.expenseDate,m=row.dataset.expenseMonth;
+      renderExpenseDateDetails(m,d);
+    });
+  });
+}
+function renderExpenseDateDetails(month,date){
+  const body=$('expenseHierarchyBody'), data=groupExpensesByMonth();
+  const rows=data[month]?.dates?.[date]||[];
+  if(!body)return;
+  if($('expenseSub'))$('expenseSub').textContent=fmtDate(date)+' · Expense details';
+  let html=`<tr><td colspan="2"><button type="button" class="miniAction expenseBackBtn" id="expenseBackDates">← ${monthLabel(month)}</button></td></tr>`;
+  html+=rows.map(x=>`<tr>
+    <td><strong>${esc(x.type||'Expense')}</strong><div style="font-size:10px;color:#7b8796;margin-top:3px">${esc(x.remark||'-')} · ${esc(x.mode||'-')}</div></td>
+    <td class="num">${money(x.amount)}</td>
+  </tr>`).join('');
+  body.innerHTML=html;
+  $('expenseBackDates')?.addEventListener('click',()=>renderExpenseDates(month));
 }
 
 function collectionEarned(total){ return total * 0.5; }
@@ -799,9 +954,10 @@ function renderDailyChart(k){
 
 
 function setCollectionControls(view){
-  const monthSelect=$('monthSelect'), addTop=$('addEntryTopBtn');
-  if(monthSelect) monthSelect.style.display=view==='collection'?'none':'';
-  if(addTop) addTop.style.display=view==='collection'?'':'none';
+  const monthSelect=$('monthSelect'), addTop=$('addEntryTopBtn'), addExpenseTop=$('addExpenseTopBtn');
+  if(monthSelect) monthSelect.style.display=(view==='collection'||view==='expenses')?'none':'';
+  if(addTop) addTop.style.display='none';
+  if(addExpenseTop) addExpenseTop.style.display=view==='expenses'?'':'none';
 }
 function showCollectionEntryForm(){
   const list=$('collectionListPanel'), form=$('collectionEntryPanel');
@@ -921,16 +1077,143 @@ function createMobileBottomNav(){
 }
 
 
+
+let portalExpenseAccess=null, portalExpenseEmployees=[], portalExpenseTypes=[];
+let portalExpense={name:'',date:'',type:'',pay:'Cash'};
+
+async function loadPortalExpenseAccess(){
+  if(portalExpenseAccess)return portalExpenseAccess;
+  const url=SCRIPT_URL+'?action=access&email='+encodeURIComponent(userEmail||'');
+  const x=await new Promise((resolve,reject)=>{
+    const cb='__expenseAccess_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    const timer=setTimeout(()=>{try{delete window[cb]}catch(e){};s.remove();reject(new Error('Expense access check timed out.'))},15000);
+    window[cb]=data=>{clearTimeout(timer);try{delete window[cb]}catch(e){};s.remove();resolve(data)};
+    s.onerror=()=>{clearTimeout(timer);try{delete window[cb]}catch(e){};s.remove();reject(new Error('Expense access check failed.'))};
+    s.src=url+'&callback='+cb;
+    document.body.appendChild(s);
+  });
+  if(!x.ok)throw new Error(x.message||'Expense access denied.');
+  portalExpenseAccess=x.user||{};
+  portalExpenseEmployees=x.employeeNames||[];
+  portalExpenseTypes=x.expenseTypes||[];
+  if(portalExpenseAccess.dailyExpense!==true)throw new Error('Daily Expense access is not assigned to this employee.');
+  return portalExpenseAccess;
+}
+function expenseChoiceHtml(arr,selected){
+  return (arr||[]).map(x=>`<button type="button" class="expenseChoice ${x===selected?'sel':''}" data-expense-choice="${esc(x)}">${esc(x)}</button>`).join('');
+}
+function bindExpenseChoices(containerId,items,selected,handler){
+  const el=$(containerId); if(!el)return;
+  el.innerHTML=expenseChoiceHtml(items,selected);
+  el.querySelectorAll('[data-expense-choice]').forEach(b=>b.addEventListener('click',()=>handler(b.dataset.expenseChoice)));
+}
+function setExpenseStep(n){
+  ['expenseStep1','expenseStep2','expenseStep3'].forEach((id,i)=>$(id)?.classList.toggle('on',i===n-1));
+  ['x1','x2','x3'].forEach((id,i)=>{const e=$(id);if(e)e.className='expenseDot '+(i===n-1?'on':i<n-1?'done':'')});
+}
+function startPortalExpense(){
+  showExpenseEntryForm();
+  const statusEl=$('expenseEntryStatus'); if(statusEl){statusEl.className='entryStatus';statusEl.textContent='';}
+  portalExpense={name:userName||'',date:new Date().toISOString().slice(0,10),type:'',pay:'Cash'};
+  loadPortalExpenseAccess().then(()=>{
+    const people=portalExpenseAccess.entryAccess==='All' && portalExpenseEmployees.length ? portalExpenseEmployees : [userName];
+    bindExpenseChoices('expenseEmployeeChoices',people,portalExpense.name,x=>{
+      portalExpense.name=x; setExpenseStep(2);
+    });
+    bindExpenseChoices('expenseDateChoices',[portalExpense.date],portalExpense.date,x=>{
+      portalExpense.date=x; renderPortalExpenseTypes();
+    });
+    renderPortalExpenseTypes();
+    bindExpenseChoices('expensePaymentChoices',['Cash','Online'],portalExpense.pay,x=>{portalExpense.pay=x;renderPortalExpensePayments()});
+    setExpenseStep(1);
+  }).catch(err=>showExpenseEntryStatus(err.message||'Expense access denied.',true));
+}
+function renderPortalExpenseTypes(){
+  bindExpenseChoices('expenseTypeChoices',portalExpenseTypes,portalExpense.type,x=>{
+    portalExpense.type=x; setExpenseStep(3);
+  });
+}
+function renderPortalExpensePayments(){
+  bindExpenseChoices('expensePaymentChoices',['Cash','Online'],portalExpense.pay,x=>{portalExpense.pay=x;renderPortalExpensePayments()});
+}
+function showExpenseEntryForm(){
+  $('expenseListPanel').style.display='none';
+  $('expenseEntryPanel').style.display='block';
+  $('expenseEntryPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hideExpenseEntryForm(){
+  const p=$('expenseEntryPanel'),l=$('expenseListPanel');
+  if(p)p.style.display='none';
+  if(l)l.style.display='block';
+  if($('expenseSub'))$('expenseSub').textContent='Month-wise expenses · Click Month → Date';
+}
+function showExpenseEntryStatus(msg,error=false){
+  const e=$('expenseEntryStatus');if(!e)return;
+  e.textContent=msg;e.className='entryStatus show'+(error?' error':'');
+}
+async function postPortalExpense(data){
+  return new Promise((resolve,reject)=>{
+    const frame=document.createElement('iframe');
+    frame.name='portalExpenseSubmitFrame_'+Date.now();
+    frame.style.display='none';document.body.appendChild(frame);
+    const form=document.createElement('form');
+    form.method='POST';form.action=SCRIPT_URL;form.target=frame.name;form.style.display='none';
+    Object.entries(data).forEach(([k,v])=>{
+      const input=document.createElement('input');input.type='hidden';input.name=k;input.value=v==null?'':String(v);form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    let finished=false;
+    const finish=()=>{if(finished)return;finished=true;setTimeout(()=>{form.remove();frame.remove()},300);resolve(true)};
+    frame.onload=finish;form.submit();setTimeout(finish,2500);
+  });
+}
+function reviewPortalExpense(){
+  const a=Number($('portalExpenseAmount')?.value||0), remark=$('portalExpenseRemark')?.value.trim()||'';
+  if(!portalExpense.name||!portalExpense.date||!portalExpense.type||a<=0){
+    showExpenseEntryStatus('Please complete all fields.',true);return;
+  }
+  const summary={
+    email:userEmail,name:portalExpense.name,expenseDate:portalExpense.date,expenseType:portalExpense.type,
+    paymentMode:portalExpense.pay,amount:a,remark
+  };
+  const modal=$('profileMenu'); // keep profile untouched; use native confirmation to preserve exact submit flow
+  if(!window.confirm('Submit this expense entry?'))return;
+  finalSubmitPortalExpense(summary);
+}
+async function finalSubmitPortalExpense(d){
+  showExpenseEntryStatus('Saving...');
+  const b=$('reviewExpenseBtn');if(b){b.disabled=true;b.textContent='Saving...'}
+  try{
+    await postPortalExpense({action:'expense',email:d.email,name:d.name,expenseDate:d.expenseDate,expenseType:d.expenseType,paymentMode:d.paymentMode,amount:d.amount,remark:d.remark});
+    if($('portalExpenseAmount'))$('portalExpenseAmount').value='';
+    if($('portalExpenseRemark'))$('portalExpenseRemark').value='';
+    showExpenseEntryStatus('Saved Successfully.');
+    await sync();
+    setTimeout(()=>hideExpenseEntryForm(),900);
+  }catch(e){showExpenseEntryStatus(e.message||'Save failed.',true)}
+  finally{if(b){b.disabled=false;b.textContent='Review & Submit'}}
+}
+
 document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.querySelectorAll('.sectionView').forEach(v=>v.classList.remove('active'));
   const v=$(btn.dataset.view+'View'); if(v)v.classList.add('active');
   setCollectionControls(btn.dataset.view);
-  if(btn.dataset.view==='collection') renderCollectionHierarchy();
-  else hideCollectionEntryForm();
+  if(btn.dataset.view==='collection'){ renderCollectionHierarchy(); hideExpenseEntryForm(); }
+  else if(btn.dataset.view==='expenses'){ renderExpenseHierarchy(); hideCollectionEntryForm(); }
+  else { hideCollectionEntryForm(); hideExpenseEntryForm(); }
   syncMobileNav(btn.dataset.view);
 }));
 
+
+$('addExpenseBtn')?.addEventListener('click',startPortalExpense);
+$('addExpenseTopBtn')?.addEventListener('click',startPortalExpense);
+$('backToExpensesBtn')?.addEventListener('click',hideExpenseEntryForm);
+$('expenseStep1Back')?.addEventListener('click',hideExpenseEntryForm);
+$('expenseStep2Back')?.addEventListener('click',()=>setExpenseStep(1));
+$('expenseStep3Back')?.addEventListener('click',()=>setExpenseStep(2));
+$('reviewExpenseBtn')?.addEventListener('click',reviewPortalExpense);
 createMobileBottomNav();
 setCollectionControls('dashboard');
 window.addEventListener('resize', createMobileBottomNav);
