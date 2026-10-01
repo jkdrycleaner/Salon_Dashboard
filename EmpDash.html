@@ -66,6 +66,9 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
 #syncStatus{color:#526276}
 .btn{box-shadow:0 2px 6px rgba(31,47,65,.05)}
 @media(max-width:650px){.appHeader{box-shadow:0 4px 14px rgba(31,47,65,.07)}}
+
+/* Collection drill-down */
+.collectionLevel{cursor:pointer}.collectionLevel:hover{background:#f5f8fc}.collectionLevel .periodCell{font-weight:800}.collectionArrow{display:inline-block;width:18px;color:#8a98a8;font-size:10px;transition:transform .15s}.collectionArrow.open{transform:rotate(90deg);color:#1677e8}.collectionDetailRow{display:none;background:#fbfcfe}.collectionDetailRow td{padding:6px 7px}.collectionDetailTable{width:100%;border-collapse:collapse}.collectionDetailTable th{font-size:8px;color:#7b8796;text-transform:uppercase}.collectionDetailTable td,.collectionDetailTable th{padding:7px;border-bottom:1px solid #e8edf2}.collectionDetailTable .periodCell{font-weight:700}.collectionLevel.yearRow td{font-weight:800}.collectionLevel.monthRow2 td{font-weight:700}.collectionLevel.weekRow2 td{font-weight:600}
 </style>
 </head>
 <body>
@@ -85,7 +88,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon">✂</div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.5</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.6</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <div class="avatar" id="avatar">A</div>
@@ -123,7 +126,18 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
         </section>
 
         <section id="collectionView" class="sectionView">
-          <div class="panel"><h2>Collection</h2><div class="panelSub">Your collection entries.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Payment Mode</th><th class="num">Amount</th></tr></thead><tbody id="collectionBody"></tbody></table></div></div>
+          <div class="panel">
+            <h2>Collection</h2>
+            <div class="panelSub" id="collectionSub">Year-wise collection · Click Year → Month → Week → Date</div>
+            <div class="scroll">
+              <table id="collectionHierarchyTable">
+                <thead>
+                  <tr><th>Period</th><th class="num">Total Collection</th><th class="num">My Earned</th></tr>
+                </thead>
+                <tbody id="collectionBody"></tbody>
+              </table>
+            </div>
+          </div>
         </section>
         <section id="expensesView" class="sectionView">
           <div class="panel"><h2>Expense History</h2><div class="panelSub">Expenses linked to this employee.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Remark</th><th class="num">Amount</th></tr></thead><tbody id="expenseBody"></tbody></table></div></div>
@@ -165,7 +179,7 @@ function storageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function storageSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function storageRemove(k){try{localStorage.removeItem(k)}catch(e){}}
 function status(msg,error=false){
-  const el=$('syncStatus'); el.textContent=msg; el.className='status show'+(error?' error':'');
+  const el=$('syncStatus'); if(!el)return; el.textContent=msg; el.className='status show'+(error?' error':'');
 }
 function loginStatus(msg,error=false){
   const el=$('loginStatus'); el.textContent=msg; el.className='status show'+(error?' error':'');
@@ -369,13 +383,19 @@ function render(){
   select.value=months.includes(old)||old==='ALL'?old:'ALL';
 
   const k=select.value, a=calc(rowsFor(k));
-  $('collection').textContent=money(a.collection);$('earned').textContent=money(a.earned);
-  $('expenses').textContent=money(a.expense);$('paid').textContent=money(a.paid);$('payable').textContent=money(a.payable);
-  $('heroSub').textContent=k==='ALL'?'All Months':monthLabel(k);
-  $('calcCollection').textContent=money(a.collection);$('calcEarned').textContent=money(a.earned);
-  $('calcExpenses').textContent=money(a.expense);$('calcPaid').textContent=money(a.paid);$('calcPayable').textContent=money(a.payable);
+  if($('collection'))$('collection').textContent=money(a.collection);
+  if($('earned'))$('earned').textContent=money(a.earned);
+  if($('expenses'))$('expenses').textContent=money(a.expense);
+  if($('paid'))$('paid').textContent=money(a.paid);
+  if($('payable'))$('payable').textContent=money(a.payable);
+  if($('heroSub'))$('heroSub').textContent=k==='ALL'?'All Months':monthLabel(k);
+  if($('calcCollection'))$('calcCollection').textContent=money(a.collection);
+  if($('calcEarned'))$('calcEarned').textContent=money(a.earned);
+  if($('calcExpenses'))$('calcExpenses').textContent=money(a.expense);
+  if($('calcPaid'))$('calcPaid').textContent=money(a.paid);
+  if($('calcPayable'))$('calcPayable').textContent=money(a.payable);
 
-  $('monthBody').innerHTML=months.length?months.map(m=>{
+  if($('monthBody'))$('monthBody').innerHTML=months.length?months.map(m=>{
     const x=calc(rowsFor(m));
     return `<tr class="monthRow" data-month="${m}">
       <td><span class="badge">${monthLabel(m)}</span></td>
@@ -384,16 +404,106 @@ function render(){
     </tr>`;
   }).join(''):'<tr><td colspan="6">No salary data found.</td></tr>';
 
-  $('paymentBody').innerHTML=payments.length?payments.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
+  if($('paymentBody'))$('paymentBody').innerHTML=payments.length?payments.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
     `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Salary')}</td><td>${esc(x.mode||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
   ).join(''):'<tr><td colspan="4">No salary payments found.</td></tr>';
 
-  $('expenseBody').innerHTML=expenses.length?expenses.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
+  if($('expenseBody'))$('expenseBody').innerHTML=expenses.length?expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
     `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Expense')}</td><td>${esc(x.remark||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
   ).join(''):'<tr><td colspan="4">No expenses found.</td></tr>';
 
-  $('collectionBody').innerHTML=collections.length?collections.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.mode||'-')}</td><td class="num">${money(x.amount)}</td></tr>`).join(''):'<tr><td colspan="3">No collection data found.</td></tr>';
+  renderCollectionHierarchy();
   renderDailyChart(k);
+}
+
+function collectionEarned(total){ return total * 0.5; }
+function groupCollectionByYear(){
+  const map={};
+  collections.forEach(x=>{
+    if(!x.date)return;
+    const year=x.date.slice(0,4), month=x.date.slice(0,7), day=x.date;
+    if(!map[year])map[year]={months:{}};
+    if(!map[year].months[month])map[year].months[month]={weeks:{},dates:{}};
+    const d=parseInt(x.date.slice(8,10),10);
+    const week=d<=7?'Week 1':d<=14?'Week 2':d<=21?'Week 3':'Week 4';
+    const m=map[year].months[month];
+    if(!m.weeks[week])m.weeks[week]={start:week==='Week 1'?1:week==='Week 2'?8:week==='Week 3'?15:22,end:week==='Week 1'?7:week==='Week 2'?14:week==='Week 3'?21:new Date(Number(year),Number(month.slice(5,7)),0).getDate(),dates:{}};
+    m.weeks[week].dates[day]=(m.weeks[week].dates[day]||0)+Number(x.amount||0);
+  });
+  return map;
+}
+function sumObj(o){return Object.values(o||{}).reduce((s,v)=>s+Number(v||0),0)}
+function fmtYear(y){return y}
+function fmtMonth(k){return monthLabel(k)}
+function fmtDate(d){
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function renderCollectionHierarchy(){
+  const body=$('collectionBody');
+  if(!body)return;
+  const data=groupCollectionByYear();
+  const years=Object.keys(data).sort().reverse();
+  if(!years.length){
+    body.innerHTML='<tr><td colspan="3" style="text-align:center;color:#7b8796;padding:20px">No collection data found.</td></tr>';
+    if($('collectionSub'))$('collectionSub').textContent='No collection data available';
+    return;
+  }
+  let html='';
+  years.forEach(year=>{
+    const yearTotal=sumObj(Object.fromEntries(Object.entries(data[year].months).map(([k,m])=>[k,sumObj(Object.values(m.weeks).map(w=>sumObj(w.dates)))])));
+    html+=`<tr class="collectionLevel yearRow" data-level="year" data-key="${year}"><td class="periodCell"><span class="collectionArrow">▶</span>Year ${esc(year)}</td><td class="num">${money(yearTotal)}</td><td class="num">${money(collectionEarned(yearTotal))}</td></tr>`;
+    html+=`<tr class="collectionDetailRow" data-parent="year-${year}"><td colspan="3"><div class="collectionDetailWrap"></div></td></tr>`;
+  });
+  body.innerHTML=html;
+
+  body.querySelectorAll('.yearRow').forEach(row=>row.addEventListener('click',()=>{
+    const year=row.dataset.key, detail=body.querySelector(`[data-parent="year-${year}"]`), wrap=detail?.querySelector('.collectionDetailWrap');
+    if(!detail||!wrap)return;
+    if(detail.style.display==='table-row'){detail.style.display='none';row.querySelector('.collectionArrow').classList.remove('open');return;}
+    const monthsFor=data[year].months, keys=Object.keys(monthsFor).sort().reverse();
+    let h='<table class="collectionDetailTable"><thead><tr><th>Month</th><th class="num">Total Collection</th><th class="num">My Earned</th></tr></thead><tbody>';
+    keys.forEach(month=>{
+      const total=sumObj(Object.values(monthsFor[month].weeks).map(w=>sumObj(w.dates)));
+      h+=`<tr class="collectionLevel monthRow2" data-year="${year}" data-month="${month}"><td class="periodCell"><span class="collectionArrow">▶</span>${esc(fmtMonth(month))}</td><td class="num">${money(total)}</td><td class="num">${money(collectionEarned(total))}</td></tr>`;
+      h+=`<tr class="collectionDetailRow" data-parent="month-${year}-${month}"><td colspan="3"><div class="collectionDetailWrap"></div></td></tr>`;
+    });
+    h+='</tbody></table>'; wrap.innerHTML=h; detail.style.display='table-row'; row.querySelector('.collectionArrow').classList.add('open');
+    bindMonthRows(wrap,data,year);
+  }));
+  if($('collectionSub'))$('collectionSub').textContent='Year → Month → Week → Date · Total Collection and My Earned (50%)';
+}
+function bindMonthRows(root,data,year){
+  root.querySelectorAll('.monthRow2').forEach(row=>row.addEventListener('click',e=>{
+    e.stopPropagation();
+    const month=row.dataset.month, detail=root.querySelector(`[data-parent="month-${year}-${month}"]`), wrap=detail?.querySelector('.collectionDetailWrap');
+    if(!detail||!wrap)return;
+    if(detail.style.display==='table-row'){detail.style.display='none';row.querySelector('.collectionArrow').classList.remove('open');return;}
+    const weeks=data[year].months[month].weeks, keys=Object.keys(weeks).sort((a,b)=>Number(a.split(' ')[1])-Number(b.split(' ')[1]));
+    let h='<table class="collectionDetailTable"><thead><tr><th>Week</th><th class="num">Total Collection</th><th class="num">My Earned</th></tr></thead><tbody>';
+    keys.forEach(week=>{
+      const w=weeks[week], total=sumObj(w.dates), wkKey=week.replace(' ','-');
+      h+=`<tr class="collectionLevel weekRow2" data-week="${week}"><td class="periodCell"><span class="collectionArrow">▶</span>${week} <small style="font-weight:400;color:#8a98a8">(${w.start}–${w.end})</small></td><td class="num">${money(total)}</td><td class="num">${money(collectionEarned(total))}</td></tr>`;
+      h+=`<tr class="collectionDetailRow" data-parent="week-${year}-${month}-${wkKey}"><td colspan="3"><div class="collectionDetailWrap"></div></td></tr>`;
+    });
+    h+='</tbody></table>'; wrap.innerHTML=h; detail.style.display='table-row'; row.querySelector('.collectionArrow').classList.add('open');
+    bindWeekRows(wrap,data,year,month);
+  }));
+}
+function bindWeekRows(root,data,year,month){
+  root.querySelectorAll('.weekRow2').forEach(row=>row.addEventListener('click',e=>{
+    e.stopPropagation();
+    const week=row.dataset.week, wkKey=week.replace(' ','-'), detail=root.querySelector(`[data-parent="week-${year}-${month}-${wkKey}"]`), wrap=detail?.querySelector('.collectionDetailWrap');
+    if(!detail||!wrap)return;
+    if(detail.style.display==='table-row'){detail.style.display='none';row.querySelector('.collectionArrow').classList.remove('open');return;}
+    const dates=data[year].months[month].weeks[week].dates, keys=Object.keys(dates).sort().reverse();
+    let h='<table class="collectionDetailTable"><thead><tr><th>Date</th><th class="num">Total Collection</th><th class="num">My Earned</th></tr></thead><tbody>';
+    keys.forEach(date=>{
+      const total=dates[date];
+      h+=`<tr><td class="periodCell">${esc(fmtDate(date))}</td><td class="num">${money(total)}</td><td class="num">${money(collectionEarned(total))}</td></tr>`;
+    });
+    h+='</tbody></table>'; wrap.innerHTML=h; detail.style.display='table-row'; row.querySelector('.collectionArrow').classList.add('open');
+  }));
 }
 
 function renderDailyChart(k){
@@ -425,6 +535,7 @@ document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',(
   document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.querySelectorAll('.sectionView').forEach(v=>v.classList.remove('active'));
   const v=$(btn.dataset.view+'View'); if(v)v.classList.add('active');
+  if(btn.dataset.view==='collection') renderCollectionHierarchy();
 }));
 
 (async function init(){
