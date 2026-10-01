@@ -69,6 +69,19 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
 
 /* Collection drill-down */
 .collectionLevel{cursor:pointer}.collectionLevel:hover{background:#f5f8fc}.collectionLevel .periodCell{font-weight:800}.collectionArrow{display:inline-block;width:18px;color:#8a98a8;font-size:10px;transition:transform .15s}.collectionArrow.open{transform:rotate(90deg);color:#1677e8}.collectionDetailRow{display:none;background:#fbfcfe}.collectionDetailRow td{padding:6px 7px}.collectionDetailTable{width:100%;border-collapse:collapse}.collectionDetailTable th{font-size:8px;color:#7b8796;text-transform:uppercase}.collectionDetailTable td,.collectionDetailTable th{padding:7px;border-bottom:1px solid #e8edf2}.collectionDetailTable .periodCell{font-weight:700}.collectionLevel.yearRow td{font-weight:800}.collectionLevel.monthRow2 td{font-weight:700}.collectionLevel.weekRow2 td{font-weight:600}
+
+/* ================= EMPLOYEE PORTAL UI v1.7 ================= */
+.appHeader{height:92px;margin:0 6px;padding:0 20px}
+.mainShell{gap:12px;padding:10px 6px 0}
+.sidebar{width:220px;flex-basis:220px;padding:14px 12px;min-height:calc(100dvh - 104px)}
+.navBtn{height:48px;font-size:13px;padding:0 15px;margin-bottom:7px}.navIcon{width:22px;margin-right:9px;font-size:16px}
+.content{padding-bottom:34px}.pageTop{margin:6px 0 14px}.pageTitle{font-size:28px}.pageDesc{font-size:12px}.controls{gap:10px}.controls select{min-width:330px;height:42px}.controls .btn{height:42px;padding:0 20px}
+.dashboardGrid{gap:12px;margin-bottom:12px}.statCard{height:178px;padding:18px;border-radius:17px;box-shadow:0 8px 22px rgba(31,47,65,.06)}.statIcon{width:54px;height:54px;border-radius:15px;margin-bottom:12px}.statLabel{font-size:12px}.statValue{font-size:29px}.statFoot{font-size:10px;margin-top:10px}.cardGlow{position:absolute;right:18px;bottom:13px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:25px;font-weight:900;background:rgba(255,255,255,.5)}
+.dashboardTwoCol{display:grid;grid-template-columns:minmax(0,2fr) minmax(320px,1fr);gap:12px;align-items:stretch}.overviewPanel,.recentPanel{margin-top:0;min-height:345px;padding:16px 18px;border-radius:17px;box-shadow:0 6px 20px rgba(31,47,65,.05)}
+.overviewHead,.recentHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.overviewTitle{display:flex;align-items:flex-start;gap:12px}.overviewTitle h2{font-size:17px;color:#182536;margin:1px 0 4px}.overviewIcon{width:42px;height:42px;border-radius:13px;background:#fff1c9;color:#b87a00;display:grid;place-items:center;font-size:22px;font-weight:900;flex:0 0 42px}.clockIcon{background:#fff1d5;color:#c26b00}.earnedBadge{min-width:150px;background:#ecfaf4;border-radius:13px;padding:9px 14px;text-align:left}.earnedBadge span{display:block;font-size:10px;color:#0c9d6a;font-weight:700}.earnedBadge strong{display:block;font-size:21px;color:#0a9e6a;margin-top:2px}.overviewChart{height:235px;margin-top:14px;display:flex;align-items:flex-end;gap:6px;padding:12px 8px 22px;border-top:1px dashed #dfe7ef;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 46px,rgba(214,224,234,.45) 47px)}.overviewBarWrap{height:100%;flex:1;display:flex;align-items:flex-end;justify-content:center;min-width:4px}.overviewBar{width:70%;min-width:3px;border-radius:5px 5px 1px 1px;background:linear-gradient(180deg,#2bcf93,#10aa72);box-shadow:0 3px 7px rgba(8,169,109,.16)}.chartDay{position:absolute;bottom:2px;font-size:8px;color:#7c8998;transform:translateX(-50%)}
+.miniAction{height:38px;padding:0 13px;border:1px solid #d7e0e8;background:#fff;border-radius:10px;color:#1677e8;font-weight:800;font-size:11px;cursor:pointer}.recentList{margin-top:10px}.recentItem{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #e8edf2}.recentItem:last-child{border-bottom:0}.recentDate{width:44px;height:44px;border-radius:12px;background:#f4f6f9;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#182536;font-weight:900}.recentDate b{font-size:15px;line-height:1}.recentDate span{font-size:8px;color:#718095;margin-top:3px}.recentMain{min-width:0}.recentTitle{font-size:12px;font-weight:800;color:#182536;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.recentMeta{font-size:10px;color:#718095;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.recentAmount{text-align:right}.recentAmount strong{display:block;font-size:14px;color:#08a96d}.recentAmount span{display:block;font-size:9px;color:#7c8998;margin-top:3px}.recentEmpty{padding:35px 10px;text-align:center;color:#7b8796;font-size:11px}
+@media(max-width:1050px){.sidebar{width:180px;flex-basis:180px}.dashboardTwoCol{grid-template-columns:1fr}.recentPanel{min-height:auto}.overviewPanel{min-height:330px}}
+@media(max-width:650px){.appHeader{height:auto;min-height:94px;padding:12px 14px}.brandTitle{font-size:19px}.brandSub{font-size:10px}.version{display:inline-block}.mainShell{padding:8px 5px 82px}.sidebar{width:100%;flex-basis:auto}.pageTop{margin:5px 0 10px}.pageTitle{font-size:26px}.pageDesc{font-size:11px}.controls{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}.controls select{min-width:0;width:100%;height:42px}.controls .btn{width:100%;height:42px}.dashboardGrid{grid-template-columns:1fr 1fr;gap:10px}.statCard{height:145px;padding:12px;border-radius:15px}.statIcon{width:40px;height:40px;border-radius:12px;font-size:19px;margin-bottom:9px}.statLabel{font-size:10px}.statValue{font-size:21px}.statFoot{font-size:9px;margin-top:9px}.cardGlow{width:52px;height:52px;right:-7px;bottom:-8px;font-size:20px}.dashboardTwoCol{grid-template-columns:1fr;gap:10px}.overviewPanel,.recentPanel{min-height:0;padding:13px 12px;border-radius:15px}.overviewTitle{gap:9px}.overviewIcon{width:38px;height:38px;flex-basis:38px;border-radius:11px;font-size:19px}.overviewTitle h2{font-size:15px}.panelSub{font-size:9px}.earnedBadge{min-width:112px;padding:8px 10px}.earnedBadge strong{font-size:17px}.overviewChart{height:190px;margin-top:10px;gap:4px;padding-bottom:20px}.overviewBar{width:72%}.recentHead{gap:8px}.miniAction{height:34px;padding:0 9px;font-size:9px}.recentItem{grid-template-columns:43px minmax(0,1fr) auto;gap:8px;padding:9px 0}.recentDate{width:40px;height:40px}.recentDate b{font-size:13px}.recentTitle{font-size:11px}.recentMeta{font-size:9px}.recentAmount strong{font-size:13px}.recentAmount span{font-size:8px}}
 </style>
 </head>
 <body>
@@ -88,7 +101,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon">✂</div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.6</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.7</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <div class="avatar" id="avatar">A</div>
@@ -112,17 +125,26 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
 
         <section id="dashboardView" class="sectionView active">
           <div class="dashboardGrid">
-            <div class="statCard collection"><div class="statIcon">₹</div><div class="statLabel">Total Collection</div><div class="statValue" id="collection">₹0</div><div class="statFoot">This month's collection.</div></div>
-            <div class="statCard expenses"><div class="statIcon">□</div><div class="statLabel">Total Expenses</div><div class="statValue" id="expenses">₹0</div><div class="statFoot">This month's expenses.</div></div>
-            <div class="statCard salary"><div class="statIcon">◉</div><div class="statLabel">Total Salary</div><div class="statValue" id="earned">₹0</div><div class="statFoot">50% earned salary.</div></div>
-            <div class="statCard payable"><div class="statIcon">▥</div><div class="statLabel">Net Payable</div><div class="statValue" id="payable">₹0</div><div class="statFoot" id="heroSub">Current Month</div></div>
+            <div class="statCard collection"><div class="statIcon">₹</div><div class="statLabel">Total Collection</div><div class="statValue" id="collection">₹0</div><div class="statFoot">This month's collection.</div><div class="cardGlow">↗</div></div>
+            <div class="statCard expenses"><div class="statIcon">□</div><div class="statLabel">Total Expenses</div><div class="statValue" id="expenses">₹0</div><div class="statFoot">This month's expenses.</div><div class="cardGlow">▤</div></div>
+            <div class="statCard salary"><div class="statIcon">◉</div><div class="statLabel">Total Salary</div><div class="statValue" id="earned">₹0</div><div class="statFoot">50% earned salary.</div><div class="cardGlow">▣</div></div>
+            <div class="statCard payable"><div class="statIcon">▥</div><div class="statLabel">Net Payable</div><div class="statValue" id="payable">₹0</div><div class="statFoot" id="heroSub">Current Month</div><div class="cardGlow">₹</div></div>
           </div>
-          <div class="panel chartPanel">
-            <div class="chartLegend"><span class="legendDot"></span>Collection <span class="legendDot red"></span>Expenses</div>
-            <h2>Daily Collection vs Expenses</h2><div class="panelSub">Current month performance</div>
-            <div class="chartArea" id="dailyChart"><div class="emptyChart">No daily data available</div></div>
+
+          <div class="dashboardTwoCol">
+            <div class="panel overviewPanel">
+              <div class="overviewHead">
+                <div class="overviewTitle"><div class="overviewIcon">▥</div><div><h2>Collection Overview</h2><div class="panelSub" id="overviewSub">Daily collection for selected month</div></div></div>
+                <div class="earnedBadge"><span>My Earned</span><strong id="overviewEarned">₹0</strong></div>
+              </div>
+              <div class="overviewChart" id="dailyChart"><div class="emptyChart">No collection data available</div></div>
+            </div>
+
+            <div class="panel recentPanel">
+              <div class="recentHead"><div class="overviewTitle"><div class="overviewIcon clockIcon">◷</div><div><h2>Recent Collection Entries</h2><div class="panelSub">Latest collection records for this month.</div></div></div><button class="miniAction" type="button" data-view-action="collection">View All&nbsp; ›</button></div>
+              <div id="recentCollectionList" class="recentList"><div class="recentEmpty">No collection data available.</div></div>
+            </div>
           </div>
-          <div class="panel"><h2>Salary Calculation</h2><div class="panelSub">Collection × 50% − Expenses − Salary Paid</div><div class="scroll"><table><tbody><tr><td>Total Collection</td><td class="num" id="calcCollection">₹0</td></tr><tr><td>Earned Salary (50%)</td><td class="num" id="calcEarned">₹0</td></tr><tr><td>Expenses</td><td class="num" id="calcExpenses">₹0</td></tr><tr><td>Salary Already Paid</td><td class="num" id="calcPaid">₹0</td></tr><tr><th>Final Payable</th><th class="num" id="calcPayable">₹0</th></tr></tbody></table></div></div>
         </section>
 
         <section id="collectionView" class="sectionView">
@@ -413,7 +435,7 @@ function render(){
   ).join(''):'<tr><td colspan="4">No expenses found.</td></tr>';
 
   renderCollectionHierarchy();
-  renderDailyChart(k);
+  renderDashboardOverview(k);
 }
 
 function collectionEarned(total){ return total * 0.5; }
@@ -506,6 +528,41 @@ function bindWeekRows(root,data,year,month){
   }));
 }
 
+function renderDashboardOverview(k){
+  const rows=rowsFor(k).c.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const chart=$('dailyChart'), list=$('recentCollectionList');
+  const earnedEl=$('overviewEarned'), sub=$('overviewSub');
+  const total=rows.reduce((s,x)=>s+Number(x.amount||0),0);
+  const earned=collectionEarned(total);
+  if(earnedEl)earnedEl.textContent=money(earned);
+  if(sub)sub.textContent=(k==='ALL'?'Daily collection across all available months':'Daily collection for '+monthLabel(k));
+  if(chart){
+    if(!rows.length){chart.innerHTML='<div class="emptyChart">No collection data available</div>';}
+    else{
+      const daily={}; rows.forEach(x=>daily[x.date]=(daily[x.date]||0)+Number(x.amount||0));
+      const keys=Object.keys(daily).sort();
+      const max=Math.max(...keys.map(d=>daily[d]),1);
+      chart.innerHTML=keys.slice(-31).map(d=>{
+        const h=Math.max(3,(daily[d]/max)*100);
+        const day=Number(d.slice(8,10));
+        return `<div class="overviewBarWrap" title="${esc(d)} · ${money(daily[d])}"><div class="overviewBar" style="height:${h}%"></div><span class="chartDay" style="left:${(keys.slice(-31).indexOf(d)+.5)/(Math.min(keys.length,31))*100}%">${day}</span></div>`;
+      }).join('');
+    }
+  }
+  if(list){
+    const recent=rows.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+    if(!recent.length){list.innerHTML='<div class="recentEmpty">No collection data available.</div>';return;}
+    list.innerHTML=recent.map(x=>{
+      const dt=new Date(x.date+'T00:00:00');
+      const day=String(dt.getDate()).padStart(2,'0');
+      const mon=dt.toLocaleString('en-IN',{month:'short'}).toUpperCase();
+      const title=x.type||x.remark||'Collection Entry';
+      const meta=x.mode||x.remark||'Collection';
+      return `<div class="recentItem"><div class="recentDate"><b>${day}</b><span>${mon}</span></div><div class="recentMain"><div class="recentTitle">${esc(title)}</div><div class="recentMeta">${esc(meta)}</div></div><div class="recentAmount"><strong>${money(x.amount)}</strong><span>Collection</span></div></div>`;
+    }).join('');
+  }
+}
+
 function renderDailyChart(k){
   const el=$('dailyChart'); if(!el)return;
   const data={};
@@ -527,6 +584,8 @@ $('logoutBtn').addEventListener('click',()=>{
   loginStatus('Signed out.');
 });
 document.addEventListener('click',e=>{
+  const action=e.target.closest('[data-view-action]');
+  if(action){ const target=document.querySelector('.navBtn[data-view=+action.dataset.viewAction+]'); if(target)target.click(); return; }
   const row=e.target.closest('.monthRow'); if(!row)return;
   $('monthSelect').value=row.dataset.month; render(); window.scrollTo({top:0,behavior:'smooth'});
 });
