@@ -107,6 +107,41 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   .brandIcon{width:40px;height:40px;flex:0 0 40px}
   .brandIcon img{border-radius:10px}
 }
+
+/* ================= v2.0 MOBILE BOTTOM NAV FIX ================= */
+#mobileBottomNav{display:none}
+@media(max-width:650px){
+  .mainShell{padding-bottom:88px !important}
+  .mainShell > .sidebar{display:none !important}
+  #mobileBottomNav{
+    position:fixed !important;
+    left:6px !important;
+    right:6px !important;
+    bottom:6px !important;
+    width:auto !important;
+    height:64px !important;
+    min-height:64px !important;
+    z-index:2147483647 !important;
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:4px !important;
+    padding:5px !important;
+    margin:0 !important;
+    background:#fff !important;
+    border:1px solid #dce3eb !important;
+    border-radius:16px !important;
+    box-shadow:0 -4px 18px rgba(31,47,65,.16) !important;
+    overflow:hidden !important;
+  }
+  #mobileBottomNav button{
+    min-width:0 !important; width:100% !important; height:54px !important;
+    border:0 !important; border-radius:11px !important; background:transparent !important;
+    color:#526276 !important; display:flex !important; align-items:center !important;
+    justify-content:center !important; padding:0 !important; margin:0 !important;
+    font-size:22px !important; line-height:1 !important; cursor:pointer !important;
+  }
+  #mobileBottomNav button.active{background:#f6c33a !important;color:#17202b !important}
+}
 </style>
 </head>
 <body>
@@ -126,7 +161,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.9</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.0</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -673,12 +708,46 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#profileMenu') && !e.target.closest('#avatar')) $('profileMenu').classList.remove('show');
 });
 
+function syncMobileNav(view){
+  const nav=document.getElementById('mobileBottomNav');
+  if(!nav)return;
+  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+}
+
+function createMobileBottomNav(){
+  if(document.getElementById('mobileBottomNav'))return;
+  const original=document.querySelector('.mainShell > .sidebar');
+  if(!original)return;
+  const nav=document.createElement('nav');
+  nav.id='mobileBottomNav';
+  nav.setAttribute('aria-label','Mobile navigation');
+  const icons={dashboard:'⌂',collection:'₹',expenses:'▣',salary:'▤'};
+  original.querySelectorAll('.navBtn').forEach(src=>{
+    const b=document.createElement('button');
+    b.type='button'; b.dataset.view=src.dataset.view; b.title=src.textContent.trim();
+    b.innerHTML='<span class="navIcon">'+(icons[src.dataset.view]||'•')+'</span>';
+    b.addEventListener('click',()=>{
+      const target=original.querySelector('.navBtn[data-view="'+src.dataset.view+'"]');
+      if(target)target.click();
+      syncMobileNav(src.dataset.view);
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    nav.appendChild(b);
+  });
+  document.body.appendChild(nav);
+  const active=original.querySelector('.navBtn.active');
+  syncMobileNav(active?active.dataset.view:'dashboard');
+}
+
 document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.querySelectorAll('.sectionView').forEach(v=>v.classList.remove('active'));
   const v=$(btn.dataset.view+'View'); if(v)v.classList.add('active');
   if(btn.dataset.view==='collection') renderCollectionHierarchy();
+  syncMobileNav(btn.dataset.view);
 }));
+
+createMobileBottomNav();
 
 (async function init(){
   const returned=await handleOAuthReturn();
