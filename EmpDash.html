@@ -6,141 +6,100 @@
 <title>YOURS SALON — Employee Salary Portal</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;min-height:100%}
-body{background:#12100E;color:#F3EEE3;font-family:Arial,sans-serif;min-height:100dvh;padding:18px}
-.container{max-width:760px;width:100%;margin:0 auto;background:#1B1815;border:1px solid #332C22;border-radius:14px;padding:20px}
-.logo{font-size:24px;font-weight:700;color:#C9A227;border-bottom:1px solid #332C22;padding-bottom:10px;margin-bottom:12px}
-.logo span{color:#E4C55C}
-.login{text-align:center;padding:34px 10px}
-.login h1{font-size:24px;margin-bottom:7px}
-.sub{font-size:12px;color:#9C9284;margin-bottom:20px}
-.btn{width:100%;height:42px;background:#C9A227;color:#1B1508;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
-.google-btn{background:#F3EEE3;color:#1B1815;border:1px solid #CFC7B8}
-#portal{display:none}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-.empName{font-size:21px;font-weight:800;color:#E4C55C}
-.email{font-size:10px;color:#9C9284;margin-top:3px}
-.logout{width:auto;padding:0 13px;background:#332C22;color:#F3EEE3}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-select{width:100%;height:40px;background:#242019;border:1px solid #332C22;color:#F3EEE3;border-radius:8px;padding:0 10px;outline:none}
-.hero{background:linear-gradient(145deg,#2b2414,#1b1815);border:1px solid rgba(201,162,39,.35);border-radius:14px;padding:18px;margin-bottom:12px}
-.kicker{font-size:10px;color:#9C9284;text-transform:uppercase;letter-spacing:1px}
-.heroAmt{font-size:34px;font-weight:900;color:#fff;margin-top:4px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.card{background:#242019;border:1px solid #332C22;border-radius:10px;padding:12px}
-.card span{display:block;font-size:9px;color:#9C9284;text-transform:uppercase}
-.card b{display:block;font-size:15px;margin-top:5px;color:#F3EEE3}
-.panel{background:#1B1815;border:1px solid #332C22;border-radius:12px;padding:14px;margin-top:10px}
-.panel h2{font-size:15px;margin-bottom:3px}
-.panelSub{font-size:10px;color:#9C9284;margin-bottom:10px}
-.scroll{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th,td{padding:9px 7px;border-bottom:1px solid #2d2820;text-align:left;white-space:nowrap}
-th{color:#9C9284;font-size:9px;text-transform:uppercase}
-.num{text-align:right}
-.monthRow{cursor:pointer}
-.monthRow:hover{background:#211d18}
-.monthDetail{display:none;background:#151310}
-.monthDetail td{padding:7px}
-.badge{display:inline-block;padding:4px 7px;border-radius:99px;background:rgba(201,162,39,.1);color:#E4C55C;font-size:9px}
-.status{margin-top:10px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}
-.status.show{display:block;background:rgba(201,162,39,.06);border:1px solid #332C22;color:#9C9284}
-.error{background:rgba(181,71,63,.2)!important;border-color:#B5473F!important;color:#E88A82!important}
-@media(max-width:650px){
- body{padding:0}.container{max-width:none;min-height:100dvh;border:0;border-radius:0;padding:14px 16px}
- .grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.empName{font-size:18px}.heroAmt{font-size:29px}
-}
+:root{--bg:#080d13;--panel:#0d141c;--panel2:#101922;--line:#21303f;--text:#f4f7fb;--muted:#8795a5;--blue:#1d6fc2;--blue2:#0f4f91;--gold:#f2bd28;--green:#00a978;--red:#ff626c;--purple:#7540aa}
+html,body{width:100%;min-height:100%;background:var(--bg)}
+body{color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100dvh;padding:0}
+.container{width:100%;max-width:none;margin:0;background:transparent;border:0;border-radius:0;padding:0}
+.logo{display:none}
+#login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.loginBox{width:min(760px,94vw);background:#111820;border:1px solid var(--line);border-radius:18px;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.login{text-align:center;padding:0}
+.login h1{font-size:27px;margin-bottom:8px}.sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.btn{height:40px;background:var(--gold);color:#15120a;border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:0 15px;font-size:13px;font-weight:800;cursor:pointer}
+.google-btn{width:100%;background:#f5f1e8;color:#17130d;border:1px solid #d6d0c3}
+.status{margin-top:10px;padding:8px 10px;border-radius:7px;font-size:11px;display:none}.status.show{display:block;background:rgba(29,111,194,.08);border:1px solid #29415a;color:#9eb8d1}.error{background:rgba(181,71,63,.2)!important;border-color:#B5473F!important;color:#E88A82!important}
+#portal{display:none;min-height:100dvh}
+.appHeader{height:102px;margin:0 6px;border:1px solid #1e2c3a;border-radius:17px;background:linear-gradient(180deg,#0e151d,#0b1118);display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.brandWrap{display:flex;align-items:center;gap:12px}.brandIcon{width:46px;height:46px;border-radius:13px;background:#f3b91d;color:#10151b;display:grid;place-items:center;font-size:25px;font-weight:900}.brandTitle{font-size:25px;font-weight:900;color:#f7be24;letter-spacing:.2px}.brandSub{font-size:12px;color:#94a1af;margin-top:3px}.version{font-size:10px;color:#738293;margin-left:8px;font-weight:700}
+.profile{display:flex;align-items:center;gap:12px}.avatar{width:46px;height:46px;border-radius:50%;background:#f3b91d;color:#151515;display:grid;place-items:center;font-size:20px;font-weight:900}.profileText .name{font-size:14px;font-weight:800}.profileText .mail{font-size:10px;color:#8b99a9;margin-top:4px}.role{background:rgba(242,189,40,.12);color:#f2bd28;border-radius:14px;padding:8px 13px;font-size:10px;font-weight:800}.logout{width:42px;padding:0;background:#121b24;border:1px solid #293746;color:#dce5ee;font-size:16px}
+.mainShell{display:flex;gap:10px;padding:10px 6px 0}.sidebar{width:137px;flex:0 0 137px;background:#0d141c;border:1px solid #1c2a38;border-radius:16px;min-height:calc(100dvh - 112px);padding:10px 10px}.navBtn{width:100%;height:38px;border:0;background:transparent;color:#aab5c1;border-radius:10px;text-align:left;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px}.navBtn:hover{background:#151f29;color:#fff}.navBtn.active{background:#f4bd26;color:#16130a}.navIcon{display:inline-block;width:19px;text-align:center;margin-right:7px}.content{flex:1;min-width:0;padding:0 0 28px}.pageTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 10px}.pageTitle{font-size:25px;font-weight:900}.pageDesc{font-size:11px;color:#8190a0;margin-top:5px}.controls{display:flex;align-items:center;gap:8px;margin:0}.controls select{min-width:225px}.controls .btn{background:#0e477e;color:#eaf4ff;border-color:#1c6ab2}
+select{height:40px;background:#0f1821;border:1px solid #274052;color:#e9eef4;border-radius:9px;padding:0 12px;outline:none;font-size:12px}
+.dashboardGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}.statCard{height:172px;border-radius:15px;border:1px solid #294052;padding:17px;position:relative;overflow:hidden}.statCard:after{content:'';position:absolute;width:82px;height:82px;border-radius:50%;right:-20px;bottom:-31px;background:rgba(255,255,255,.045)}.statCard.collection{background:linear-gradient(145deg,#062e25,#102820);border-color:#17604d}.statCard.expenses{background:linear-gradient(145deg,#0c2543,#112137);border-color:#1d5d99}.statCard.salary{background:linear-gradient(145deg,#30230a,#251e0e);border-color:#755716}.statCard.payable{background:linear-gradient(145deg,#25133a,#1d1630);border-color:#60358a}.statIcon{width:51px;height:51px;border-radius:13px;display:grid;place-items:center;font-size:24px;font-weight:900;margin-bottom:10px}.collection .statIcon{background:#078b60}.expenses .statIcon{background:#1160a6}.salary .statIcon{background:#986c0f}.payable .statIcon{background:#7540aa}.statLabel{font-size:11px;color:#c1cbd4}.statValue{font-size:25px;font-weight:900;margin-top:5px}.statFoot{font-size:9px;color:#8c99a7;margin-top:12px}
+.panel{background:#0d141c;border:1px solid #1e2d3b;border-radius:15px;padding:14px 16px;margin-top:10px}.panel h2{font-size:15px;margin-bottom:4px}.panelSub{font-size:10px;color:#7f8d9c;margin-bottom:10px}.chartPanel{height:310px}.chartLegend{float:right;font-size:10px;color:#aab4bf}.legendDot{display:inline-block;width:9px;height:9px;border-radius:3px;background:#23c78b;margin-right:5px}.legendDot.red{background:#ff626c;margin-left:13px}.chartArea{height:235px;border-top:1px solid #1d2a36;margin-top:24px;position:relative;display:flex;align-items:flex-end;gap:8px;padding:20px 12px 12px}.chartCol{flex:1;height:100%;display:flex;align-items:flex-end;gap:4px}.bar{flex:1;border-radius:4px 4px 0 0;min-height:2px;background:#1fc58a}.bar.red{background:#ff626c}.emptyChart{position:absolute;inset:0;display:grid;place-items:center;color:#596878;font-size:11px}
+.scroll{overflow:auto}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:9px 7px;border-bottom:1px solid #1c2833;text-align:left;white-space:nowrap}th{color:#7f8d9c;font-size:9px;text-transform:uppercase}.num{text-align:right}.monthRow{cursor:pointer}.monthRow:hover{background:#121c25}.monthDetail{display:none;background:#0b1117}.monthDetail td{padding:7px}.badge{display:inline-block;padding:4px 7px;border-radius:99px;background:rgba(242,189,40,.1);color:#f2bd28;font-size:9px}
+.sectionView{display:none}.sectionView.active{display:block}
+@media(max-width:900px){.dashboardGrid{grid-template-columns:1fr 1fr}.sidebar{width:125px;flex-basis:125px}.pageTop{align-items:flex-start;flex-direction:column}.controls{width:100%}.controls select{flex:1}}
+@media(max-width:650px){.appHeader{height:auto;min-height:88px;padding:12px}.brandTitle{font-size:19px}.brandIcon{width:40px;height:40px}.profileText,.role{display:none}.mainShell{padding:8px 5px}.sidebar{width:66px;flex-basis:66px;padding:8px 6px}.navBtn{padding:0;text-align:center;font-size:0}.navIcon{margin:0;font-size:15px}.content{width:calc(100vw - 82px)}.dashboardGrid{grid-template-columns:1fr 1fr}.statCard{height:145px;padding:12px}.statIcon{width:40px;height:40px;font-size:19px}.statValue{font-size:19px}.chartPanel{height:260px}.controls{flex-wrap:wrap}.controls select{width:100%}}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="logo">YOURS <span>SALON</span> <small id="appVersion" style="font-size:10px;color:#9C9284;font-weight:600;margin-left:8px;">Version 1.2</small></div>
 
   <section id="login" class="login">
-    <h1>Employee Salary Portal</h1>
-    <div class="sub">Sign in with your Google account to view your salary details.</div>
-    <button class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
-    <div id="loginStatus" class="status"></div>
+    <div class="loginBox">
+      <div class="brandTitle" style="margin-bottom:18px">YOURS SALON</div>
+      <h1>Employee Salary Portal</h1>
+      <div class="sub">Sign in with your Google account to view your salary details.</div>
+      <button class="btn google-btn" id="googleSignInBtn">Continue with Google</button>
+      <div id="loginStatus" class="status"></div>
+    </div>
   </section>
 
   <section id="portal">
-    <div class="top">
-      <div>
-        <div class="empName" id="employeeName">Employee</div>
-        <div class="email" id="employeeEmail"></div>
+    <header class="appHeader">
+      <div class="brandWrap">
+        <div class="brandIcon">✂</div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 1.3</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
-      <button class="btn logout" id="logoutBtn">Sign Out</button>
-    </div>
-
-    <div class="controls">
-      <select id="monthSelect"><option value="ALL">All Months</option></select>
-      <button class="btn" id="syncBtn">↻ Sync Salary</button>
-    </div>
-
-    <div class="hero">
-      <div class="kicker">Final Salary Payable</div>
-      <div class="heroAmt" id="payable">₹0</div>
-      <div class="sub" id="heroSub">All Months</div>
-    </div>
-
-    <div class="grid">
-      <div class="card"><span>Collection</span><b id="collection">₹0</b></div>
-      <div class="card"><span>50% Earned</span><b id="earned">₹0</b></div>
-      <div class="card"><span>Expenses</span><b id="expenses">₹0</b></div>
-      <div class="card"><span>Salary Paid</span><b id="paid">₹0</b></div>
-    </div>
-
-    <div class="panel">
-      <h2>Salary Calculation</h2>
-      <div class="panelSub">Collection × 50% − Expenses − Salary Paid</div>
-      <div class="scroll">
-        <table>
-          <tbody>
-            <tr><td>Total Collection</td><td class="num" id="calcCollection">₹0</td></tr>
-            <tr><td>Earned Salary (50%)</td><td class="num" id="calcEarned">₹0</td></tr>
-            <tr><td>Expenses</td><td class="num" id="calcExpenses">₹0</td></tr>
-            <tr><td>Salary Already Paid</td><td class="num" id="calcPaid">₹0</td></tr>
-            <tr><th>Final Payable</th><th class="num" id="calcPayable">₹0</th></tr>
-          </tbody>
-        </table>
+      <div class="profile">
+        <div class="avatar" id="avatar">A</div>
+        <div class="profileText"><div class="name" id="employeeName">Employee</div><div class="mail" id="employeeEmail"></div></div>
+        <div class="role">Employee</div>
+        <button class="btn logout" id="logoutBtn" title="Sign Out">↥</button>
       </div>
-    </div>
+    </header>
+    <div class="mainShell">
+      <aside class="sidebar">
+        <button class="navBtn active" data-view="dashboard"><span class="navIcon">⌂</span>Dashboard</button>
+        <button class="navBtn" data-view="collection"><span class="navIcon">₹</span>Collection</button>
+        <button class="navBtn" data-view="expenses"><span class="navIcon">▣</span>Expenses</button>
+        <button class="navBtn" data-view="salary"><span class="navIcon">▤</span>Salary</button>
+      </aside>
+      <main class="content">
+        <div class="pageTop">
+          <div><div class="pageTitle">Employee Dashboard</div><div class="pageDesc">View your salary, collections and expenses details.</div></div>
+          <div class="controls"><button class="btn" id="syncBtn">⟳ &nbsp; Sync</button><select id="monthSelect"><option value="ALL">All Months</option></select></div>
+        </div>
 
-    <div class="panel">
-      <h2>All Months Salary</h2>
-      <div class="panelSub">Click a month to open its daily details.</div>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Month</th><th class="num">Collection</th><th class="num">Earned</th><th class="num">Expense</th><th class="num">Paid</th><th class="num">Payable</th></tr></thead>
-          <tbody id="monthBody"></tbody>
-        </table>
-      </div>
-    </div>
+        <section id="dashboardView" class="sectionView active">
+          <div class="dashboardGrid">
+            <div class="statCard collection"><div class="statIcon">₹</div><div class="statLabel">Total Collection</div><div class="statValue" id="collection">₹0</div><div class="statFoot">This month's collection.</div></div>
+            <div class="statCard expenses"><div class="statIcon">□</div><div class="statLabel">Total Expenses</div><div class="statValue" id="expenses">₹0</div><div class="statFoot">This month's expenses.</div></div>
+            <div class="statCard salary"><div class="statIcon">◉</div><div class="statLabel">Total Salary</div><div class="statValue" id="earned">₹0</div><div class="statFoot">50% earned salary.</div></div>
+            <div class="statCard payable"><div class="statIcon">▥</div><div class="statLabel">Net Payable</div><div class="statValue" id="payable">₹0</div><div class="statFoot" id="heroSub">Current Month</div></div>
+          </div>
+          <div class="panel chartPanel">
+            <div class="chartLegend"><span class="legendDot"></span>Collection <span class="legendDot red"></span>Expenses</div>
+            <h2>Daily Collection vs Expenses</h2><div class="panelSub">Current month performance</div>
+            <div class="chartArea" id="dailyChart"><div class="emptyChart">No daily data available</div></div>
+          </div>
+          <div class="panel"><h2>Salary Calculation</h2><div class="panelSub">Collection × 50% − Expenses − Salary Paid</div><div class="scroll"><table><tbody><tr><td>Total Collection</td><td class="num" id="calcCollection">₹0</td></tr><tr><td>Earned Salary (50%)</td><td class="num" id="calcEarned">₹0</td></tr><tr><td>Expenses</td><td class="num" id="calcExpenses">₹0</td></tr><tr><td>Salary Already Paid</td><td class="num" id="calcPaid">₹0</td></tr><tr><th>Final Payable</th><th class="num" id="calcPayable">₹0</th></tr></tbody></table></div></div>
+        </section>
 
-    <div class="panel">
-      <h2>Salary Payment History</h2>
-      <div class="panelSub">Payments recorded in the Salary sheet.</div>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Date</th><th>Type</th><th>Mode</th><th class="num">Amount</th></tr></thead>
-          <tbody id="paymentBody"></tbody>
-        </table>
-      </div>
+        <section id="collectionView" class="sectionView">
+          <div class="panel"><h2>Collection</h2><div class="panelSub">Your collection entries.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Payment Mode</th><th class="num">Amount</th></tr></thead><tbody id="collectionBody"></tbody></table></div></div>
+        </section>
+        <section id="expensesView" class="sectionView">
+          <div class="panel"><h2>Expense History</h2><div class="panelSub">Expenses linked to this employee.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Remark</th><th class="num">Amount</th></tr></thead><tbody id="expenseBody"></tbody></table></div></div>
+        </section>
+        <section id="salaryView" class="sectionView">
+          <div class="panel"><h2>Salary Payment History</h2><div class="panelSub">Payments recorded in the Salary sheet.</div><div class="scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Mode</th><th class="num">Amount</th></tr></thead><tbody id="paymentBody"></tbody></table></div></div>
+          <div class="panel"><h2>All Months Salary</h2><div class="panelSub">Click a month to open its details.</div><div class="scroll"><table><thead><tr><th>Month</th><th class="num">Collection</th><th class="num">Earned</th><th class="num">Expense</th><th class="num">Paid</th><th class="num">Payable</th></tr></thead><tbody id="monthBody"></tbody></table></div></div>
+        </section>
+        <div id="syncStatus" class="status"></div>
+      </main>
     </div>
-
-    <div class="panel">
-      <h2>Expense History</h2>
-      <div class="panelSub">Expenses linked to this employee.</div>
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Date</th><th>Category</th><th>Remark</th><th class="num">Amount</th></tr></thead>
-          <tbody id="expenseBody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div id="syncStatus" class="status"></div>
   </section>
-</div>
 
 <script>
 const CONFIG={
@@ -272,6 +231,7 @@ function showPortal(){
   $('login').style.display='none'; $('portal').style.display='block';
   $('employeeName').textContent=userName;
   $('employeeEmail').textContent=userEmail;
+  $('avatar').textContent=(userName||'E').trim().charAt(0).toUpperCase();
 }
 
 function sheetRead(sheetName){
@@ -367,7 +327,7 @@ function rowsFor(k){
 }
 
 function render(){
-  months=[...new Set([...collections,...expenses,...payments].map(x=>monthKey(x.date)).filter(Boolean))].sort().reverse();
+  months=[...new Set(collections.map(x=>monthKey(x.date)).filter(Boolean))].sort().reverse();
   const select=$('monthSelect'),old=select.value||'ALL';
   select.innerHTML='<option value="ALL">All Months</option>'+months.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
   select.value=months.includes(old)||old==='ALL'?old:'ALL';
@@ -395,6 +355,20 @@ function render(){
   $('expenseBody').innerHTML=expenses.length?expenses.sort((a,b)=>b.date.localeCompare(a.date)).map(x=>
     `<tr><td>${esc(x.date)}</td><td>${esc(x.type||'Expense')}</td><td>${esc(x.remark||'-')}</td><td class="num">${money(x.amount)}</td></tr>`
   ).join(''):'<tr><td colspan="4">No expenses found.</td></tr>';
+
+  $('collectionBody').innerHTML=collections.length?collections.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.mode||'-')}</td><td class="num">${money(x.amount)}</td></tr>`).join(''):'<tr><td colspan="3">No collection data found.</td></tr>';
+  renderDailyChart(k);
+}
+
+function renderDailyChart(k){
+  const el=$('dailyChart'); if(!el)return;
+  const data={};
+  rowsFor(k==='ALL'?(months[0]||'ALL'):k).c.forEach(x=>{data[x.date]=(data[x.date]||{});data[x.date].c=(data[x.date].c||0)+x.amount});
+  rowsFor(k==='ALL'?(months[0]||'ALL'):k).e.forEach(x=>{data[x.date]=(data[x.date]||{});data[x.date].e=(data[x.date].e||0)+x.amount});
+  const keys=Object.keys(data).sort();
+  if(!keys.length){el.innerHTML='<div class="emptyChart">No daily data available</div>';return;}
+  const max=Math.max(...keys.map(d=>Math.max(data[d].c||0,data[d].e||0)),1);
+  el.innerHTML=keys.slice(-31).map(d=>`<div class="chartCol" title="${d}"><div class="bar" style="height:${Math.max(2,((data[d].c||0)/max)*100)}%"></div><div class="bar red" style="height:${Math.max(2,((data[d].e||0)/max)*100)}%"></div></div>`).join('');
 }
 
 $('googleSignInBtn').addEventListener('click',startGoogleLogin);
@@ -410,6 +384,12 @@ document.addEventListener('click',e=>{
   const row=e.target.closest('.monthRow'); if(!row)return;
   $('monthSelect').value=row.dataset.month; render(); window.scrollTo({top:0,behavior:'smooth'});
 });
+
+document.querySelectorAll('.navBtn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.sectionView').forEach(v=>v.classList.remove('active'));
+  const v=$(btn.dataset.view+'View'); if(v)v.classList.add('active');
+}));
 
 (async function init(){
   const returned=await handleOAuthReturn();
