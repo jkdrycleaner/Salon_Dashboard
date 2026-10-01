@@ -181,6 +181,32 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
   #mobileBottomNav .navIcon{display:block !important;font-size:22px !important;margin:0 !important;width:auto !important}
   .mainShell{padding-bottom:88px !important}
 }
+
+/* ================= v2.2 MOBILE NAV RESPONSIVE FIX ================= */
+@media(max-width:900px){
+  html,body{width:100%;min-width:0;overflow-x:hidden}
+  .container{width:100%;min-width:0}
+  .mainShell{display:block !important;position:relative !important;padding:8px 5px 84px !important;margin:0 !important;min-height:100dvh !important}
+  .mainShell > .sidebar{display:none !important}
+  .content{width:100% !important;min-width:0 !important;padding-bottom:82px !important}
+  #mobileBottomNav{
+    display:grid !important;position:fixed !important;left:5px !important;right:5px !important;bottom:5px !important;
+    width:auto !important;height:68px !important;min-height:68px !important;z-index:2147483647 !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:4px !important;padding:5px !important;margin:0 !important;
+    background:#fff !important;border:1px solid #dce3eb !important;border-radius:15px !important;
+    box-shadow:0 -4px 18px rgba(31,47,65,.16) !important;overflow:hidden !important;visibility:visible !important;opacity:1 !important;
+  }
+  #mobileBottomNav button{
+    min-width:0 !important;width:100% !important;height:56px !important;border:0 !important;border-radius:11px !important;
+    background:transparent !important;color:#526276 !important;display:flex !important;flex-direction:column !important;
+    align-items:center !important;justify-content:center !important;gap:3px !important;padding:2px 1px !important;margin:0 !important;
+    font-size:10px !important;line-height:1 !important;white-space:nowrap !important;cursor:pointer !important;
+  }
+  #mobileBottomNav button.active{background:#f6c33a !important;color:#17202b !important}
+  #mobileBottomNav .navIcon{display:block !important;width:auto !important;margin:0 !important;font-size:18px !important;line-height:1 !important}
+  #mobileBottomNav .navLabel{display:block !important;font-size:9px !important;font-weight:700 !important;line-height:1 !important}
+}
+@media(min-width:901px){#mobileBottomNav{display:none !important}}
 </style>
 </head>
 <body>
@@ -200,7 +226,7 @@ html,body{background:linear-gradient(180deg,#f7f9fc 0%,#f2f5f9 100%);color:var(-
     <header class="appHeader">
       <div class="brandWrap">
         <div class="brandIcon"><img id="salonLogo" alt="YOURS SALON Logo"><span id="salonLogoFallback">✂</span></div>
-        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.1</span></div><div class="brandSub">Employee Salary Portal</div></div>
+        <div><div class="brandTitle">YOURS SALON <span class="version" id="appVersion">Version 2.2</span></div><div class="brandSub">Employee Salary Portal</div></div>
       </div>
       <div class="profile">
         <button class="avatar avatarBtn" id="avatar" type="button" title="Profile"><span id="avatarInitial">A</span><img id="avatarPhoto" alt="Profile Photo"></button>
@@ -767,7 +793,7 @@ function createMobileBottomNav(){
       b.type='button';
       b.dataset.view=src.dataset.view;
       b.title=src.textContent.trim();
-      b.innerHTML='<span class="navIcon">'+(icons[src.dataset.view]||'•')+'</span>';
+      b.innerHTML='<span class="navIcon">'+(icons[src.dataset.view]||'•')+'</span><span class="navLabel">'+src.dataset.view.charAt(0).toUpperCase()+src.dataset.view.slice(1)+'</span>';
       b.addEventListener('click',()=>{
         const target=original.querySelector('.navBtn[data-view="'+src.dataset.view+'"]');
         if(target)target.click();
